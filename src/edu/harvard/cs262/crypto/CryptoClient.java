@@ -5,7 +5,7 @@ public interface CryptoClient {
 	/*
 	 * Handler for client to receive messages.
 	 */
-	void receiveMessage(String from, Message m);
+	void receiveMessage(String from, CryptoMessage m);
 
 	/*
 	 * Set up a secret key with client "clientName"

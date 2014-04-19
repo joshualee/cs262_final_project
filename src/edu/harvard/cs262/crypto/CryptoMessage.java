@@ -1,5 +1,6 @@
 package edu.harvard.cs262.crypto;
 
-public interface CryptoMessage {
-
+public class CryptoMessage {
+	String cipherText;
+	String plainText;
 }
