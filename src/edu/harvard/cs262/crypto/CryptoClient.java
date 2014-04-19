@@ -1,11 +1,16 @@
 package edu.harvard.cs262.crypto;
 
-public interface CryptoClient {
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
+// All methods need to throw RemoteException in order for interface to be remote.
+// Interface needs to be remote so a stub can be generated.
+public interface CryptoClient extends Remote{
 	
 	/*
 	 * Handler for client to receive messages.
 	 */
-	void receiveMessage(String from, CryptoMessage m);
+	public void receiveMessage(String from, CryptoMessage m) throws RemoteException;
 
 	/*
 	 * Set up a secret key with client "clientName"
@@ -14,8 +19,10 @@ public interface CryptoClient {
 	 * will send the information to set up the key
 	 * (this allows eavesdroppers to also listen to this communication)
 	 */
-	void handshake(String clientName, ProtocolType ptype);
+	public void handshake(String clientName, ProtocolType ptype) throws RemoteException;
 
-	boolean ping();
+	public String getName() throws RemoteException;
+
+	public boolean ping() throws RemoteException;
 
 }
