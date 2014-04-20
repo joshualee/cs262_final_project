@@ -1,15 +1,15 @@
-genral.policy:		policy file
+general.policy: policy file
 
-CryptoClient.java:	client interface
+CryptoClient.java: client interface
 
-CryptoServer.java:	server interface
+CryptoServer.java: server interface
 
-CryptoMessage.java:	message class
+CryptoMessage.java: message class
 
-ProtocolType.java:	type class
+ProtocolType.java: type class
 
-ClientNotFound.java:	exception class
+ClientNotFound.java: exception class
 
 CentralServer.java:	server class
 
-Client.java:		client class
+Client.java: client class
