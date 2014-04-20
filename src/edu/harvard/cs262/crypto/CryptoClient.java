@@ -10,19 +10,22 @@ public interface CryptoClient extends Remote{
 	/*
 	 * Handler for client to receive messages.
 	 */
-	public void receiveMessage(String from, CryptoMessage m) throws RemoteException;
-
-	/*
-	 * Set up a secret key with client "clientName"
-	 * using protocol of type "ptype" (e.g. Diffie Hellman).
-	 * This is a wrapper for send/receive message calls which
-	 * will send the information to set up the key
-	 * (this allows eavesdroppers to also listen to this communication)
-	 */
-	public void handshake(String clientName, ProtocolType ptype) throws RemoteException;
+	void receiveMessage(String from, CryptoMessage m) throws RemoteException;
+	void sendMessage(String to, String msg);
+	
+	void startSession();
+	void endSession();
+	
+	CryptoMessage waitForMessage(String from);
 
 	public String getName() throws RemoteException;
 
 	public boolean ping() throws RemoteException;
+
+	int random();
+		
+	boolean supportsKeyExchange(Class<?> keyExchange);
+	boolean supportsEncryptionScheme(Class<?> encryptionScheme);
+	
 
 }
