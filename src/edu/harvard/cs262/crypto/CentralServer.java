@@ -66,10 +66,10 @@ public class CentralServer implements CryptoServer {
 		}
 				
 		else{
-			String key = (getClient(eve)).getName();
-			String vic = (getClient(victim)).getName();
+			String eave = (getClient(eve)).getName();
+			String key = (getClient(victim)).getName();
 			LinkedList<String> allVics = notifications.get(key);
-			allVics.addLast(victim);
+			allVics.addLast(eave);
 			notifications.put(key,allVics);
 		}
 	}
@@ -85,10 +85,10 @@ public class CentralServer implements CryptoServer {
 		}
 				
 		else{
-			String key = (getClient(eve)).getName();
-			String vic = (getClient(victim)).getName();
+			String eave = (getClient(eve)).getName();
+			String key = (getClient(victim)).getName();
 			LinkedList<String> allVics = notifications.get(key);
-			allVics.remove(victim);
+			allVics.remove(eave);
 			notifications.put(key,allVics);
 		}		
 	}
