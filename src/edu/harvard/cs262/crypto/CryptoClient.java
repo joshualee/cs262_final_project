@@ -10,7 +10,7 @@ public interface CryptoClient extends Remote {
 	 * Handler for client to receive messages.
 	 */
 	void receiveMessage(String from, CryptoMessage m) throws RemoteException, InterruptedException;
-	void sendMessage(String to, String msg, String sid) throws RemoteException, ClientNotFound;
+	void sendMessage(String to, String msg, String sid) throws RemoteException, ClientNotFound, InterruptedException;
 	void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException;
 	
 	CryptoMessage waitForMessage(String sid) throws InterruptedException;

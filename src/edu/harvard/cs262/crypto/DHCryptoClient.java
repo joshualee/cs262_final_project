@@ -97,7 +97,7 @@ public class DHCryptoClient implements CryptoClient {
 		}
 		
 		// indirectly invoke the counterpart of the key exchange on remote client
-		server.relaySecureChannel(counterParty, kx, cipher);
+		server.relaySecureChannel(name, counterParty, kx, cipher);
 		CryptoKey key = kx.initiate(this, counterParty);
 		cipher.setKey(key);
 		ciphers.put(counterParty, cipher);
@@ -114,7 +114,7 @@ public class DHCryptoClient implements CryptoClient {
 	}
 
 	@Override
-	public void sendMessage(String to, String text, String sid) throws RemoteException, ClientNotFound {
+	public void sendMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException {
 		CryptoMessage m = new CryptoMessage(text, sid);
 		if (sid.length() > 0) {
 			m.setSessionID(sid);	
