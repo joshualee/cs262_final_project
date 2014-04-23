@@ -10,22 +10,20 @@ public interface CryptoClient extends Remote{
 	/*
 	 * Handler for client to receive messages.
 	 */
-	void receiveMessage(String from, CryptoMessage m) throws RemoteException;
-	void sendMessage(String to, String msg);
+	void receiveMessage(String from, CryptoMessage m) throws RemoteException, InterruptedException;
+	void sendMessage(String to, String msg, String sid) throws RemoteException, ClientNotFound;
+	void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException;
 	
-	void startSession();
-	void endSession();
-	
-	CryptoMessage waitForMessage(String from);
+	CryptoMessage waitForMessage(String sid) throws InterruptedException;
 
 	public String getName() throws RemoteException;
 
 	public boolean ping() throws RemoteException;
-
-	int random();
-		
-	boolean supportsKeyExchange(Class<?> keyExchange);
-	boolean supportsEncryptionScheme(Class<?> encryptionScheme);
 	
-
+	
+	public void initSecureChannel(String recip, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException;
+	public void recvSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, InterruptedException, ClientNotFound;
+		
+//	boolean supportsKeyExchange(Class<?> keyExchange);
+//	boolean supportsEncryptionScheme(Class<?> encryptionScheme);
 }

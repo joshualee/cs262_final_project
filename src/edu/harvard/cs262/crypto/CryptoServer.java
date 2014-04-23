@@ -25,6 +25,14 @@ public interface CryptoServer extends Remote{
 	 * Blocks until message has successfully been delivered.
 	 */
 	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound;
+	
+	/**
+	 * 
+	 * @param from
+	 * @param to
+	 * @param m
+	 */
+	public void relaySecureChannel(String to, KeyExchangeProtocol kx, CryptoCipher c);
 
 	/*
 	 * Return reference to client

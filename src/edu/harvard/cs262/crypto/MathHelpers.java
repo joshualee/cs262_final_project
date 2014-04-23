@@ -14,7 +14,7 @@ public class MathHelpers {
 	    while (exp != 0) {
 	    	
 	        if ((exp & 1) != 0)
-	            result *= base;
+	            result = (result * base);
 	        exp >>= 1;
 	        base *= base;
 	    }
