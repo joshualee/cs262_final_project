@@ -31,8 +31,9 @@ public interface CryptoServer extends Remote{
 	 * @param from
 	 * @param to
 	 * @param m
+	 * @throws ClientNotFound 
 	 */
-	public void relaySecureChannel(String to, KeyExchangeProtocol kx, CryptoCipher c);
+	public void relaySecureChannel(String to, KeyExchangeProtocol kx, CryptoCipher c) throws ClientNotFound;
 
 	/*
 	 * Return reference to client

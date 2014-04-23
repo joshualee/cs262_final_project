@@ -1,7 +1,9 @@
 package edu.harvard.cs262.crypto;
 
+import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DHCryptoClient implements CryptoClient {
@@ -143,4 +145,54 @@ public class DHCryptoClient implements CryptoClient {
 		CryptoClient myClient = new DHCryptoClient(args[3], null);
 	  }
 	}
+	
+	
+	public void doEVote(EVote evote) {
+		System.out.println("Initiating e-vote:");
+		System.out.print("Ballot: ");
+		System.out.println(evote.ballot);
+		
+		String sid = evote.id.toString();
+		
+		Random rand = new Random();
+		
+		int sk = rand.nextInt(evote.p.intValue());
+		
+		// TODO: vote input instead of random
+		int yay_or_nay = rand.nextInt(2);
+		int vote = MathHelpers.ipow(evote.g.intValue(), yay_or_nay);
+		
+		server.recvMessage(Integer.toString(sk));
+		CryptoMessage pkMessage = waitForMessage(sid);
+		
+		// since for now we only do the encryption phase,
+		// we only have to set the public key
+		ElGamalCipher EGCipher = new ElGamalCipher();
+		DHTuple	dht = new DHTuple(evote.p.intValue(), evote.g.intValue(), 
+				Integer.parseInt(pkMessage.getPlainText()));
+		
+		CryptoKey publicKey = new CryptoKey(null, dht);
+		EGCipher.setKey(publicKey);
+		
+		CryptoMessage encryptedVote = EGCipher.encrypt(Integer.toString(vote));
+		
+		
+		// send tag with server message, so clients know what they are seeing when eaves dropping
+		server.recvMessage(encryptedVote);
+		
+		CryptoMessage encryptedResult = waitForMessage(sid);
+		
+		int c1 = (Integer) encryptedResult.getEncryptionState();
+		int c2 = Integer.parseInt(encryptedResult.getPlainText());
+		int encC1 = MathHelpers.ipow(c1, sk);
+		
+		CryptoMessage decoder = waitForMessage(sid);
+		int egPrivateKey 
+		
+		// TODO: no clean way to pass in this to ElGamal since it isn't really the private key
+		// but rather what you take the inverse of and multiply directly...
+		CryptoKey fullKey = new CryptoKey(null, dht);
+	}
+	
+	
 }

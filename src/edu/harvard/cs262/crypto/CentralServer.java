@@ -129,6 +129,17 @@ public class CentralServer implements CryptoServer {
 	public boolean ping() throws RemoteException{
 		return true;
 	}
+	
+
+	@Override
+	public void relaySecureChannel(String from, String to, KeyExchangeProtocol kx, CryptoCipher cipher) throws ClientNotFound, RemoteException {
+		CryptoClient client = getClient(to);
+		if (client == null) {
+			throw new ClientNotFound(to + " is not registered.");
+		}
+		
+		client.recvSecureChannel(from, kx, cipher);
+	}	
 
   public static void main(String args[]){
     try {
@@ -152,6 +163,6 @@ public class CentralServer implements CryptoServer {
     } catch (Exception e) {
       System.err.println("Server exception: " + e.toString());
     }
-  }	
+  }
 
 }
