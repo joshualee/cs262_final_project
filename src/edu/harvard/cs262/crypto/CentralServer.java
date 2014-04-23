@@ -26,7 +26,7 @@ public class CentralServer implements CryptoServer {
 		notifications = new Hashtable<String, LinkedList<String>>();
 	}
 	
-	public String getName() {
+	public String getName() throws RemoteException {
 		return name;
 	}
 	
@@ -236,7 +236,7 @@ public class CentralServer implements CryptoServer {
 			
 			CentralServer server = new CentralServer(serverName);
 			CryptoServer serverStub = (CryptoServer) UnicastRemoteObject
-					.exportObject(server);
+					.exportObject(server, 0);
 
 			// create registry so we don't have to manually start
 			// the registry server elsewhere

@@ -5,8 +5,7 @@ import java.rmi.RemoteException;
 
 // All methods need to throw RemoteException in order for interface to be remote.
 // Interface needs to be remote so a stub can be generated.
-public interface CryptoClient extends Remote{
-	
+public interface CryptoClient extends Remote {
 	/*
 	 * Handler for client to receive messages.
 	 */

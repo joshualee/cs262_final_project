@@ -9,8 +9,6 @@ import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
-import edu.harvard.cs262.ComputeServer.ComputeServer;
-
 public class DHCryptoClient implements CryptoClient {
 	private final int VERBOSE;
 	private String name;
@@ -172,7 +170,7 @@ public class DHCryptoClient implements CryptoClient {
 				myClient.sendMessage(to, msg, "");
 			}
 			
-		} catch (RemoteException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
