@@ -2,9 +2,14 @@ package edu.harvard.cs262.crypto;
 
 import java.math.BigInteger;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.Map;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
+
+import edu.harvard.cs262.ComputeServer.ComputeServer;
 
 public class DHCryptoClient implements CryptoClient {
 	private final int VERBOSE;
@@ -73,6 +78,7 @@ public class DHCryptoClient implements CryptoClient {
 			sessions.wait();
 		}
 		CryptoMessage m = sessions.remove(sid);
+		sessions.notifyAll();
 		
 		return m;
 	}
@@ -136,17 +142,48 @@ public class DHCryptoClient implements CryptoClient {
 	
 	public static void main(String args[]) {
 		
+		if (args.length != 4) {
+			System.err.println("usage: java DHCryptoClient rmiHost rmiPort serverName clientName");
+			System.exit(1);
+		}
+		
+		String rmiHost = args[0];
+		int rmiPort = Integer.parseInt(args[1]);
+		String serverName = args[2];
+		String clientName = args[3];
+		
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());
+		}
+		
+		try {
+			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
+			CryptoServer server = (CryptoServer) registry.lookup(serverName);
+			CryptoClient myClient = new DHCryptoClient(clientName, server);
+			
+			Scanner scan = new Scanner(System.in);
+			
+			while (true) {
+				System.out.print("To: ");
+				String to = scan.next();
+				System.out.print("Message: ");
+				String msg = scan.next();
+				
+				myClient.sendMessage(to, msg, "");
+			}
+			
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}		
 	  	// args[0]: IP (registry)
 		// args[1]: Server name
 		// args[2]: Port (registry)
 		// args[3]: name
-		CryptoClient myClient = new DHCryptoClient(args[3], null);
-	  }
+		
 	}
 	
-	
+	/*
 	public void doEVote(EVote evote) {
 		System.out.println("Initiating e-vote:");
 		System.out.print("Ballot: ");
@@ -186,13 +223,13 @@ public class DHCryptoClient implements CryptoClient {
 		int c2 = Integer.parseInt(encryptedResult.getPlainText());
 		int encC1 = MathHelpers.ipow(c1, sk);
 		
-		CryptoMessage decoder = waitForMessage(sid);
-		int egPrivateKey 
+		CryptoMessage combinedCipher = waitForMessage(sid);
+//		int egPrivateKey = combinedCipher;  
 		
 		// TODO: no clean way to pass in this to ElGamal since it isn't really the private key
 		// but rather what you take the inverse of and multiply directly...
 		CryptoKey fullKey = new CryptoKey(null, dht);
 	}
 	
-	
+	*/
 }
