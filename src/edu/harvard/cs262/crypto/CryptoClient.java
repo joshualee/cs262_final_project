@@ -5,24 +5,24 @@ import java.rmi.RemoteException;
 
 // All methods need to throw RemoteException in order for interface to be remote.
 // Interface needs to be remote so a stub can be generated.
-public interface CryptoClient extends Remote{
-	
+public interface CryptoClient extends Remote {
 	/*
 	 * Handler for client to receive messages.
 	 */
-	public void receiveMessage(String from, CryptoMessage m) throws RemoteException;
-
-	/*
-	 * Set up a secret key with client "clientName"
-	 * using protocol of type "ptype" (e.g. Diffie Hellman).
-	 * This is a wrapper for send/receive message calls which
-	 * will send the information to set up the key
-	 * (this allows eavesdroppers to also listen to this communication)
-	 */
-	public void handshake(String clientName, ProtocolType ptype) throws RemoteException;
+	void receiveMessage(String from, CryptoMessage m) throws RemoteException, InterruptedException;
+	void sendMessage(String to, String msg, String sid) throws RemoteException, ClientNotFound;
+	void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException;
+	
+	CryptoMessage waitForMessage(String sid) throws InterruptedException;
 
 	public String getName() throws RemoteException;
 
 	public boolean ping() throws RemoteException;
-
+	
+	
+	public void initSecureChannel(String recip, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException;
+	public void recvSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, InterruptedException, ClientNotFound;
+		
+//	boolean supportsKeyExchange(Class<?> keyExchange);
+//	boolean supportsEncryptionScheme(Class<?> encryptionScheme);
 }

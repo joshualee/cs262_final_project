@@ -4,16 +4,21 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Map;
+
 import edu.harvard.cs262.crypto.CryptoClient;
 import edu.harvard.cs262.crypto.ClientNotFound;
 
 public class CentralServer implements CryptoServer {
 
+	private String name;
 	private Hashtable<String, CryptoClient> clients;
 	private Hashtable<String, LinkedList<String>> notifications;
+<<<<<<< HEAD
 	private LinkedList<CryptoServer> serverList;
 	private String name;
 	private boolean is_primary;
@@ -21,6 +26,12 @@ public class CentralServer implements CryptoServer {
 	private CentralServer(String name, boolean p){
 		this.name = name;
 		is_primary = p
+=======
+	private Map<String, Map<String, CryptoMessage>> sessions;
+	
+	private CentralServer(String name) {
+		this.name = name;
+>>>>>>> 6ba173ab6cf3eb47f192978a765c361e42d6d20c
 		clients = new Hashtable<String, CryptoClient>();
 		notifications = new Hashtable<String, LinkedList<String>>();
 	}
@@ -29,6 +40,7 @@ public class CentralServer implements CryptoServer {
 		return name
 	}
 	
+<<<<<<< HEAD
 	public boolean updateServerList(CryptoServer s, boolean add) throws RemoteException{
 		ListIterator<String> iterServers = serverList.listIterator(); 
 		while(iterServers.hasNext()){
@@ -62,6 +74,14 @@ public class CentralServer implements CryptoServer {
 	@Override
 	public boolean registerClient(CryptoClient c) throws RemoteException{
 
+=======
+	public String getName() throws RemoteException {
+		return name;
+	}
+	
+	@Override
+	public boolean registerClient(CryptoClient c) throws RemoteException {
+>>>>>>> 6ba173ab6cf3eb47f192978a765c361e42d6d20c
 		String key = c.getName();
 		
 		// client with that name already exists
@@ -166,10 +186,10 @@ public class CentralServer implements CryptoServer {
 		}
 				
 		else{
-			String key = (getClient(eve)).getName();
-			String vic = (getClient(victim)).getName();
+			String eave = (getClient(eve)).getName();
+			String key = (getClient(victim)).getName();
 			LinkedList<String> allVics = notifications.get(key);
-			allVics.addLast(victim);
+			allVics.addLast(eave);
 			notifications.put(key,allVics);
 			if (is_primary){
 				ListIterator<String> iterServers = serverList.listIterator(); 
@@ -200,10 +220,10 @@ public class CentralServer implements CryptoServer {
 		}
 				
 		else{
-			String key = (getClient(eve)).getName();
-			String vic = (getClient(victim)).getName();
+			String eave = (getClient(eve)).getName();
+			String key = (getClient(victim)).getName();
 			LinkedList<String> allVics = notifications.get(key);
-			allVics.remove(victim);
+			allVics.remove(eave);
 			notifications.put(key,allVics);
 			if (is_primary){
 				ListIterator<String> iterServers = serverList.listIterator(); 
@@ -223,7 +243,7 @@ public class CentralServer implements CryptoServer {
 	}
 	
 	@Override
-	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound{
+	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException{
 		if(null == clients.get(from)){
 			throw new ClientNotFound(from + " is not registered.");
 		}
@@ -267,13 +287,62 @@ public class CentralServer implements CryptoServer {
 	public boolean ping() throws RemoteException{
 		return true;
 	}
+	
 
-  public static void main(String args[]){
-    try {
-      if (System.getSecurityManager() == null) {
-        System.setSecurityManager(new SecurityManager());
-      }
+	@Override
+	public void relaySecureChannel(String from, String to, KeyExchangeProtocol kx, CryptoCipher cipher) throws ClientNotFound, RemoteException, InterruptedException {
+		CryptoClient client = getClient(to);
+		if (client == null) {
+			throw new ClientNotFound(to + " is not registered.");
+		}
+		
+		client.recvSecureChannel(from, kx, cipher);
+	}	
+	
+	/**
+	 * Blocks until all registered clients have sent a message with sid 
+	 * @param sid the session id to wait on
+	 * @throws InterruptedException 
+	 */
+	
+	/*
+	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
+		while (!sessions.containsKey(sid)) {
+			sessions.wait();
+		}
+		
+		Map<String, CryptoMessage> clientMap = sessions.get(sid);
+		
+		for (String client : clients.keySet()) {
+			while (!clientMap.containsKey(client)) {
+				clientMap.wait();
+			}
+		}
+		
+		clientMap = sessions.remove(sid);
+		clientMap.notifyAll();
+		
+		return clientMap;
+	}
+	
+	public CryptoMessage waitForMessage(String from, String sid) throws InterruptedException {
+		while (!sessions.containsKey(sid)) {
+			sessions.wait();
+		}
+		
+		Map<String, CryptoMessage> clientMap = sessions.get(sid);
+		
+		while (!clientMap.containsKey(from)) {
+			clientMap.wait();
+		}
+		
+		CryptoMessage m = clientMap.remove(from);
+		sessions.notifyAll();
+		
+		return m;
+	}
 
+<<<<<<< HEAD
       CentralServer server1 = new CentralServer(server1, true);
       CentralServer server2 = new CentralServer(server2, false);
       CentralServer server3 = new CentralServer(server3, false);
@@ -298,11 +367,70 @@ public class CentralServer implements CryptoServer {
       Registry registry = LocateRegistry.getRegistry(args[0]);
       registry.rebind(serverName, serverStub); // rebind to avoid AlreadyBoundException
       System.out.println("Server ready");
+=======
+	
+	public void recvMessage(String from, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+		if (m.hasSessionID()) {
+			String sid = m.getSessionID();
+			
+			// TODO: potential race condition if two new session IDs
+			// come in at the same time...
+			// both will make new sessionMaps
+			Map<String, CryptoMessage> sessionMap = sessions.get(sid);
+			
+			if (sessionMap == null) {
+				sessionMap = new Hashtable<String, CryptoMessage>();
+				sessions.put(sid, sessionMap);
+			}
+			
+			while (sessionMap.containsKey(from)) {
+				System.out.println("Warning: (session, client) (" + sid + ", " + from + ") already has a waiting message");
+				sessionMap.wait();
+			}
+			sessionMap.put(from, m);
+			return;
+		}
+		
+		System.out.println(from + ": " + m.getPlainText());
+	}
+	*/
+	
+	public static void main(String args[]) {
+		if (args.length != 2) {
+			System.err.println("usage: java CentralServer rmiport servername");
+			System.exit(1);
+		}
+>>>>>>> 6ba173ab6cf3eb47f192978a765c361e42d6d20c
 
-	      
-    } catch (Exception e) {
-      System.err.println("Server exception: " + e.toString());
-    }
-  }	
+		try {
+			if (System.getSecurityManager() == null) {
+				System.setSecurityManager(new SecurityManager());
+			}
+			
+			int registryPort = Integer.parseInt(args[0]);
+			String serverName = args[1];
+			
+			CentralServer server = new CentralServer(serverName);
+			CryptoServer serverStub = (CryptoServer) UnicastRemoteObject
+					.exportObject(server, 0);
+
+			// create registry so we don't have to manually start
+			// the registry server elsewhere
+			Registry registry = LocateRegistry.createRegistry(registryPort);
+			
+			// rebind to avoid AlreadyBoundException
+			registry.rebind(serverName, serverStub); 
+			System.out.println("Server ready");
+
+		} catch (Exception e) {
+			System.err.println("Server exception: " + e.toString());
+		}
+	}
+
+	@Override
+	public void recvMessage(String from, CryptoMessage m)
+			throws RemoteException, ClientNotFound, InterruptedException {
+		return;
+	}
 
 }
