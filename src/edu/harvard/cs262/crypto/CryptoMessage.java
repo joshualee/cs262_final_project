@@ -1,6 +1,9 @@
 package edu.harvard.cs262.crypto;
 
-public class CryptoMessage {
+import java.io.Serializable;
+
+public class CryptoMessage implements Serializable {
+	private static final long serialVersionUID = 1L;
 	
 	private String sessionID;
 	private String plainText;
