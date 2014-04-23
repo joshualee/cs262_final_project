@@ -14,15 +14,54 @@ public class CentralServer implements CryptoServer {
 
 	private Hashtable<String, CryptoClient> clients;
 	private Hashtable<String, LinkedList<String>> notifications;
-	
-	private CentralServer(){
-		super();
+	private LinkedList<CryptoServer> serverList;
+	private String name;
+	private boolean is_primary;
+
+	private CentralServer(String name, boolean p){
+		this.name = name;
+		is_primary = p
 		clients = new Hashtable<String, CryptoClient>();
 		notifications = new Hashtable<String, LinkedList<String>>();
 	}
+
+	public String getName(){
+		return name
+	}
 	
+	public boolean updateServerList(CryptoServer s, boolean add) throws RemoteException{
+		ListIterator<String> iterServers = serverList.listIterator(); 
+		while(iterServers.hasNext()){
+			serv = iterServers.next();
+			if (serv == this){
+				continue;
+			}
+			if (add){
+				(serv.getServerList()).addLast(s);
+			}
+			else {
+				(serv.getServerList()).remove(s)
+			}
+
+		}
+		return true
+	}
+
+	public boolean updateNotifications() throws RemoteException{
+		ListIterator<String> iterServers = serverList.listIterator(); 
+		while(iterServers.hasNext()){
+			serv = iterServers.next();
+			if (serv == this){
+				continue;
+			}
+			
+
+		}
+	}
+
 	@Override
 	public boolean registerClient(CryptoClient c) throws RemoteException{
+
 		String key = c.getName();
 		
 		// client with that name already exists
@@ -30,6 +69,22 @@ public class CentralServer implements CryptoServer {
 			return false;
 		}
 		
+		if (is_primary){
+			ListIterator<String> iterServers = serverList.listIterator(); 
+			while(iterServers.hasNext()){
+				serv = iterServers.next();
+				if (serv != this){
+					success = serv.registerClient(c);
+					if (!success){
+						updateServerList(serv, false);
+
+					}
+
+				}
+			}
+		}
+		
+
 		clients.put(key, c);
 		return true;
 	}
@@ -41,8 +96,62 @@ public class CentralServer implements CryptoServer {
 		if (null == clients.get(clientName)){
 			return false;
 		}
+		if (is_primary){
+			ListIterator<String> iterServers = serverList.listIterator(); 
+			while(iterServers.hasNext()){
+				serv = iterServers.next();
+				if (serv != this){
+					success = serv.unregisterClient(c);
+					if (!success){
+						updateServerList(serv, false);
+
+					}
+
+				}
+			}
+		}
 		
 		clients.remove(clientName);
+		return true;
+	}
+
+	public String getServerList() throws RemoteException{
+		return serverList;
+	}
+
+	public String getClients() throws RemoteException{
+		return clients;
+	}
+
+	public String getNotifications() throws RemoteException{
+		return notifications;
+	}
+
+	public boolean registerBackup(CryptoServer backup) {
+		serverList.add(backup);
+
+		backup.updateNotifications()
+		backup.updateClients()
+
+		if (is_primary) {
+			for (CryptoServer server : serverList) {
+				server.registerBackup(backup);
+			}
+		}
+	}
+
+	public boolean registerSelf(CryptoServer primary) throws RemoteException{
+		// server is already registered
+		slist = primary.getServerList();
+		if (slist.contains(this)){
+			return false;
+		}
+		slist.addLast(this);
+		serverList = slist;
+		clients = primary.getClients();
+		notifications = primary.getNotifications();
+		// slist.addLast(this);
+		primary.updateServerList(this,true);
 		return true;
 	}
 
@@ -62,6 +171,21 @@ public class CentralServer implements CryptoServer {
 			LinkedList<String> allVics = notifications.get(key);
 			allVics.addLast(victim);
 			notifications.put(key,allVics);
+			if (is_primary){
+				ListIterator<String> iterServers = serverList.listIterator(); 
+				while(iterServers.hasNext()){
+					serv = iterServers.next();
+					if (serv != this){
+						success = serv.eavesdrop(eve,victim);
+						if (!success){
+							updateServerList(serv, false);
+
+						}
+
+					}
+				}
+			}
+
 		}
 	}
 	
@@ -81,6 +205,20 @@ public class CentralServer implements CryptoServer {
 			LinkedList<String> allVics = notifications.get(key);
 			allVics.remove(victim);
 			notifications.put(key,allVics);
+			if (is_primary){
+				ListIterator<String> iterServers = serverList.listIterator(); 
+				while(iterServers.hasNext()){
+					serv = iterServers.next();
+					if (serv != this){
+						success = serv.stopEavesdrop(eve,victim);
+						if (!success){
+							updateServerList(serv, false);
+
+						}
+
+					}
+				}
+			}
 		}		
 	}
 	
@@ -136,13 +274,26 @@ public class CentralServer implements CryptoServer {
         System.setSecurityManager(new SecurityManager());
       }
 
-      CentralServer server = new CentralServer();
-      CryptoServer serverStub = (CryptoServer)UnicastRemoteObject.exportObject(server);
+      CentralServer server1 = new CentralServer(server1, true);
+      CentralServer server2 = new CentralServer(server2, false);
+      CentralServer server3 = new CentralServer(server3, false);
+      CryptoServer serverStub1 = (CryptoServer)UnicastRemoteObject.exportObject(server);
+      CryptoServer serverStub2 = (CryptoServer)UnicastRemoteObject.exportObject(server);
+      CryptoServer serverStub3 = (CryptoServer)UnicastRemoteObject.exportObject(server);
+
+
+
+
+
+      server1.registerSelf(server1);
+      server2.registerSelf(server1);
+      server3.registerSelf(server1);
       
       // args[0]: IP (registry)
 			// args[1]: Server name
 			// args[2]: Port (registry)
 			
+      //TODO
       String serverName = args[1];
       Registry registry = LocateRegistry.getRegistry(args[0]);
       registry.rebind(serverName, serverStub); // rebind to avoid AlreadyBoundException
