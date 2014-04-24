@@ -9,7 +9,8 @@ import java.util.UUID;
 public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	private static final long serialVersionUID = 1L;
 	
-	private final int BITS = 32; 
+	// warning: making BITS > 31 
+	private final int BITS = 31; 
 	private final BigInteger P;
 	private final BigInteger G;
 	private long seed;
@@ -50,9 +51,12 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		me.sendMessage(recipientName, x_hat.toString(), getProtocolId());
 		CryptoMessage inM = me.waitForMessage(getProtocolId());
 		
+		System.out.println(String.format("(%s) about to calculate key", me.getName()));
+		
 		BigInteger y_hat = new BigInteger(inM.getPlainText());
-		BigInteger key = y_hat.pow(x.intValue());
-		CryptoKey ck = new CryptoKey(key);
+		
+		CryptoKey ck = new CryptoKey(x, y_hat);
+		System.out.println(String.format("(%s) returning key", me.getName()));
 		
 		return ck;
 	}
@@ -64,13 +68,18 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		BigInteger y = new BigInteger(BITS, rand);
 		BigInteger y_hat = G.modPow(y, P);
 		
-		CryptoMessage m = me.waitForMessage(getProtocolId());		
+		CryptoMessage m = me.waitForMessage(getProtocolId());
+		System.out.println(String.format("(%s) about to send y_hat", me.getName()));
 		me.sendMessage(initiatorName, y_hat.toString(), getProtocolId());
 		
-		BigInteger x_hat = new BigInteger(m.getPlainText());
-		BigInteger key = x_hat.pow(y.intValue());
-		CryptoKey ck = new CryptoKey(key);
+		System.out.println(String.format("(%s) about to calculate key", me.getName()));
 		
+		BigInteger x_hat = new BigInteger(m.getPlainText());
+//		System.out.println(y.intValue());
+//		BigInteger key = x_hat.pow(y.intValue());
+		CryptoKey ck = new CryptoKey(y, x_hat);
+		
+		System.out.println(String.format("(%s) returning key", me.getName()));
 		return ck;
 	}
 }

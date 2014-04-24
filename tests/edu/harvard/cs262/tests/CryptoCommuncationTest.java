@@ -23,7 +23,7 @@ import edu.harvard.cs262.crypto.DHCryptoClient;
 public class CryptoCommuncationTest {
 	
 	private static String rmiHost;
-	private final static int rmiPort = 8080;
+	private final static int rmiPort = 8082;
 	private final static String serverName = "server";
 	
 	private static void setupServer() throws RemoteException {
@@ -83,8 +83,8 @@ public class CryptoCommuncationTest {
 			CryptoClient c2 = createClient("c2", server);
 			CryptoClient e1 = createClient("e1", server);
 			
-			e1.eavesdrop("c1");
-			e1.eavesdrop("c2");
+//			e1.eavesdrop("c1");
+//			e1.eavesdrop("c2");
 			
 			sendRandomEncMessages(c1, c2, 1);
 		} catch (Exception e) {

@@ -47,6 +47,8 @@ public class DHCryptoClient implements CryptoClient {
 		String plaintext;
 		
 		if (m.hasSessionID()) {
+			System.out.println(String.format("(%s) got message with sid %s", name, m.getSessionID()));
+			
 			String sid = m.getSessionID();
 			/*
 			 * If there is already a waiting message, wait for
@@ -58,7 +60,9 @@ public class DHCryptoClient implements CryptoClient {
 					sessions.wait();
 				}
 				sessions.put(sid, m);
+				sessions.notifyAll();
 			}
+			System.out.println(String.format("(%s) done recvMessage", name));
 			return;
 		}
 		
@@ -126,6 +130,7 @@ public class DHCryptoClient implements CryptoClient {
 		
 		System.out.println(String.format("%s: about to kx.initiate", name));
 		CryptoKey key = kx.initiate(this, counterParty);
+		System.out.println(String.format("%s: finished kx.initiate", name));
 		cipher.setKey(key);
 		ciphers.put(counterParty, cipher);
 	}
