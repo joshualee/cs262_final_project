@@ -202,7 +202,7 @@ public class DHCryptoClient implements CryptoClient {
 					System.out.print("Message: ");
 					String msg = scan.nextLine();
 					
-					myClient.sendEncryptedMessage(to, msg, "");
+					myClient.sendMessage(to, msg, "");
 				}
 			}
 			else {
