@@ -6,6 +6,8 @@ import java.util.Random;
 
 import javax.crypto.Cipher;
 
+import com.sun.org.apache.xml.internal.security.utils.Base64;
+
 public class ElGamalCipher implements CryptoCipher, Serializable {
 	private static final long serialVersionUID = 1L;
 	private CryptoKey key;
@@ -31,49 +33,52 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 
 	@Override
 	public CryptoMessage encrypt(String plaintext) {
+		System.out.println(String.format("Encrypting: %s", plaintext));
 		DHTuple dht = (DHTuple) key.getPublic();
-		int y = (int) (rand.nextInt() % dht.p);
-		int y_hat = MathHelpers.expmod(dht.g, y, dht.p);
+		
+//		System.out.println("Base64: " + Base64.encode(plaintext.getBytes()).);
+		
+		BigInteger y = new BigInteger(key.getBits(), rand).mod(dht.p);
+		BigInteger yhat = dht.g.modPow(y, dht.p);
 		
 		char[] cs = plaintext.toCharArray();
 		char[] new_cs = new char[cs.length];
 		
 		for (int i = 0; i < cs.length; i++) {
-			int m = cs[i];
-			
-			new_cs[i] = (char) ((MathHelpers.ipow(dht.xhat, y) * m) % dht.p);
+			BigInteger m = BigInteger.valueOf(cs[i]);
+			BigInteger tmp = dht.xhat.modPow(y, dht.p).multiply(m).mod(dht.p);
+			new_cs[i] = (char) tmp.intValue();
+			System.out.println(String.format("cs[i]=%s, m=%s, tmp=%s, new_cs[i]=%s", cs[i], m.toString(), tmp.toString(), (int) new_cs[i]));
 		}
 		
 		String ciphertext = new String(new_cs);
-		
 		CryptoMessage m = new CryptoMessage(plaintext, ciphertext, "");
-		m.setEncryptionState(new Integer(y_hat));
-		
+		m.setEncryptionState(yhat);
 		return m;
 	}
 
 	@Override
 	public String decrypt(CryptoMessage cm) {
 		DHTuple dht = (DHTuple) key.getPublic();
-		int x = (Integer) key.getPrivate();
-		int yhat = (Integer) cm.getEncryptionState();
+		BigInteger x = (BigInteger) key.getPrivate();
+		BigInteger yhat = (BigInteger) cm.getEncryptionState();
 		
 		// for now, just decrypt each character separately
 		char[] cs = cm.getCipherText().toCharArray();
 		char[] new_cs = new char[cs.length];
 		
 		for (int i = 0; i < cs.length; i++) {
-			int m = cs[i];
+			BigInteger m = BigInteger.valueOf(cs[i]);
 			
-			// for now, convert to BigInteger to use modInverse
-			int tmp = MathHelpers.ipow(yhat, x);
-			BigInteger bigTmp = BigInteger.valueOf((long)tmp);
-			bigTmp = bigTmp.modInverse(BigInteger.valueOf((long)dht.p));
+			BigInteger tmp = yhat.modPow(x, dht.p).modInverse(dht.p).multiply(m).mod(dht.p);
+			new_cs[i] = (char) tmp.intValue();
 			
-			new_cs[i] = (char) ((bigTmp.intValue() * m) % dht.p);
+			System.out.println(String.format("cs[i]=%s, m=%s, tmp=%s, new_cs[i]=%s", cs[i], m.toString(), tmp.toString(), new_cs[i]));
 		}
 		
 		String plaintext = new String(new_cs);
+		
+		System.out.println(String.format("Decrypted: %s", plaintext));
 		
 		return plaintext;
 	}

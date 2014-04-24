@@ -1,11 +1,13 @@
 package edu.harvard.cs262.crypto;
 
+import java.math.BigInteger;
+
 public class DHTuple {
-	public int p;
-	public int g;
-	public int xhat;
+	public BigInteger p;
+	public BigInteger g;
+	public BigInteger xhat;
 	
-	public DHTuple(int p, int g, int xhat) {
+	public DHTuple(BigInteger p, BigInteger g, BigInteger xhat) {
 		this.p = p;
 		this.g = g;
 		this.xhat = xhat;

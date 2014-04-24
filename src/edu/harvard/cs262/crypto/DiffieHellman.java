@@ -18,8 +18,8 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	private UUID id;
 	
 	public DiffieHellman() {
-		P = BigInteger.valueOf(23L);
-		G = BigInteger.valueOf(5L);
+		P = BigInteger.valueOf(31123L);
+		G = BigInteger.valueOf(2341L);
 		
 		seed = 262;
 		rand = new Random(seed);
@@ -35,6 +35,10 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	@Override
 	public String getProtocolId() {
 		return id.toString();
+	}
+	
+	public int getBits() {
+		return BITS;
 	}
 	
 	@Override
@@ -54,8 +58,9 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		System.out.println(String.format("(%s) about to calculate key", me.getName()));
 		
 		BigInteger y_hat = new BigInteger(inM.getPlainText());
+		DHTuple publicKey = new DHTuple(P, G, y_hat);
+		CryptoKey ck = new CryptoKey(x, publicKey, getBits());
 		
-		CryptoKey ck = new CryptoKey(x, y_hat);
 		System.out.println(String.format("(%s) returning key", me.getName()));
 		
 		return ck;
@@ -75,9 +80,8 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		System.out.println(String.format("(%s) about to calculate key", me.getName()));
 		
 		BigInteger x_hat = new BigInteger(m.getPlainText());
-//		System.out.println(y.intValue());
-//		BigInteger key = x_hat.pow(y.intValue());
-		CryptoKey ck = new CryptoKey(y, x_hat);
+		DHTuple publicKey = new DHTuple(P, G, x_hat);
+		CryptoKey ck = new CryptoKey(y, publicKey, getBits());
 		
 		System.out.println(String.format("(%s) returning key", me.getName()));
 		return ck;
