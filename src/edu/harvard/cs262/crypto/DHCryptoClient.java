@@ -46,7 +46,7 @@ public class DHCryptoClient implements CryptoClient {
 		
 		String plaintext;
 		
-		if (m.hasSessionID()) {
+		if (m.hasSessionID() && to.equals(name)) {
 			System.out.println(String.format("(%s) got message with sid %s", name, m.getSessionID()));
 			
 			String sid = m.getSessionID();
@@ -66,20 +66,22 @@ public class DHCryptoClient implements CryptoClient {
 			return;
 		}
 		
-		if (m.isEncrypted()) {
+		if (!m.isEncrypted()) {
+			plaintext = m.getPlainText();
+		}
+		else {
 			CryptoCipher key = ciphers.get(from);
 			if (key != null) {
 				plaintext = key.decrypt(m);
 				
-				assert(plaintext.equals(m.getPlainText()));
+				if (!plaintext.equals(m.getPlainText())) {
+					System.out.println("Warning: plaintext does not match original message");
+				}
 				verbosePrint(from + " (ciphertext): " + m.getCipherText(), 0);	
 			}
 			else {
 				plaintext = m.getCipherText();
 			}
-		}
-		else {
-			plaintext = m.getPlainText();
 		}
 		
 		System.out.println(String.format("(%s) %s-%s: %s", name, from, to, plaintext));
