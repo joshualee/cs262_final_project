@@ -22,7 +22,7 @@ public class CentralServer implements CryptoServer {
 	private Map<String, List<String>> notifications;
 	private Map<String, Map<String, CryptoMessage>> sessions;
 	
-	private CentralServer(String name) {
+	public CentralServer(String name) {
 		this.name = name;
 		clients = new ConcurrentHashMap<String, CryptoClient>();
 		notifications = new ConcurrentHashMap<String, List<String>>();

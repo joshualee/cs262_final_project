@@ -24,6 +24,10 @@ public class CryptoMessage implements Serializable {
 		cipherText = ctext;
 	}
 	
+	public String toString() {
+		return String.format("session: %s\nplaintext: %s\nciphertext: %s", sessionID, plainText, cipherText);
+	}
+	
 	public boolean hasSessionID() {
 		return sessionID.length() > 0;
 	}
@@ -53,7 +57,7 @@ public class CryptoMessage implements Serializable {
 	}
 	
 	public boolean isEncrypted() {
-		return cipherText != "";
+		return cipherText.length() > 0;
 	}
 
 	public Object getEncryptionState() {

@@ -72,7 +72,7 @@ public class DHCryptoClient implements CryptoClient {
 			plaintext = m.getPlainText();
 		}
 		
-		System.out.println(String.format("%s-%s: %s", from, to, plaintext));
+		System.out.println(String.format("(%s) %s-%s: %s", name, from, to, plaintext));
 	}
 	
 	
@@ -145,7 +145,6 @@ public class DHCryptoClient implements CryptoClient {
 	}
 	
 	public static void main(String args[]) {
-		
 		if (args.length != 4) {
 			System.err.println("usage: java DHCryptoClient rmiHost rmiPort serverName clientName");
 			System.exit(1);
@@ -172,9 +171,9 @@ public class DHCryptoClient implements CryptoClient {
 				
 				while (true) {
 					System.out.print("To: ");
-					String to = scan.next();
+					String to = scan.nextLine();
 					System.out.print("Message: ");
-					String msg = scan.next();
+					String msg = scan.nextLine();
 					
 					myClient.sendMessage(to, msg, "");
 				}
@@ -192,6 +191,11 @@ public class DHCryptoClient implements CryptoClient {
 		// args[2]: Port (registry)
 		// args[3]: name
 		
+	}
+
+	@Override
+	public void eavesdrop(String victim) throws RemoteException, ClientNotFound {
+		server.eavesdrop(name, victim);
 	}
 	
 	/*
