@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class DHCryptoClient implements CryptoClient {
 	private final int VERBOSE;
@@ -39,6 +42,8 @@ public class DHCryptoClient implements CryptoClient {
 
 	@Override
 	public void recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
+		System.out.println(String.format("(%s) recvMessage(%s, %s, m)", name, from, to));
+		
 		String plaintext;
 		
 		if (m.hasSessionID()) {
@@ -47,12 +52,13 @@ public class DHCryptoClient implements CryptoClient {
 			 * If there is already a waiting message, wait for
 			 * message to be processed before adding to queue.
 			 */
-			while (sessions.containsKey(sid)) {
-				verbosePrint("Warning: session " + sid + " already has a waiting message", 1);
-				sessions.wait();
+			synchronized(sessions) {
+				while (sessions.containsKey(sid)) {
+					verbosePrint(String.format("(%s) warning: session " + sid + " already has a waiting message", name), 1);
+					sessions.wait();
+				}
+				sessions.put(sid, m);
 			}
-			sessions.put(sid, m);
-			
 			return;
 		}
 		
@@ -75,14 +81,18 @@ public class DHCryptoClient implements CryptoClient {
 		System.out.println(String.format("(%s) %s-%s: %s", name, from, to, plaintext));
 	}
 	
-	
 	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
+		CryptoMessage m;
 		
-		while (!sessions.containsKey(sid)) {
-			sessions.wait();
+		synchronized(sessions) {
+			while (!sessions.containsKey(sid)) {
+				System.out.println(String.format("(%s) waiting for session: %s", name, sid));
+				sessions.wait();
+			}
+			System.out.println(String.format("(%s) got message for session: %s", name, sid));
+			m = sessions.remove(sid);
+			sessions.notifyAll();
 		}
-		CryptoMessage m = sessions.remove(sid);
-		sessions.notifyAll();
 		
 		return m;
 	}
@@ -97,13 +107,24 @@ public class DHCryptoClient implements CryptoClient {
 		ciphers.put(counterParty, cipher);
 	}
 	
-	public void initSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException {
+	public void initSecureChannel(final String counterParty, final KeyExchangeProtocol kx, final CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException {
+		System.out.println(String.format("%s: initSecureChannel", name));
+		
 		if (ciphers.containsKey(counterParty)) {
 			verbosePrint("Warning: key for " + counterParty + " already exists", 1);
 		}
 		
 		// indirectly invoke the counterpart of the key exchange on remote client
-		server.relaySecureChannel(name, counterParty, kx, cipher);
+		
+		Helpers.doAsync(new Runnable() { public void run() {
+			try {
+				server.relaySecureChannel(name, counterParty, kx, cipher);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} });
+		
+		System.out.println(String.format("%s: about to kx.initiate", name));
 		CryptoKey key = kx.initiate(this, counterParty);
 		cipher.setKey(key);
 		ciphers.put(counterParty, cipher);
@@ -121,6 +142,7 @@ public class DHCryptoClient implements CryptoClient {
 
 	@Override
 	public void sendMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException {
+		System.out.println(String.format("(%s) sending message to %s with session %s: %s", name, to, sid, text));
 		CryptoMessage m = new CryptoMessage(text, sid);
 		if (sid.length() > 0) {
 			m.setSessionID(sid);	
@@ -175,7 +197,7 @@ public class DHCryptoClient implements CryptoClient {
 					System.out.print("Message: ");
 					String msg = scan.nextLine();
 					
-					myClient.sendMessage(to, msg, "");
+					myClient.sendEncryptedMessage(to, msg, "");
 				}
 			}
 			else {

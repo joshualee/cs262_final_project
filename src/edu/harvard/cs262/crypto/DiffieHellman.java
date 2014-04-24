@@ -1,17 +1,25 @@
 package edu.harvard.cs262.crypto;
 
+import java.io.Serializable;
+import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.util.Random;
 import java.util.UUID;
 
-public class DiffieHellman implements KeyExchangeProtocol {
-	private final int P = 23;
-	private final int G = 5;
+public class DiffieHellman implements KeyExchangeProtocol, Serializable {
+	private static final long serialVersionUID = 1L;
+	
+	private final int BITS = 32; 
+	private final BigInteger P;
+	private final BigInteger G;
 	private long seed;
 	private Random rand;
 	private UUID id;
 	
 	public DiffieHellman() {
+		P = BigInteger.valueOf(23L);
+		G = BigInteger.valueOf(5L);
+		
 		seed = 262;
 		rand = new Random(seed);
 		id = UUID.randomUUID();
@@ -30,14 +38,20 @@ public class DiffieHellman implements KeyExchangeProtocol {
 	
 	@Override
 	public CryptoKey initiate(CryptoClient me, String recipientName) throws RemoteException, ClientNotFound, InterruptedException {
-		int x = rand.nextInt();
-		int x_hat = MathHelpers.expmod(G, x, P);
+		System.out.println(String.format("%s initiating DiffieHellman with %s", me.getName(), recipientName));
+		System.out.println("here");
+		BigInteger x = new BigInteger(BITS, rand);
+		System.out.println("here1");
 		
-		me.sendMessage(recipientName, Integer.toString(x_hat), getProtocolId());
+		BigInteger x_hat = G.modPow(x, P);
+		System.out.println("here2");
+		
+		System.out.println(String.format("(%s) about to send x_hat", me.getName()));
+		me.sendMessage(recipientName, x_hat.toString(), getProtocolId());
 		CryptoMessage inM = me.waitForMessage(getProtocolId());
 		
-		int y_hat = Integer.parseInt(inM.getPlainText());
-		int key = MathHelpers.ipow(y_hat, x);
+		BigInteger y_hat = new BigInteger(inM.getPlainText());
+		BigInteger key = y_hat.pow(x.intValue());
 		CryptoKey ck = new CryptoKey(key);
 		
 		return ck;
@@ -45,14 +59,16 @@ public class DiffieHellman implements KeyExchangeProtocol {
 
 	@Override
 	public CryptoKey reciprocate(CryptoClient me, String initiatorName) throws InterruptedException, RemoteException, ClientNotFound {
-		int y = rand.nextInt();
-		int y_hat = MathHelpers.expmod(G, y, P);
+		System.out.println(String.format("%s reciprocating DiffieHellman with %s", me.getName(), initiatorName));
+		
+		BigInteger y = new BigInteger(BITS, rand);
+		BigInteger y_hat = G.modPow(y, P);
 		
 		CryptoMessage m = me.waitForMessage(getProtocolId());		
-		me.sendMessage(initiatorName, Integer.toString(y_hat), getProtocolId());
+		me.sendMessage(initiatorName, y_hat.toString(), getProtocolId());
 		
-		int x_hat = Integer.parseInt(m.getPlainText());
-		int key = MathHelpers.ipow(x_hat, y);
+		BigInteger x_hat = new BigInteger(m.getPlainText());
+		BigInteger key = x_hat.pow(y.intValue());
 		CryptoKey ck = new CryptoKey(key);
 		
 		return ck;

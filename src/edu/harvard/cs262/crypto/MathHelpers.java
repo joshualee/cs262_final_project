@@ -22,11 +22,24 @@ public class MathHelpers {
 	    return result;
 	}
 	
+	public static int ipowmod(int base, int exp, int p) {
+	    int result = 1;
+	    while (exp != 0) {
+	    	
+	        if ((exp & 1) != 0)
+	            result = (result * base) % p;
+	        exp >>= 1;
+	        base *= base;
+	    }
+
+	    return result;
+	}
+	
 	/**
 	 * @return (a^b mod c)
 	 */
 	public static int expmod(int a, int b, int c) {
-		return ipow(a, b) % c;
+		return ipowmod(a, b, c);
 	}
 
 

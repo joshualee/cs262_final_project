@@ -1,11 +1,13 @@
 package edu.harvard.cs262.crypto;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Random;
 
 import javax.crypto.Cipher;
 
-public class ElGamalCipher implements CryptoCipher {
+public class ElGamalCipher implements CryptoCipher, Serializable {
+	private static final long serialVersionUID = 1L;
 	private CryptoKey key;
 	private long seed;
 	private Random rand;

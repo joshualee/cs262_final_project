@@ -57,6 +57,15 @@ public class CryptoCommuncationTest {
 		}
 	}
 	
+	private static void sendRandomEncMessages(CryptoClient c1, CryptoClient c2, int numMessages) throws RemoteException, ClientNotFound, InterruptedException {
+		for (int i = 0; i < numMessages; i++) {
+			String uuid1 = UUID.randomUUID().toString();
+			String uuid2 = UUID.randomUUID().toString();
+			c1.sendEncryptedMessage(c2.getName(), uuid1, "");
+//			c2.sendEncryptedMessage(c1.getName(), uuid2, "");
+		}
+	}
+	
 	public static void main(String args[]) {		
 		try {
 			rmiHost = InetAddress.getLocalHost().getHostAddress();
@@ -77,7 +86,7 @@ public class CryptoCommuncationTest {
 			e1.eavesdrop("c1");
 			e1.eavesdrop("c2");
 			
-			sendRandomMessages(c1, c2, 5);
+			sendRandomEncMessages(c1, c2, 1);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
