@@ -16,11 +16,11 @@ public interface CryptoServer extends Remote {
 	public boolean unregisterClient(String clientName) throws RemoteException;
 
 	/* 
-	 * Allow client "eve" to listen to all incoming
+	 * Allow client "listener" to listen to all incoming
 	 * and outgoing communication of client "victim"
 	 */
-	public void eavesdrop(String eve, String victim) throws RemoteException, ClientNotFound;
-	public void stopEavesdrop(String eve, String victim) throws RemoteException, ClientNotFound;
+	public void eavesdrop(String listener, String victim) throws RemoteException, ClientNotFound;
+	public void stopEavesdrop(String listener, String victim) throws RemoteException, ClientNotFound;
 
 	/*
 	 * Send message "m" from client "from" to client "to".
@@ -40,7 +40,7 @@ public interface CryptoServer extends Remote {
 	 * @throws ClientNotFound
 	 * @throws InterruptedException 
 	 */
-	public void recvMessage(String from, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
+	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
 	
 	/**
 	 * 

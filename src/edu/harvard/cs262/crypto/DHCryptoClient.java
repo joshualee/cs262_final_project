@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
@@ -37,7 +38,7 @@ public class DHCryptoClient implements CryptoClient {
 	}
 
 	@Override
-	public void receiveMessage(String from, CryptoMessage m) throws InterruptedException {
+	public void recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
 		String plaintext;
 		
 		if (m.hasSessionID()) {
@@ -57,20 +58,25 @@ public class DHCryptoClient implements CryptoClient {
 		
 		if (m.isEncrypted()) {
 			CryptoCipher key = ciphers.get(from);
-			plaintext = key.decrypt(m);
-			
-			assert(plaintext.equals(m.getPlainText()));
-			verbosePrint(from + " (ciphertext): " + m.getCipherText(), 0);
+			if (key != null) {
+				plaintext = key.decrypt(m);
+				
+				assert(plaintext.equals(m.getPlainText()));
+				verbosePrint(from + " (ciphertext): " + m.getCipherText(), 0);	
+			}
+			else {
+				plaintext = m.getCipherText();
+			}
 		}
 		else {
 			plaintext = m.getPlainText();
 		}
 		
-		verbosePrint(from + ": " + plaintext, 0);
+		System.out.println(String.format("%s-%s: %s", from, to, plaintext));
 	}
 	
 	
-	public CryptoMessage waitForMessage(String sid) throws InterruptedException {
+	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
 		
 		while (!sessions.containsKey(sid)) {
 			sessions.wait();
@@ -158,16 +164,23 @@ public class DHCryptoClient implements CryptoClient {
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
 			CryptoClient myClient = new DHCryptoClient(clientName, server);
+			CryptoClient myClientSer = ((CryptoClient)
+		    		  UnicastRemoteObject.exportObject(myClient, 0));
 			
-			Scanner scan = new Scanner(System.in);
-			
-			while (true) {
-				System.out.print("To: ");
-				String to = scan.next();
-				System.out.print("Message: ");
-				String msg = scan.next();
+			if (server.registerClient(myClientSer)) {
+				Scanner scan = new Scanner(System.in);
 				
-				myClient.sendMessage(to, msg, "");
+				while (true) {
+					System.out.print("To: ");
+					String to = scan.next();
+					System.out.print("Message: ");
+					String msg = scan.next();
+					
+					myClient.sendMessage(to, msg, "");
+				}
+			}
+			else {
+				System.out.println("Client with name " + clientName + " already exists.");
 			}
 			
 		} catch (Exception e) {

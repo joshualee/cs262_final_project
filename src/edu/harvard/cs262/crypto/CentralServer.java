@@ -7,8 +7,10 @@ import java.rmi.registry.LocateRegistry;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.harvard.cs262.crypto.CryptoClient;
 import edu.harvard.cs262.crypto.ClientNotFound;
@@ -16,14 +18,14 @@ import edu.harvard.cs262.crypto.ClientNotFound;
 public class CentralServer implements CryptoServer {
 
 	private String name;
-	private Hashtable<String, CryptoClient> clients;
-	private Hashtable<String, LinkedList<String>> notifications;
+	private Map<String, CryptoClient> clients;
+	private Map<String, List<String>> notifications;
 	private Map<String, Map<String, CryptoMessage>> sessions;
 	
 	private CentralServer(String name) {
 		this.name = name;
-		clients = new Hashtable<String, CryptoClient>();
-		notifications = new Hashtable<String, LinkedList<String>>();
+		clients = new ConcurrentHashMap<String, CryptoClient>();
+		notifications = new ConcurrentHashMap<String, List<String>>();
 	}
 	
 	public String getName() throws RemoteException {
@@ -32,106 +34,95 @@ public class CentralServer implements CryptoServer {
 	
 	@Override
 	public boolean registerClient(CryptoClient c) throws RemoteException {
-		String key = c.getName();
+		String clientName = c.getName();
 		
 		// client with that name already exists
-		if (null != clients.get(key)){
+		if (clients.containsKey(clientName)){
+			System.out.println("Client with name " + clientName + " already exists");
 			return false;
 		}
 		
-		clients.put(key, c);
+		clients.put(clientName, c);
+		// TODO: possible race condition if we context switch here
+		// and client is in client list but not in notification map
+		List<String> newList = new LinkedList<String>();
+		notifications.put(clientName, newList);
+		
+		System.out.println("Registered new client: " + clientName);
 		return true;
 	}
 	
 	@Override
-	public boolean unregisterClient(String clientName) throws RemoteException{
-		
+	public boolean unregisterClient(String clientName) throws RemoteException {
 		// client not registered (note: this could also return true)
-		if (null == clients.get(clientName)){
+		if (!clients.containsKey(clientName)){
 			return false;
 		}
 		
 		clients.remove(clientName);
+		notifications.remove(clientName);
+		for (List<String> clientList : notifications.values()) {
+			clientList.remove(clientName);
+		}
+		
 		return true;
 	}
-
-	@Override
-	public void eavesdrop(String eve, String victim) throws RemoteException, ClientNotFound{
-		if(null == clients.get(eve)){
-			throw new ClientNotFound(eve + " is not registered.");
-		}
-
-		else if(null == clients.get(victim)){
-			throw new ClientNotFound(victim + " is not registered.");
-		}
-				
-		else{
-			String eave = (getClient(eve)).getName();
-			String key = (getClient(victim)).getName();
-			LinkedList<String> allVics = notifications.get(key);
-			allVics.addLast(eave);
-			notifications.put(key,allVics);
-		}
-	}
 	
-	@Override
-	public void stopEavesdrop(String eve, String victim) throws RemoteException, ClientNotFound{
-		if(null == clients.get(eve)){
-			throw new ClientNotFound(eve + " is not registered.");
-		}
-		
-		else if(null == clients.get(victim)){
-			throw new ClientNotFound(victim + " is not registered.");
-		}
-				
-		else{
-			String eave = (getClient(eve)).getName();
-			String key = (getClient(victim)).getName();
-			LinkedList<String> allVics = notifications.get(key);
-			allVics.remove(eave);
-			notifications.put(key,allVics);
-		}		
-	}
-	
-	@Override
-	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException{
-		if(null == clients.get(from)){
-			throw new ClientNotFound(from + " is not registered.");
-		}
-		
-		else if(null == clients.get(to)){
-			throw new ClientNotFound(to + " is not registered.");
-		}
-			
-		else{
-			// first send message to all clients in notification lists (to and from)	
-			LinkedList<String> eavesTo = notifications.get(to);
-			LinkedList<String> eavesFrom = notifications.get(from);
-			
-			ListIterator<String> iterTo = eavesTo.listIterator(); 
-			while(iterTo.hasNext()){
-				(getClient(iterTo.next())).receiveMessage(from, m);
-			}
-						
-			ListIterator<String> iterFrom = eavesFrom.listIterator(); 
-			while(iterFrom.hasNext()){
-				(getClient(iterFrom.next())).receiveMessage(from,m);
-			}			
-			
-			// finally send message to intended recipient
-				(getClient(to)).receiveMessage(from,m);
-		}			
-	}
-
-	@Override
-	public CryptoClient getClient(String clientName) throws RemoteException, ClientNotFound{
-		if(null == clients.get(clientName)){
+	private void assertClientRegistered(String clientName) throws ClientNotFound {
+		if (!clients.containsKey(clientName)) {
 			throw new ClientNotFound(clientName + " is not registered.");
 		}
+	}
+
+	@Override
+	public void eavesdrop(String listener, String victim) throws RemoteException, ClientNotFound {
+		assertClientRegistered(listener);
+		assertClientRegistered(victim);
 		
-		else{
-			return clients.get(clientName);
+		// TODO: assumes if victim is a client, then vicList won't be null
+		List<String> vicList = notifications.get(victim);
+		
+		if (!vicList.contains(listener)) {
+			vicList.add(listener);
 		}
+		else {
+			System.out.println(String.format("Warning: %s is already listening to %s", listener, victim));
+		}
+	}
+	
+	@Override
+	public void stopEavesdrop(String listener, String victim) throws RemoteException, ClientNotFound{
+		assertClientRegistered(listener);
+		assertClientRegistered(victim);
+		
+		List<String> vicList = notifications.get(victim);
+		vicList.remove(listener);
+	}
+	
+	private void relayMessage(String relayTarget, String from, String to, CryptoMessage m) throws RemoteException, InterruptedException, ClientNotFound {
+		List<String> listeners = notifications.get(relayTarget);
+		for (String cname : listeners) {
+			getClient(cname).recvMessage(from, to, m);
+		}
+	}
+	
+	@Override
+	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+		assertClientRegistered(from);
+		assertClientRegistered(to);
+		
+		// first send message to all clients in notification lists (to and from)
+		relayMessage(to, from, to, m);
+		relayMessage(from, from, to, m);
+
+		// finally send message to intended recipient
+		getClient(to).recvMessage(from, to, m);			
+	}
+
+	@Override
+	public CryptoClient getClient(String clientName) throws RemoteException, ClientNotFound {
+		assertClientRegistered(clientName);
+		return clients.get(clientName);
 	}
 
 	@Override
@@ -142,12 +133,10 @@ public class CentralServer implements CryptoServer {
 
 	@Override
 	public void relaySecureChannel(String from, String to, KeyExchangeProtocol kx, CryptoCipher cipher) throws ClientNotFound, RemoteException, InterruptedException {
-		CryptoClient client = getClient(to);
-		if (client == null) {
-			throw new ClientNotFound(to + " is not registered.");
-		}
+		assertClientRegistered(from);
+		assertClientRegistered(to);
 		
-		client.recvSecureChannel(from, kx, cipher);
+		getClient(to).recvSecureChannel(from, kx, cipher);
 	}	
 	
 	/**
@@ -252,9 +241,8 @@ public class CentralServer implements CryptoServer {
 	}
 
 	@Override
-	public void recvMessage(String from, CryptoMessage m)
+	public void recvMessage(String from, String to, CryptoMessage m)
 			throws RemoteException, ClientNotFound, InterruptedException {
 		return;
 	}
-
 }
