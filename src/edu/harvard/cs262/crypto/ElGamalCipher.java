@@ -6,7 +6,8 @@ import java.util.Random;
 
 import javax.crypto.Cipher;
 
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+// Note: doesn't compile on my machine (Holly)
+//import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class ElGamalCipher implements CryptoCipher, Serializable {
 	private static final long serialVersionUID = 1L;

@@ -159,7 +159,7 @@ public class CentralServer implements CryptoServer {
 		
 		// TODO: assumes if victim is a client, then vicList won't be null
 		List<String> vicList = notifications.get(victim);
-		
+			
 		if (!vicList.contains(listener)) {
 			vicList.add(listener);
 		}

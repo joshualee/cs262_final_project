@@ -179,10 +179,15 @@ public class DHCryptoClient implements CryptoClient {
 			System.exit(1);
 		}
 		
+		// args[0]: IP (registry)
+		// args[1]: Port (registry)
+		// args[2]: Server name
+		// args[3]: Client name
+		
 		String rmiHost = args[0];
 		int rmiPort = Integer.parseInt(args[1]);
 		String serverName = args[2];
-		String clientName = args[3];
+		//String clientName = args[3];
 		
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());
@@ -191,35 +196,45 @@ public class DHCryptoClient implements CryptoClient {
 		try {
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
-			CryptoClient myClient = new DHCryptoClient(clientName, server);
-			CryptoClient myClientSer = ((CryptoClient)
-		    		  UnicastRemoteObject.exportObject(myClient, 0));
+			//CryptoClient myClient = new DHCryptoClient(clientName, server);
+			//CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
+
+      //Create new Scanner
+      Scanner scan = new Scanner(System.in);
+      			
+			// boolean to keep track of whether the Client is registered
+      boolean reg = false;
 			
-			if (server.registerClient(myClientSer)) {
-				Scanner scan = new Scanner(System.in);
+			while(true){
 				
-				while (true) {
-					System.out.print("To: ");
-					String to = scan.nextLine();
-					System.out.print("Message: ");
-					String msg = scan.nextLine();
-					
-					myClient.sendMessage(to, msg, "");
+				// make client register before it can do anything else
+				while(!reg){
+					System.out.print("Enter your name: ");
+					String clientName = scan.nextLine();							
+					CryptoClient myClient = new DHCryptoClient(clientName, server);
+					CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
+					if(server.registerClient(myClientSer)){
+						reg = true;
+						break;
+					}
+					else{
+						System.out.println("Client with name " + clientName + " already exists.");
+					}
 				}
+				
+				while(reg){
+					System.out.print("hi!");
+					String temp = scan.nextLine();
+				}
+
 			}
-			else {
-				System.out.println("Client with name " + clientName + " already exists.");
-			}
+			
+
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}		
-	  	// args[0]: IP (registry)
-		// args[1]: Server name
-		// args[2]: Port (registry)
-		// args[3]: name
-		
+		}			
 	}
 
 	@Override
