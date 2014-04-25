@@ -6,9 +6,10 @@ import java.util.concurrent.Future;
 
 public class Helpers {
 	
-	public static void doAsync(Runnable r) {
-		ExecutorService pool = Executors.newFixedThreadPool(1);
+	public static Future doAsync(Runnable r) {
+		ExecutorService pool = Executors.newSingleThreadExecutor();
 		Future future = pool.submit(r);
+		return future;
 	}
 
 }

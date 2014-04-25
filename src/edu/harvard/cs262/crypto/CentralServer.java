@@ -10,13 +10,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import edu.harvard.cs262.crypto.CryptoClient;
 import edu.harvard.cs262.crypto.ClientNotFound;
 
 public class CentralServer implements CryptoServer {
-
 	private String name;
 	private Map<String, CryptoClient> clients;
 	private Map<String, List<String>> notifications;
@@ -26,6 +30,14 @@ public class CentralServer implements CryptoServer {
 		this.name = name;
 		clients = new ConcurrentHashMap<String, CryptoClient>();
 		notifications = new ConcurrentHashMap<String, List<String>>();
+		
+		Helpers.doAsync(new Runnable() { public void run() {
+			try {
+				heartbeatClients(2, 1);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}});
 	}
 	
 	public String getName() throws RemoteException {
@@ -66,6 +78,72 @@ public class CentralServer implements CryptoServer {
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * Ping clients and remove from client list if unresponsive
+	 * @throws RemoteException 
+	 */
+	private void heartbeatClients(int maxFails, int pingTimeout) throws RemoteException {
+		int failCount;
+		String clientName;
+		Future<?> pingFuture;
+		
+		ExecutorService pool = Executors.newCachedThreadPool();
+		Map<String, Future<?>> futureMap = new ConcurrentHashMap<String, Future<?>>();
+		
+		// keep track of the number of failed pings per client
+		Map<String, Integer> failedAttempts = new ConcurrentHashMap<String, Integer>();
+		
+		while (true) {
+			futureMap.clear();
+			
+			/*
+			 * Ping all clients
+			 */
+			for (final CryptoClient client : clients.values()) {
+				pingFuture = pool.submit(new Runnable() { public void run() {
+					try {
+						client.ping();
+					} catch (RemoteException e) {
+						e.printStackTrace();
+					}
+				}});
+				
+				futureMap.put(client.getName(), pingFuture);
+			}
+			
+			/*
+			 * Ensure ping went through
+			 */
+			for (Entry<String, Future<?>> entry : futureMap.entrySet()) {
+				clientName = entry.getKey();
+				pingFuture = entry.getValue();
+				
+				try {
+					pingFuture.get(pingTimeout, TimeUnit.SECONDS);
+					
+					// the client successfully responded to the ping 
+					failedAttempts.put(clientName, 0);
+				}
+				catch (Exception e) {
+					/*
+					 * The client either (1) didn't respond to ping in time
+					 * or (2) threw an error such as RMI Remote exception  
+					 */
+					failCount = failedAttempts.containsKey(clientName) ?
+							failedAttempts.get(clientName) + 1 : 1;
+					
+					if (failCount >= maxFails) {
+						unregisterClient(clientName);
+						failedAttempts.remove(clientName);
+					} 
+					else {
+						failedAttempts.put(clientName, failCount);
+					}
+				}
+			}
+		}
 	}
 	
 	private void assertClientRegistered(String clientName) throws ClientNotFound {
