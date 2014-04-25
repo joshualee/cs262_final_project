@@ -9,6 +9,8 @@ public interface CryptoServer extends Remote {
 	
 	String getName() throws RemoteException;
 	
+	String getClients() throws RemoteException;
+	
 	/*
 	 * Register client so server can forward it messages.
 	 */

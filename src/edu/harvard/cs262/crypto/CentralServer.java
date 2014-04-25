@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,8 +42,22 @@ public class CentralServer implements CryptoServer {
 		}});
 	}
 	
+	@Override
 	public String getName() throws RemoteException {
 		return name;
+	}
+	
+	@Override
+	public String getClients() throws RemoteException{
+		String ret = "";
+		Set<String> clientSet = clients.keySet();
+		String[] clientArray = clientSet.toArray(new String[0]);
+		Arrays.sort(clientArray);
+		for(String temp: clientArray){
+			ret += "\n" + temp;
+		}
+					
+		return ret;
 	}
 	
 	@Override
