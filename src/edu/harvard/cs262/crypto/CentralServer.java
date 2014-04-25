@@ -80,13 +80,15 @@ public class CentralServer implements CryptoServer {
 		assertClientRegistered(victim);
 		
 		// TODO: assumes if victim is a client, then vicList won't be null
-		List<String> vicList = notifications.get(victim);
-		
-		if (!vicList.contains(listener)) {
-			vicList.add(listener);
-		}
-		else {
-			System.out.println(String.format("Warning: %s is already listening to %s", listener, victim));
+		if (notifications.containsKey(victim)){
+			List<String> vicList = notifications.get(victim);
+			
+			if (!vicList.contains(listener)) {
+				vicList.add(listener);
+			}
+			else {
+				System.out.println(String.format("Warning: %s is already listening to %s", listener, victim));
+			}
 		}
 	}
 	
