@@ -22,6 +22,7 @@ public interface CryptoClient extends Remote {
 	CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException;
 	
 	void eavesdrop(String victim) throws RemoteException, ClientNotFound;
+	void stopEavesdrop(String victim) throws RemoteException, ClientNotFound;
 	
 	public void initSecureChannel(String recip, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException;
 	public void recvSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, InterruptedException, ClientNotFound;

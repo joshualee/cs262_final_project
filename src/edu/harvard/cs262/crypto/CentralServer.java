@@ -96,7 +96,8 @@ public class CentralServer implements CryptoServer {
 		for (List<String> clientList : notifications.values()) {
 			clientList.remove(clientName);
 		}
-		
+
+		System.out.println("Unregistered client: " + clientName);		
 		return true;
 	}
 	
