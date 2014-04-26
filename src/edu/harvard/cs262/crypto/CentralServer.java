@@ -1,10 +1,13 @@
 package edu.harvard.cs262.crypto;
 
 import java.math.BigInteger;
+import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
@@ -24,18 +27,27 @@ import edu.harvard.cs262.crypto.CryptoClient;
 import edu.harvard.cs262.crypto.ClientNotFound;
 
 public class CentralServer implements CryptoServer {
+	private final static int VERBOSITY = VPrint.DEBUG; 
+	
 	private String name;
+	private VPrint log;
+	
 	private Map<String, CryptoClient> clients;
 	private Map<String, List<String>> notifications;
 	private Map<String, Map<String, CryptoMessage>> sessions;
 	
 	public CentralServer(String name) {
 		this.name = name;
+		
+		Timestamp ts = new Timestamp((new Date()).getTime()); 
+		String logName = String.format("%s %s", name, ts);
+		log = new VPrint(VERBOSITY, logName);
+		
 		clients = new ConcurrentHashMap<String, CryptoClient>();
 		notifications = new ConcurrentHashMap<String, List<String>>();
 		sessions = new ConcurrentHashMap<String, Map<String, CryptoMessage>>();
 		
-		Helpers.doAsync(new Runnable() { public void run() {
+		Executors.newSingleThreadExecutor().submit(new Runnable() { public void run() {
 			try {
 				heartbeatClients(1, 2, 1);
 			} catch (Exception e) {
@@ -67,8 +79,8 @@ public class CentralServer implements CryptoServer {
 		String clientName = c.getName();
 		
 		// client with that name already exists
-		if (clients.containsKey(clientName)){
-			System.out.println("Client with name " + clientName + " already exists");
+		if (clients.containsKey(clientName)) {
+			log.print(VPrint.ERROR, "client with name %s already exists", clientName);
 			return false;
 		}
 		
@@ -78,14 +90,14 @@ public class CentralServer implements CryptoServer {
 		List<String> newList = new LinkedList<String>();
 		notifications.put(clientName, newList);
 		
-		System.out.println("Registered new client: " + clientName);
+		log.print(VPrint.QUIET, "registered new client: %s", clientName);
 		return true;
 	}
 	
 	@Override
 	public boolean unregisterClient(String clientName) throws RemoteException {
 		// client not registered (note: this could also return true)
-		if (!clients.containsKey(clientName)){
+		if (!clients.containsKey(clientName)) {
 			return false;
 		}
 		
@@ -95,7 +107,7 @@ public class CentralServer implements CryptoServer {
 			clientList.remove(clientName);
 		}
 
-		System.out.println("Unregistered client: " + clientName);		
+		log.print(VPrint.QUIET, "unregistered client: %s", clientName);		
 		return true;
 	}
 	
@@ -106,7 +118,7 @@ public class CentralServer implements CryptoServer {
 		}
 		
 		public Boolean call() throws RemoteException {
-			//System.out.println(String.format("Pinging %s...", client.getName()));
+			log.print(VPrint.DEBUG2, "pinging %s...", client.getName());
 			return client.ping();
 		}
 	}
@@ -140,8 +152,6 @@ public class CentralServer implements CryptoServer {
 				clientName = entry.getKey();
 				client = entry.getValue();
 				
-				
-				// TODO: wrap this in a class...
 				pingFuture = pool.submit(new ClientPingCallable(client));
 				
 				futureMap.put(clientName, pingFuture);
@@ -157,7 +167,7 @@ public class CentralServer implements CryptoServer {
 				try {
 					pingFuture.get(pingTimeout, TimeUnit.SECONDS);
 					
-					//System.out.println(String.format("%s responded to ping", clientName));
+					log.print(VPrint.DEBUG2, "%s responded to ping", clientName);
 					
 					// the client successfully responded to the ping 
 					failedAttempts.put(clientName, 0);
@@ -170,7 +180,8 @@ public class CentralServer implements CryptoServer {
 					failCount = failedAttempts.containsKey(clientName) ?
 							failedAttempts.get(clientName) + 1 : 1;
 					
-					System.out.println(String.format("%s failed ping (%d)", clientName, failCount));
+					
+					log.print(VPrint.DEBUG, "%s failed ping (%d)", clientName, failCount);
 					
 					if (failCount >= maxFails) {
 						unregisterClient(clientName);
@@ -202,12 +213,12 @@ public class CentralServer implements CryptoServer {
 			vicList.add(listener);
 		}
 		else {
-			System.out.println(String.format("Warning: %s is already listening to %s", listener, victim));
+			log.print(VPrint.WARN, "%s is already listening to %s", listener, victim);
 		}
 	}
 	
 	@Override
-	public void stopEavesdrop(String listener, String victim) throws RemoteException, ClientNotFound{
+	public void stopEavesdrop(String listener, String victim) throws RemoteException, ClientNotFound {
 		assertClientRegistered(listener);
 		assertClientRegistered(victim);
 		
@@ -329,7 +340,7 @@ public class CentralServer implements CryptoServer {
 			
 			synchronized (sessionMap) {
 				while (sessionMap.containsKey(from)) {
-					System.out.println("Warning: (session, client) (" + sid + ", " + from + ") already has a waiting message");
+					log.print(VPrint.WARN, "(%s, %s) already has a waiting message", sid, from);
 					sessionMap.wait();
 				}
 				sessionMap.put(from, m);
@@ -340,7 +351,7 @@ public class CentralServer implements CryptoServer {
 			return;
 		}
 		
-		System.out.println(from + ": " + m.getPlainText());
+		log.print(VPrint.QUIET, "%s: %s", from, m.getPlainText());
 	}
 	
 	private class clientEVote implements Runnable {
@@ -357,7 +368,6 @@ public class CentralServer implements CryptoServer {
 				client.eVote(evote);
 			} 
 			catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -372,7 +382,7 @@ public class CentralServer implements CryptoServer {
 		EVote evote = new EVote(ballot, votingClientsSer);
 		
 		String sid = evote.id.toString();
-		System.out.println(String.format("(%s) initiating ballot %s", name, sid));
+		log.print(VPrint.LOUD, "initiating ballot %s", sid);
 		
 		/*
 		 * EVote phase one:
@@ -395,8 +405,7 @@ public class CentralServer implements CryptoServer {
 			publicKey = publicKey.multiply(pk).mod(evote.p);
 		}
 		
-		System.out.println("publicKey: " + publicKey);
-		
+		log.print(VPrint.DEBUG2, "publicKey: %s", publicKey);
 		CryptoMessage publicKeyMessage = new CryptoMessage(publicKey.toString(), sid);
 		
 		// TODO: broadcast function
@@ -418,8 +427,8 @@ public class CentralServer implements CryptoServer {
 			c2 = c2.multiply(c2_i).mod(evote.p);
 		}
 		
-		System.out.println("c1: " + c1);
-		System.out.println("c2: " + c2);
+		log.print(VPrint.DEBUG2, "c1: %s", c1);
+		log.print(VPrint.DEBUG2, "c2: %s", c2);
 		
 		CryptoMessage combinedCipherMsg = new CryptoMessage(c2.toString(), sid);
 		combinedCipherMsg.setEncryptionState(c1);
@@ -440,7 +449,7 @@ public class CentralServer implements CryptoServer {
 			decrypt = decrypt.multiply(decrypt_i).mod(evote.p);
 		}
 		
-		System.out.println("decrypt: " + decrypt);
+		log.print(VPrint.DEBUG2, "decrypt: %s", decrypt);
 		
 		CryptoMessage decryptKeyMsg = new CryptoMessage(decrypt.toString(), sid);
 		for (String clientName: votingClients) {
@@ -459,12 +468,11 @@ public class CentralServer implements CryptoServer {
 		try {
 			positiveVotes = evote.countYays(voteResult, numVoters);
 		} catch (EVoteInvalidResult e) {
-			System.out.println(String.format("evote failed (%s)", e.msg));
+			log.print(VPrint.ERROR, "evote failed: %s", e.getMessage());
 			return;
 		}
 		
-		
-		System.out.println(String.format("%d voters: %d voted yes", numVoters, positiveVotes));
+		log.print(VPrint.LOUD, "%d voters: %d voted yes", numVoters, positiveVotes);
 	}
 	
 	public static void main(String args[]) {
@@ -478,6 +486,7 @@ public class CentralServer implements CryptoServer {
 				System.setSecurityManager(new SecurityManager());
 			}
 			
+			String rmiHost = InetAddress.getLocalHost().getHostAddress();
 			int registryPort = Integer.parseInt(args[0]);
 			String serverName = args[1];
 			
@@ -490,8 +499,10 @@ public class CentralServer implements CryptoServer {
 			Registry registry = LocateRegistry.createRegistry(registryPort);
 			
 			// rebind to avoid AlreadyBoundException
-			registry.rebind(serverName, serverStub); 
-			System.out.println("Server ready");
+			registry.rebind(serverName, serverStub);
+			
+			System.out.println(String.format("Running central server '%s' at %s:%d", 
+					serverName, rmiHost, registryPort));
 
 		} catch (Exception e) {
 			System.err.println("Server exception: " + e.toString());

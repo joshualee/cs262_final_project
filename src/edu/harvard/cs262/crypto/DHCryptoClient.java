@@ -250,11 +250,6 @@ public class DHCryptoClient implements CryptoClient {
 		return name;
 	}
 
-	@Override 
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	@Override
 	public Map<ClientPair, List<CryptoMessage>> getMessages() {
 		return this.messages;
@@ -432,7 +427,7 @@ public class DHCryptoClient implements CryptoClient {
 		try {
 			numYays = evote.countYays(voteResult, numVoters);
 		} catch (EVoteInvalidResult e) {
-			System.out.println(String.format("evote failed (%s)", e.msg));
+			System.out.println(String.format("evote failed (%s)", e.getMessage()));
 			return;
 		}
 		
@@ -457,11 +452,9 @@ public class DHCryptoClient implements CryptoClient {
 
 		try {
 			String clientName = "";
+			CryptoClient myClient = null;
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
-			CryptoClient myClient = new DHCryptoClient(clientName, server);
-			CryptoClient myClientSer = ((CryptoClient) UnicastRemoteObject
-					.exportObject(myClient, 0));
 
 			// Create new Scanner
 			Scanner scan = new Scanner(System.in);
@@ -478,6 +471,7 @@ public class DHCryptoClient implements CryptoClient {
 				"e: listen to a client's communications\n" +
 				"s: stop listening to a client's communications\n" +
 				"r: see list of all received messages\n" +
+				"q: quit\n" +
 				"h: display this menu";
 
 			while (true) {
@@ -486,7 +480,10 @@ public class DHCryptoClient implements CryptoClient {
 				while (!reg) {
 					System.out.print("Enter your name: ");
 					clientName = scan.nextLine();
-					myClient.setName(clientName);
+					
+					myClient = new DHCryptoClient(clientName, server);
+					CryptoClient myClientSer = ((CryptoClient) UnicastRemoteObject
+							.exportObject(myClient, 0));
 
 					if (server.registerClient(myClientSer)) {
 						System.out.println(menu);
@@ -592,7 +589,9 @@ public class DHCryptoClient implements CryptoClient {
 					else if (s.equals("h")) {
 						System.out.println(menu);
 					}
-
+					else if (s.equals("q")) {
+						System.exit(0);
+					}
 					else {
 						System.out.println("Unrecognized command.");
 					}

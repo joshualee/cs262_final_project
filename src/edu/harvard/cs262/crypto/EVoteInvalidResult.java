@@ -6,11 +6,9 @@ package edu.harvard.cs262.crypto;
  * @author joshualee
  *
  */
-public class EVoteInvalidResult extends Exception {
-	public String msg;
-	
-	public EVoteInvalidResult(String errorMsg)	 {
-		msg = errorMsg;
+public class EVoteInvalidResult extends Exception {	
+	public EVoteInvalidResult(String msg)	 {
+		super(msg);
 	}
 
 }
