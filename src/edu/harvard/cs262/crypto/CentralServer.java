@@ -396,6 +396,8 @@ public class CentralServer implements CryptoServer {
 			publicKey = publicKey.multiply(pk).mod(evote.p);
 		}
 		
+		System.out.println("publicKey: " + publicKey);
+		
 		CryptoMessage publicKeyMessage = new CryptoMessage(publicKey.toString(), sid);
 		
 		// TODO: broadcast function
@@ -412,10 +414,13 @@ public class CentralServer implements CryptoServer {
 		BigInteger c2 = BigInteger.valueOf(1L);
 		for (CryptoMessage cipherMsg : cipherMsgs.values()) {
 			BigInteger c1_i = (BigInteger) cipherMsg.getEncryptionState();
-			BigInteger c2_i = new BigInteger(cipherMsg.getPlainText());
+			BigInteger c2_i = new BigInteger(cipherMsg.getCipherText());
 			c1 = c1.multiply(c1_i).mod(evote.p);
 			c2 = c2.multiply(c2_i).mod(evote.p);
 		}
+		
+		System.out.println("c1: " + c1);
+		System.out.println("c2: " + c2);
 		
 		CryptoMessage combinedCipherMsg = new CryptoMessage(c2.toString(), sid);
 		combinedCipherMsg.setEncryptionState(c1);
@@ -436,16 +441,31 @@ public class CentralServer implements CryptoServer {
 			decrypt = decrypt.multiply(decrypt_i).mod(evote.p);
 		}
 		
+		System.out.println("decrypt: " + decrypt);
+		
 		CryptoMessage decryptKeyMsg = new CryptoMessage(decrypt.toString(), sid);
 		for (String clientName: votingClients) {
 			getClient(clientName).recvMessage(name, clientName, decryptKeyMsg);
 		}
 		
-		// TODO: do decryption myself to check result...
-		int voteResult = c2.divide(decrypt).mod(evote.p).intValue();
+		/*
+		 * EVote phase 8:
+		 * decrypt vote
+		 */
+
+		int positiveVotes;
+		BigInteger voteResult = c2.multiply(decrypt.modInverse(evote.p)).mod(evote.p);
 		int numVoters = votingClients.size();
 		
-		System.out.println(String.format("%d voters: %s voted yes", numVoters, voteResult));
+		try {
+			positiveVotes = evote.countYays(voteResult, numVoters);
+		} catch (EVoteInvalidResult e) {
+			System.out.println(String.format("evote failed (%s)", e.msg));
+			return;
+		}
+		
+		
+		System.out.println(String.format("%d voters: %d voted yes", numVoters, positiveVotes));
 	}
 	
 	public static void main(String args[]) {

@@ -17,7 +17,8 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 	
 	public ElGamalCipher() {
 		key = null;
-		seed = 262;
+//		seed = 262;
+		seed = (int) (Math.random() * 1000);
 		rand = new Random(seed);
 	}
 	
@@ -56,6 +57,38 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		CryptoMessage m = new CryptoMessage(plaintext, ciphertext, "");
 		m.setEncryptionState(yhat);
 		return m;
+	}
+	
+	// TODO: I duplicate code from above...
+	public CryptoMessage encryptInteger(BigInteger plaintext) {
+		DHTuple dht = (DHTuple) key.getPublic();
+		System.out.println(String.format("DHT: (%s, %s, %s)", dht.g, dht.p, dht.xhat));
+		
+		
+		BigInteger y = new BigInteger(key.getBits(), rand).mod(dht.p);
+		BigInteger yhat = dht.g.modPow(y, dht.p);
+		
+		BigInteger ciphertext = dht.xhat.modPow(y, dht.p).multiply(plaintext).mod(dht.p);
+		
+		System.out.println(String.format("plaintext=%s, ciphertext=%s, y=%s, yhat=%s", plaintext, ciphertext, y, yhat));
+		
+		
+		CryptoMessage m = new CryptoMessage(plaintext.toString(), ciphertext.toString(), "");
+		m.setEncryptionState(yhat);
+		
+		return m;
+	}
+	
+	public String decryptInteger(CryptoMessage cm) {
+		DHTuple dht = (DHTuple) key.getPublic();
+		BigInteger x = (BigInteger) key.getPrivate();
+		BigInteger yhat = (BigInteger) cm.getEncryptionState();
+		
+		BigInteger m = new BigInteger(cm.getCipherText());
+			
+		BigInteger decrypted = yhat.modPow(x, dht.p).modInverse(dht.p).multiply(m).mod(dht.p);
+		
+		return decrypted.toString();
 	}
 
 	@Override

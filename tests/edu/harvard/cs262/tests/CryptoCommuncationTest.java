@@ -1,18 +1,23 @@
 package edu.harvard.cs262.tests;
 
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Random;
 import java.util.UUID;
 
 import edu.harvard.cs262.crypto.CentralServer;
 import edu.harvard.cs262.crypto.ClientNotFound;
 import edu.harvard.cs262.crypto.CryptoClient;
+import edu.harvard.cs262.crypto.CryptoKey;
 import edu.harvard.cs262.crypto.CryptoMessage;
 import edu.harvard.cs262.crypto.CryptoServer;
 import edu.harvard.cs262.crypto.DHCryptoClient;
+import edu.harvard.cs262.crypto.DHTuple;
+import edu.harvard.cs262.crypto.ElGamalCipher;
 
 /**
  * 
@@ -66,6 +71,36 @@ public class CryptoCommuncationTest {
 		}
 	}
 	
+	private static void testElGamal() {
+		BigInteger test = new BigInteger("2134");
+		BigInteger P = BigInteger.valueOf(31123L);
+		BigInteger G = BigInteger.valueOf(2341L);
+		int bits = 31;
+		
+		Random rand = new Random(262);
+		
+		BigInteger x = new BigInteger(bits, rand);
+		BigInteger x_hat = G.modPow(x, P);
+		
+		DHTuple publicKey = new DHTuple(P, G, x_hat);
+		
+		CryptoKey ck = new CryptoKey(x, publicKey, bits);
+		
+		ElGamalCipher eg = new ElGamalCipher();
+		eg.setKey(ck);
+		
+//		CryptoMessage encrypted = eg.encrypt(test.toString());
+		CryptoMessage encrypted = eg.encryptInteger(test);
+		String decrypted = eg.decryptInteger(encrypted);
+		if (decrypted.equals(test.toString())) {
+			System.out.println("ElGamal success!");
+		}
+		else {
+			System.out.println(String.format("ElGamal failure (%s, %s)", test, decrypted));
+		}
+		
+	}
+
 	public static void main(String args[]) {		
 		try {
 			rmiHost = InetAddress.getLocalHost().getHostAddress();
@@ -83,8 +118,8 @@ public class CryptoCommuncationTest {
 			CryptoClient c2 = createClient("c2", server);
 			CryptoClient e1 = createClient("e1", server);
 			
-			
 			server.initiateEVote("test ballot josh");
+//			testElGamal();
 			
 //			e1.eavesdrop("c1");
 //			e1.eavesdrop("c2");

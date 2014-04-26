@@ -48,7 +48,7 @@ public class DHCryptoClient implements CryptoClient {
 
 	@Override
 	public void recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
-		System.out.println(String.format("(%s) recvMessage(%s, %s, m)", name, from, to));
+//		System.out.println(String.format("(%s) recvMessage(%s, %s, m)", name, from, to));
 		
 		String plaintext;
 		
@@ -65,7 +65,7 @@ public class DHCryptoClient implements CryptoClient {
 		}
 		
 		if (m.hasSessionID() && to.equals(name)) {
-			System.out.println(String.format("(%s) got message with sid %s", name, m.getSessionID()));
+//			System.out.println(String.format("(%s) got message with sid %s", name, m.getSessionID()));
 			
 			String sid = m.getSessionID();
 			/*
@@ -80,7 +80,7 @@ public class DHCryptoClient implements CryptoClient {
 				sessions.put(sid, m);
 				sessions.notifyAll();
 			}
-			System.out.println(String.format("(%s) done recvMessage", name));
+//			System.out.println(String.format("(%s) done recvMessage", name));
 			return;
 		}
 		
@@ -110,10 +110,10 @@ public class DHCryptoClient implements CryptoClient {
 		
 		synchronized(sessions) {
 			while (!sessions.containsKey(sid)) {
-				System.out.println(String.format("(%s) waiting for session: %s", name, sid));
+//				System.out.println(String.format("(%s) waiting for session: %s", name, sid));
 				sessions.wait();
 			}
-			System.out.println(String.format("(%s) got message for session: %s", name, sid));
+//			System.out.println(String.format("(%s) got message for session: %s", name, sid));
 			m = sessions.remove(sid);
 			sessions.notifyAll();
 		}
@@ -179,7 +179,7 @@ public class DHCryptoClient implements CryptoClient {
 
 	@Override
 	public void sendMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException {
-		System.out.println(String.format("(%s) sending message to %s with session %s: %s", name, to, sid, text));
+//		System.out.println(String.format("(%s) sending message to %s with session %s: %s", name, to, sid, text));
 		CryptoMessage m = new CryptoMessage(text, sid);
 		if (sid.length() > 0) {
 			m.setSessionID(sid);	
@@ -210,7 +210,7 @@ public class DHCryptoClient implements CryptoClient {
 	}
 	
 	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
-		Random rand = new Random();
+		Random rand = new Random(262);
 		String sid = evote.id.toString();
 		Scanner scan = new Scanner(System.in);
 		
@@ -259,6 +259,10 @@ public class DHCryptoClient implements CryptoClient {
 		 */
 		BigInteger sk_i = (new BigInteger(evote.BITS, rand)).mod(evote.p);
 		BigInteger pk_i = evote.g.modPow(sk_i, evote.p);
+		
+		System.out.println(String.format("g=%s, p=%s", evote.g, evote.p));
+		System.out.println(String.format("sk_i=%s, pk_i=%s", sk_i, pk_i));
+		
 		CryptoMessage phaseTwo = new CryptoMessage(pk_i.toString(), sid);
 		server.recvMessage(getName(), server.getName(), phaseTwo);
 		CryptoMessage pkMsg = waitForMessage(sid);
@@ -281,7 +285,7 @@ public class DHCryptoClient implements CryptoClient {
 		BigInteger vote = evote.g.pow(yay_or_nay).mod(evote.p);
 		// TODO: encrypt vote directly since it is already a number... instead of
 		// doing the string manipulation
-		CryptoMessage encryptedVote = EGCipher.encrypt(vote.toString());
+		CryptoMessage encryptedVote = EGCipher.encryptInteger(vote);
 		encryptedVote.setSessionID(sid);
 		
 		// TODO: send tag with server message, so clients know what they are seeing when eaves dropping
@@ -306,15 +310,23 @@ public class DHCryptoClient implements CryptoClient {
 		 * EVote phase 8:
 		 * clients use decodingKey to decode message 
 		 */
+		int numYays;
+		int numVoters = evote.voters.size();
 		
 		CryptoMessage decodingKeyMsg = waitForMessage(sid);
 		BigInteger decodingKey = new BigInteger(decodingKeyMsg.getPlainText());
-		BigInteger voteResult = c2.divide(decodingKey).mod(evote.p);
+		BigInteger voteResult = c2.multiply(decodingKey.modInverse(evote.p)).mod(evote.p);
 		
-		int numVoters = evote.voters.size();
+		try {
+			numYays = evote.countYays(voteResult, numVoters);
+		} catch (EVoteInvalidResult e) {
+			System.out.println(String.format("evote failed (%s)", e.msg));
+			return;
+		}
 		
-		System.out.println(String.format("Ballot (%s): %s yes, %d no", 
-			numVoters, voteResult, numVoters - voteResult.intValue()));
+		System.out.println(String.format("VOTERESULT: %s", voteResult.toString()));
+		System.out.println(String.format("Ballot (%s): %d yes, %d no", 
+			sid, numYays, numVoters - numYays));
 	}
 	
 	public static void main(String args[]) {

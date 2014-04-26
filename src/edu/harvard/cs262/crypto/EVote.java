@@ -36,4 +36,27 @@ public class EVote implements Serializable {
 		p = BigInteger.valueOf(31123L);
 		g = BigInteger.valueOf(2341L);
 	}
+	
+	/**
+	 * Returns the number of voters who voted in favor,
+	 * given the result of the voting protocol
+	 * (we need a few more math tricks to get the actual number)
+	 * @return
+	 */
+	public int countYays(BigInteger result, int numVoters) throws EVoteInvalidResult {
+		if (result.equals(BigInteger.valueOf(1))) {
+			return 0;
+		}
+		
+		for (int i = 1; i <= numVoters; i++) {
+			BigInteger I = BigInteger.valueOf(i);
+			BigInteger test = g.modPow(I, p);
+			if (test.equals(result)) {
+				return i;
+			}
+		}
+		String errorMsg = String.format("%s is not a valid power of %s mod %s", result, g, p);
+		throw new EVoteInvalidResult(errorMsg);
+		
+	}
 }
