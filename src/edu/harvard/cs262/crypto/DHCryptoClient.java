@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -25,7 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class DHCryptoClient implements CryptoClient {
-	private final static int VERBOSITY = VPrint.ALL;
+	private final static int VERBOSITY = VPrint.DEBUG;
 	
 	private String name;
 	private CryptoServer server;
@@ -185,8 +186,8 @@ public class DHCryptoClient implements CryptoClient {
 	}
 	
 	@SuppressWarnings("static-access")
-	public void initSecureChannel(final String counterParty, final KeyExchangeProtocol kx, final CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException {
-		CryptoKey key;
+	public boolean initSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException {
+		CryptoKey key = null;
 		Future<CryptoKey> myFuture = null;
 		Future<Object> cpFuture;
 		
@@ -211,9 +212,12 @@ public class DHCryptoClient implements CryptoClient {
 		try {
 			cpFuture.get();
 		}
-		catch (ExecutionException e) {			
-			myFuture.cancel(true);
+		catch (ExecutionException e) {
+			// TODO: we should cancel the other thread here, but
+			// this closes the log file and causes IO exceptions...
+			// myFuture.cancel(true);
 			log.print(log.ERROR, e.getCause().getMessage());
+			return false;
 		}
 		
 		/*
@@ -223,11 +227,15 @@ public class DHCryptoClient implements CryptoClient {
 			key = myFuture.get();
 		} catch (ExecutionException e) {
 			log.print(log.ERROR, e.getCause().getMessage());
-			return;
+			return false;
+		} catch (CancellationException e) {
+			log.print(log.ERROR, "%s failed to reciprocate key exchange", counterParty);
+			return false;
 		}
 		
 		cipher.setKey(key);
 		ciphers.put(counterParty, cipher);
+		return true;
 	}
 
 	@SuppressWarnings("static-access")
@@ -275,8 +283,9 @@ public class DHCryptoClient implements CryptoClient {
 			if (c == null) {
 				DiffieHellman dh = new DiffieHellman();
 				ElGamalCipher eg = new ElGamalCipher();
-				initSecureChannel(to, dh, eg);
-				sendEncryptedMessage(to, text, sid);
+				if (initSecureChannel(to, dh, eg)) {
+					sendEncryptedMessage(to, text, sid);	
+				}
 				return;
 			}
 
@@ -490,7 +499,7 @@ public class DHCryptoClient implements CryptoClient {
 				// TODO: need some way to escape back to main menu
 				// TODO: should have some way to escape back to main menu?
 				while (reg) {
-					System.out.print("\n>>");
+					System.out.print("\n>> ");
 					String s = scan.nextLine();
 
 					// unregsiter client

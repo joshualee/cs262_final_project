@@ -71,6 +71,10 @@ public class VPrint {
 	 * @param args
 	 */
 	public void print(int v, String format, Object... args) {
+		if (format == null || format.length() == 0) {
+			return;
+		}
+		
 		// log to file regardless
 		String s = String.format(format, args);
 		s = String.format("%s%s", getLevel(v), s);
@@ -82,6 +86,7 @@ public class VPrint {
 			}
 		} catch (IOException e) {
 			System.out.println("[VPrint] Log write failed...");
+			e.printStackTrace();
 		}
 		
 		if (v <= verbosity) {
