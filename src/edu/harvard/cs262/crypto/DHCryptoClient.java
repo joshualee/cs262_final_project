@@ -203,22 +203,133 @@ public class DHCryptoClient implements CryptoClient {
 		server.sendMessage(name, to, m);
 	}
 	
+
+	@Override
+	public void eavesdrop(String victim) throws RemoteException, ClientNotFound {
+		server.eavesdrop(name, victim);
+	}
+	
+	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
+		Random rand = new Random();
+		String sid = evote.id.toString();
+		Scanner scan = new Scanner(System.in);
+		
+		/*
+		 * EVote phase one: 
+		 * client receives a ballot from the server
+		 */
+		System.out.println("Initiating e-vote:");
+		System.out.print(String.format("Ballot (%s): ", sid));
+		System.out.println(evote.ballot + "\n");
+		
+		
+//		int yay_or_nay = rand.nextInt(2);
+		int yay_or_nay;
+		String clientVote = "";
+	
+		System.out.println("Vote [y\n]:");
+		System.out.println("y: vote in favor");
+		System.out.println("n: vote against");
+		
+		while (true) {
+			clientVote = scan.nextLine();
+			if (clientVote.equals("y")) {
+				System.out.println("You voted in favor");
+				yay_or_nay = 1;
+				break;
+			}
+			else if (clientVote.equals("n")) {
+				System.out.println("You voted against");
+				yay_or_nay = 0;
+				break;
+			}
+			else {
+				System.out.print("try again [y\n]: ");
+			}
+		}
+		
+		System.out.println("Tallying vote...");
+		
+		
+//		int yay_or_nay = rand.nextInt(2);
+		
+		/*
+		 * EVote phase two: 
+		 * each client generates own secret key and sends to server
+		 */
+		BigInteger sk_i = (new BigInteger(evote.BITS, rand)).mod(evote.p);
+		BigInteger pk_i = evote.g.modPow(sk_i, evote.p);
+		CryptoMessage phaseTwo = new CryptoMessage(pk_i.toString(), sid);
+		server.recvMessage(getName(), server.getName(), phaseTwo);
+		CryptoMessage pkMsg = waitForMessage(sid);
+		
+		/*
+		 * EVote phase four:
+		 * client decides vote and encrypts using ElGamal 
+		 */
+		
+		// since for now we only do the encryption phase,
+		// we only have to set the public key
+		ElGamalCipher EGCipher = new ElGamalCipher();
+		DHTuple	dht = new DHTuple(evote.p, evote.g, 
+				new BigInteger(pkMsg.getPlainText()));
+
+		CryptoKey publicKey = new CryptoKey(null, dht, evote.BITS);
+		EGCipher.setKey(publicKey);
+		
+		// TODO: vote input instead of random
+		BigInteger vote = evote.g.pow(yay_or_nay).mod(evote.p);
+		// TODO: encrypt vote directly since it is already a number... instead of
+		// doing the string manipulation
+		CryptoMessage encryptedVote = EGCipher.encrypt(vote.toString());
+		encryptedVote.setSessionID(sid);
+		
+		// TODO: send tag with server message, so clients know what they are seeing when eaves dropping
+		// TODO: store server name
+		server.recvMessage(name, server.getName(), encryptedVote);
+		
+		/*
+		 * EVote phase 6:
+		 * receive combined cipher text from server
+		 * let (c1, c2) = cipher text
+		 * compute (c1)^(sk_i) and send to server
+		 */
+		
+		CryptoMessage combinedCipher = waitForMessage(sid);
+		BigInteger c1 = (BigInteger) combinedCipher.getEncryptionState();
+		BigInteger c2 = new BigInteger(combinedCipher.getPlainText());
+		BigInteger encryptedC1 = c1.modPow(sk_i, evote.p);
+		
+		server.recvMessage(name, server.getName(), 
+				new CryptoMessage(encryptedC1.toString(), sid));
+		/*
+		 * EVote phase 8:
+		 * clients use decodingKey to decode message 
+		 */
+		
+		CryptoMessage decodingKeyMsg = waitForMessage(sid);
+		BigInteger decodingKey = new BigInteger(decodingKeyMsg.getPlainText());
+		BigInteger voteResult = c2.divide(decodingKey).mod(evote.p);
+		
+		int numVoters = evote.voters.size();
+		
+		System.out.println(String.format("Ballot (%s): %s yes, %d no", 
+			numVoters, voteResult, numVoters - voteResult.intValue()));
+	}
+	
 	public static void main(String args[]) {
-		// not sending clientName?
 		if (args.length < 3) {
-			System.err.println("usage: java DHCryptoClient rmiHost rmiPort serverName clientName");
+			System.err.println("usage: java DHCryptoClient rmiHost rmiPort serverName");
 			System.exit(1);
 		}
 		
 		// args[0]: IP (registry)
 		// args[1]: Port (registry)
 		// args[2]: Server name
-		// args[3]: Client name
 		
 		String rmiHost = args[0];
 		int rmiPort = Integer.parseInt(args[1]);
 		String serverName = args[2];
-		//String clientName = args[3];
 		
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());
@@ -361,87 +472,5 @@ public class DHCryptoClient implements CryptoClient {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}			
-	}
-
-	@Override
-	public void eavesdrop(String victim) throws RemoteException, ClientNotFound {
-		server.eavesdrop(name, victim);
-	}
-	
-	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
-		Random rand = new Random();
-		String sid = evote.id.toString();
-		
-		/*
-		 * EVote phase one: 
-		 * client receives a ballot from the server
-		 */
-		System.out.println("Initiating e-vote:");
-		System.out.print(String.format("Ballot (%s): ", sid));
-		System.out.println(evote.ballot);
-		
-		/*
-		 * EVote phase two: 
-		 * each client generates own secret key and sends to server
-		 */
-		BigInteger sk_i = (new BigInteger(evote.BITS, rand)).mod(evote.p);
-		BigInteger pk_i = evote.g.modPow(sk_i, evote.p);
-		CryptoMessage phaseTwo = new CryptoMessage(pk_i.toString(), sid);
-		server.recvMessage(getName(), server.getName(), phaseTwo);
-		CryptoMessage pkMsg = waitForMessage(sid);
-		
-		/*
-		 * EVote phase four:
-		 * client decides vote and encrypts using ElGamal 
-		 */
-		
-		// since for now we only do the encryption phase,
-		// we only have to set the public key
-		ElGamalCipher EGCipher = new ElGamalCipher();
-		DHTuple	dht = new DHTuple(evote.p, evote.g, 
-				new BigInteger(pkMsg.getPlainText()));
-
-		CryptoKey publicKey = new CryptoKey(null, dht, evote.BITS);
-		EGCipher.setKey(publicKey);
-		
-		// TODO: vote input instead of random
-		int yay_or_nay = rand.nextInt(2);
-		BigInteger vote = evote.g.pow(yay_or_nay).mod(evote.p);
-		// TODO: encrypt vote directly since it is already a number... instead of
-		// doing the string manipulation
-		CryptoMessage encryptedVote = EGCipher.encrypt(vote.toString());
-		encryptedVote.setSessionID(sid);
-		
-		// TODO: send tag with server message, so clients know what they are seeing when eaves dropping
-		// TODO: store server name
-		server.recvMessage(name, server.getName(), encryptedVote);
-		
-		/*
-		 * EVote phase 6:
-		 * receive combined cipher text from server
-		 * let (c1, c2) = cipher text
-		 * compute (c1)^(sk_i) and send to server
-		 */
-		
-		CryptoMessage combinedCipher = waitForMessage(sid);
-		BigInteger c1 = (BigInteger) combinedCipher.getEncryptionState();
-		BigInteger c2 = new BigInteger(combinedCipher.getPlainText());
-		BigInteger encryptedC1 = c1.modPow(sk_i, evote.p);
-		
-		server.recvMessage(name, server.getName(), 
-				new CryptoMessage(encryptedC1.toString(), sid));
-		/*
-		 * EVote phase 8:
-		 * clients use decodingKey to decode message 
-		 */
-		
-		CryptoMessage decodingKeyMsg = waitForMessage(sid);
-		BigInteger decodingKey = new BigInteger(decodingKeyMsg.getPlainText());
-		BigInteger voteResult = c2.divide(decodingKey);
-		
-		int numVoters = evote.voters.size();
-		
-		System.out.println(String.format("Ballot (%s): %s yes, %d no", 
-			numVoters, voteResult, numVoters - voteResult.intValue()));
 	}
 }

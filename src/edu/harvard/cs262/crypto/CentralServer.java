@@ -416,8 +416,10 @@ public class CentralServer implements CryptoServer {
 		}
 		
 		// TODO: do decryption myself to check result...
+		int voteResult = c2.divide(decrypt).mod(evote.p).intValue();
+		int numVoters = votingClients.size();
 		
-		
+		System.out.println(String.format("%d voters: %s voted yes", numVoters, voteResult));
 	}
 	
 	public static void main(String args[]) {
