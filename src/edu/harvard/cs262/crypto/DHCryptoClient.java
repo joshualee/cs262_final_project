@@ -303,53 +303,80 @@ public class DHCryptoClient implements CryptoClient {
 		server.eavesdrop(name, victim);
 	}
 	
-	/*
-	public void doEVote(EVote evote) {
-		System.out.println("Initiating e-vote:");
-		System.out.print("Ballot: ");
-		System.out.println(evote.ballot);
-		
+	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
+		Random rand = new Random();
 		String sid = evote.id.toString();
 		
-		Random rand = new Random();
+		/*
+		 * EVote phase one: 
+		 * client receives a ballot from the server
+		 */
+		System.out.println("Initiating e-vote:");
+		System.out.print(String.format("Ballot (%s): ", sid));
+		System.out.println(evote.ballot);
 		
-		int sk = rand.nextInt(evote.p.intValue());
+		/*
+		 * EVote phase two: 
+		 * each client generates own secret key and sends to server
+		 */
+		BigInteger sk_i = (new BigInteger(evote.BITS, rand)).mod(evote.p);
+		BigInteger pk_i = evote.g.modPow(sk_i, evote.p);
+		CryptoMessage phaseTwo = new CryptoMessage(pk_i.toString(), sid);
+		server.recvMessage(getName(), server.getName(), phaseTwo);
+		CryptoMessage pkMsg = waitForMessage(sid);
 		
-		// TODO: vote input instead of random
-		int yay_or_nay = rand.nextInt(2);
-		int vote = MathHelpers.ipow(evote.g.intValue(), yay_or_nay);
-		
-		server.recvMessage(Integer.toString(sk));
-		CryptoMessage pkMessage = waitForMessage(sid);
+		/*
+		 * EVote phase four:
+		 * client decides vote and encrypts using ElGamal 
+		 */
 		
 		// since for now we only do the encryption phase,
 		// we only have to set the public key
 		ElGamalCipher EGCipher = new ElGamalCipher();
-		DHTuple	dht = new DHTuple(evote.p.intValue(), evote.g.intValue(), 
-				Integer.parseInt(pkMessage.getPlainText()));
-		
-		CryptoKey publicKey = new CryptoKey(null, dht);
+		DHTuple	dht = new DHTuple(evote.p, evote.g, 
+				new BigInteger(pkMsg.getPlainText()));
+
+		CryptoKey publicKey = new CryptoKey(null, dht, evote.BITS);
 		EGCipher.setKey(publicKey);
 		
-		CryptoMessage encryptedVote = EGCipher.encrypt(Integer.toString(vote));
+		// TODO: vote input instead of random
+		int yay_or_nay = rand.nextInt(2);
+		BigInteger vote = evote.g.pow(yay_or_nay).mod(evote.p);
+		// TODO: encrypt vote directly since it is already a number... instead of
+		// doing the string manipulation
+		CryptoMessage encryptedVote = EGCipher.encrypt(vote.toString());
+		encryptedVote.setSessionID(sid);
 		
+		// TODO: send tag with server message, so clients know what they are seeing when eaves dropping
+		// TODO: store server name
+		server.recvMessage(name, server.getName(), encryptedVote);
 		
-		// send tag with server message, so clients know what they are seeing when eaves dropping
-		server.recvMessage(encryptedVote);
-		
-		CryptoMessage encryptedResult = waitForMessage(sid);
-		
-		int c1 = (Integer) encryptedResult.getEncryptionState();
-		int c2 = Integer.parseInt(encryptedResult.getPlainText());
-		int encC1 = MathHelpers.ipow(c1, sk);
+		/*
+		 * EVote phase 6:
+		 * receive combined cipher text from server
+		 * let (c1, c2) = cipher text
+		 * compute (c1)^(sk_i) and send to server
+		 */
 		
 		CryptoMessage combinedCipher = waitForMessage(sid);
-//		int egPrivateKey = combinedCipher;  
+		BigInteger c1 = (BigInteger) combinedCipher.getEncryptionState();
+		BigInteger c2 = new BigInteger(combinedCipher.getPlainText());
+		BigInteger encryptedC1 = c1.modPow(sk_i, evote.p);
 		
-		// TODO: no clean way to pass in this to ElGamal since it isn't really the private key
-		// but rather what you take the inverse of and multiply directly...
-		CryptoKey fullKey = new CryptoKey(null, dht);
+		server.recvMessage(name, server.getName(), 
+				new CryptoMessage(encryptedC1.toString(), sid));
+		/*
+		 * EVote phase 8:
+		 * clients use decodingKey to decode message 
+		 */
+		
+		CryptoMessage decodingKeyMsg = waitForMessage(sid);
+		BigInteger decodingKey = new BigInteger(decodingKeyMsg.getPlainText());
+		BigInteger voteResult = c2.divide(decodingKey);
+		
+		int numVoters = evote.voters.size();
+		
+		System.out.println(String.format("Ballot (%s): %s yes, %d no", 
+			numVoters, voteResult, numVoters - voteResult.intValue()));
 	}
-	
-	*/
 }

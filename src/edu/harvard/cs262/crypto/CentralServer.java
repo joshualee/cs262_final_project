@@ -1,5 +1,6 @@
 package edu.harvard.cs262.crypto;
 
+import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
@@ -259,7 +260,6 @@ public class CentralServer implements CryptoServer {
 	 * @throws InterruptedException 
 	 */
 	
-	/*
 	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
 		while (!sessions.containsKey(sid)) {
 			sessions.wait();
@@ -321,7 +321,104 @@ public class CentralServer implements CryptoServer {
 		
 		System.out.println(from + ": " + m.getPlainText());
 	}
-	*/
+	
+	private class clientEVote implements Runnable {
+		private CryptoClient client;
+		private EVote evote;
+		
+		public clientEVote(CryptoClient client, EVote evote) {
+			this.client = client;
+			this.evote = evote;
+		}
+		
+		public void run() {
+			try {
+				client.eVote(evote);
+			} 
+			catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
+		ExecutorService pool = Executors.newCachedThreadPool();
+		Set<String> votingClients = clients.keySet();
+		EVote evote = new EVote(ballot, votingClients);
+		
+		String sid = evote.id.toString();
+		
+		/*
+		 * EVote phase one:
+		 * initiates vote by sending evote to each client
+		 */
+		for (String clientName : votingClients) {
+			pool.execute(new clientEVote(getClient(clientName), evote));			
+		}
+		
+		/*
+		 * EVote phase 3:
+		 * server receives g^(sk_i) from each client and calculates shared public key
+		 */
+		
+		// TODO: wait for all should take list of clients
+		Map<String, CryptoMessage> pkMsgs = waitForAll(sid);
+		BigInteger publicKey = BigInteger.valueOf(1L);
+		for (CryptoMessage pkMsg : pkMsgs.values()) {
+			BigInteger pk = new BigInteger(pkMsg.getPlainText());
+			publicKey = publicKey.multiply(pk).mod(evote.p);
+		}
+		
+		CryptoMessage publicKeyMessage = new CryptoMessage(publicKey.toString(), sid);
+		
+		// TODO: broadcast function
+		for (String clientName: votingClients) {
+			getClient(clientName).recvMessage(name, clientName, publicKeyMessage);
+		}
+		
+		/*
+		 * EVote phase 4:
+		 * server combines c_i from clients to form combined cipher text
+		 */
+		Map<String, CryptoMessage> cipherMsgs = waitForAll(sid);
+		BigInteger c1 = BigInteger.valueOf(1L);
+		BigInteger c2 = BigInteger.valueOf(1L);
+		for (CryptoMessage cipherMsg : cipherMsgs.values()) {
+			BigInteger c1_i = (BigInteger) cipherMsg.getEncryptionState();
+			BigInteger c2_i = new BigInteger(cipherMsg.getPlainText());
+			c1 = c1.multiply(c1_i).mod(evote.p);
+			c2 = c2.multiply(c2_i).mod(evote.p);
+		}
+		
+		CryptoMessage combinedCipherMsg = new CryptoMessage(c2.toString(), sid);
+		combinedCipherMsg.setEncryptionState(c1);
+		
+		for (String clientName: votingClients) {
+			getClient(clientName).recvMessage(name, clientName, combinedCipherMsg);
+		}
+		
+		/*
+		 * EVote phase 7:
+		 * compute the decryption key and share with all clients
+		 */
+		
+		Map<String, CryptoMessage> decryptMsgs = waitForAll(sid);
+		BigInteger decrypt = BigInteger.valueOf(1L);
+		for (CryptoMessage decryptMsg : decryptMsgs.values()) {
+			BigInteger decrypt_i = new BigInteger(decryptMsg.getPlainText());
+			decrypt = decrypt.multiply(decrypt_i).mod(evote.p);
+		}
+		
+		CryptoMessage decryptKeyMsg = new CryptoMessage(decrypt.toString(), sid);
+		for (String clientName: votingClients) {
+			getClient(clientName).recvMessage(name, clientName, decryptKeyMsg);
+		}
+		
+		// TODO: do decryption myself to check result...
+		
+		
+	}
 	
 	public static void main(String args[]) {
 		if (args.length != 2) {

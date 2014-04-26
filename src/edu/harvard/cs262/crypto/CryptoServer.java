@@ -61,5 +61,4 @@ public interface CryptoServer extends Remote {
 	CryptoClient getClient(String clientName) throws RemoteException, ClientNotFound;
 
 	public boolean ping() throws RemoteException;
-
 }
