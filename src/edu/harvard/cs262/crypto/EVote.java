@@ -1,5 +1,6 @@
 package edu.harvard.cs262.crypto;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
@@ -11,8 +12,8 @@ import java.util.UUID;
  * Votes can only have a binary result (pass or no pass)
  */
 
-public class EVote {
-	
+public class EVote implements Serializable {
+	private static final long serialVersionUID = 1L;
 	public final int BITS = 32;
 	
 	// the list of voters

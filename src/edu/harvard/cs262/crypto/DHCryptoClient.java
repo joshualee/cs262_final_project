@@ -227,7 +227,7 @@ public class DHCryptoClient implements CryptoClient {
 		int yay_or_nay;
 		String clientVote = "";
 	
-		System.out.println("Vote [y\n]:");
+		System.out.println("Vote [y\\n]:");
 		System.out.println("y: vote in favor");
 		System.out.println("n: vote against");
 		

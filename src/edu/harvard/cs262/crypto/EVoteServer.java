@@ -20,7 +20,7 @@ public class EVoteServer {
 			}
 			
 			String rmiHost = InetAddress.getLocalHost().getHostAddress();
-			int registryPort = Integer.parseInt(args[0]);
+			int rmiPort = Integer.parseInt(args[0]);
 			String serverName = args[1];
 			
 			CentralServer server = new CentralServer(serverName);
@@ -29,10 +29,11 @@ public class EVoteServer {
 
 			// create registry so we don't have to manually start
 			// the registry server elsewhere
-			Registry registry = LocateRegistry.createRegistry(registryPort);
+			Registry registry = LocateRegistry.createRegistry(rmiPort);
 			
 			registry.rebind(serverName, serverStub); 
-			System.out.println("Running EVote server '' at %s:%s");
+			System.out.println(String.format("Running EVote server '%s' at %s:%d", 
+					serverName, rmiHost, rmiPort));
 			System.out.println("Waiting for client connections...");
 			
 			/*

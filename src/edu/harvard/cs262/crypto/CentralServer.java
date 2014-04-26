@@ -6,6 +6,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +35,7 @@ public class CentralServer implements CryptoServer {
 		this.name = name;
 		clients = new ConcurrentHashMap<String, CryptoClient>();
 		notifications = new ConcurrentHashMap<String, List<String>>();
+		sessions = new ConcurrentHashMap<String, Map<String, CryptoMessage>>();
 		
 		Helpers.doAsync(new Runnable() { public void run() {
 			try {
@@ -261,61 +263,81 @@ public class CentralServer implements CryptoServer {
 	 */
 	
 	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
-		while (!sessions.containsKey(sid)) {
-			sessions.wait();
-		}
+		Map<String, CryptoMessage> clientMap;
 		
-		Map<String, CryptoMessage> clientMap = sessions.get(sid);
-		
-		for (String client : clients.keySet()) {
-			while (!clientMap.containsKey(client)) {
-				clientMap.wait();
+		synchronized (sessions) {
+			while (!sessions.containsKey(sid)) {
+				sessions.wait();
 			}
+			
+			clientMap = sessions.get(sid);
 		}
 		
-		clientMap = sessions.remove(sid);
-		clientMap.notifyAll();
+		synchronized (clientMap) {
+			for (String client : clients.keySet()) {
+				while (!clientMap.containsKey(client)) {
+					clientMap.wait();
+				}
+			}
+			
+			clientMap = sessions.remove(sid);
+			clientMap.notifyAll();
+		}
 		
 		return clientMap;
 	}
 	
 	public CryptoMessage waitForMessage(String from, String sid) throws InterruptedException {
-		while (!sessions.containsKey(sid)) {
-			sessions.wait();
+		Map<String, CryptoMessage> clientMap;
+		CryptoMessage m;
+		
+		synchronized (sessions) {
+			while (!sessions.containsKey(sid)) {
+				sessions.wait();
+			}
+			
+			clientMap = sessions.get(sid);
+		
+			while (!clientMap.containsKey(from)) {
+				clientMap.wait();
+			}
+			
+			m = clientMap.remove(from);
+			sessions.notifyAll();
 		}
-		
-		Map<String, CryptoMessage> clientMap = sessions.get(sid);
-		
-		while (!clientMap.containsKey(from)) {
-			clientMap.wait();
-		}
-		
-		CryptoMessage m = clientMap.remove(from);
-		sessions.notifyAll();
 		
 		return m;
 	}
 
 	
-	public void recvMessage(String from, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+		Map<String, CryptoMessage> sessionMap;
+		
 		if (m.hasSessionID()) {
 			String sid = m.getSessionID();
 			
-			// TODO: potential race condition if two new session IDs
-			// come in at the same time...
-			// both will make new sessionMaps
-			Map<String, CryptoMessage> sessionMap = sessions.get(sid);
-			
-			if (sessionMap == null) {
-				sessionMap = new Hashtable<String, CryptoMessage>();
-				sessions.put(sid, sessionMap);
+			synchronized (sessions) {
+				sessionMap = sessions.get(sid);
+				
+				if (sessionMap == null) {
+					sessionMap = new Hashtable<String, CryptoMessage>();
+					sessions.put(sid, sessionMap);
+				}
+				
+				sessions.notifyAll();
 			}
 			
-			while (sessionMap.containsKey(from)) {
-				System.out.println("Warning: (session, client) (" + sid + ", " + from + ") already has a waiting message");
-				sessionMap.wait();
+			
+			synchronized (sessionMap) {
+				while (sessionMap.containsKey(from)) {
+					System.out.println("Warning: (session, client) (" + sid + ", " + from + ") already has a waiting message");
+					sessionMap.wait();
+				}
+				sessionMap.put(from, m);
+				sessionMap.notifyAll();
 			}
-			sessionMap.put(from, m);
+			
+			// don't print message, because another thread will handle it
 			return;
 		}
 		
@@ -345,9 +367,13 @@ public class CentralServer implements CryptoServer {
 	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
 		ExecutorService pool = Executors.newCachedThreadPool();
 		Set<String> votingClients = clients.keySet();
-		EVote evote = new EVote(ballot, votingClients);
+		
+		// hack b/c concurrentset is not serializable
+		Set<String> votingClientsSer = new HashSet<String>(votingClients);
+		EVote evote = new EVote(ballot, votingClientsSer);
 		
 		String sid = evote.id.toString();
+		System.out.println(String.format("(%s) initiating ballot %s", name, sid));
 		
 		/*
 		 * EVote phase one:
@@ -451,11 +477,5 @@ public class CentralServer implements CryptoServer {
 		} catch (Exception e) {
 			System.err.println("Server exception: " + e.toString());
 		}
-	}
-
-	@Override
-	public void recvMessage(String from, String to, CryptoMessage m)
-			throws RemoteException, ClientNotFound, InterruptedException {
-		return;
 	}
 }

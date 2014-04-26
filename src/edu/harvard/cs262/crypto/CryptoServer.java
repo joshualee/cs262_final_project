@@ -59,6 +59,8 @@ public interface CryptoServer extends Remote {
 	 * Return reference to client
 	 */
 	CryptoClient getClient(String clientName) throws RemoteException, ClientNotFound;
+	
+	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException;
 
 	public boolean ping() throws RemoteException;
 }

@@ -83,10 +83,13 @@ public class CryptoCommuncationTest {
 			CryptoClient c2 = createClient("c2", server);
 			CryptoClient e1 = createClient("e1", server);
 			
-			e1.eavesdrop("c1");
+			
+			server.initiateEVote("test ballot josh");
+			
+//			e1.eavesdrop("c1");
 //			e1.eavesdrop("c2");
 			
-			sendRandomEncMessages(c1, c2, 1);
+//			sendRandomEncMessages(c1, c2, 1);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
