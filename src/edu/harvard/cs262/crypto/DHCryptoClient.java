@@ -139,6 +139,7 @@ public class DHCryptoClient implements CryptoClient {
 
 	@Override
 	public boolean ping() {
+		System.out.println("pinged");
 		return true;
 	}
 

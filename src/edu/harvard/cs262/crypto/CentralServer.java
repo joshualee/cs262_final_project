@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,8 +34,8 @@ public class CentralServer implements CryptoServer {
 		
 		Helpers.doAsync(new Runnable() { public void run() {
 			try {
-				heartbeatClients(2, 1);
-			} catch (RemoteException e) {
+				heartbeatClients(1, 2, 1);
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}});
@@ -80,12 +81,26 @@ public class CentralServer implements CryptoServer {
 		return true;
 	}
 	
+	private class ClientPingCallable implements Callable<Boolean> {
+		private CryptoClient client;
+		public ClientPingCallable(CryptoClient client) {
+			this.client = client;
+		}
+		
+		public Boolean call() throws RemoteException {
+			System.out.println(String.format("Pinging %s...", client.getName()));
+			return client.ping();
+		}
+	}
+	
 	/**
 	 * Ping clients and remove from client list if unresponsive
 	 * @throws RemoteException 
+	 * @throws InterruptedException 
 	 */
-	private void heartbeatClients(int maxFails, int pingTimeout) throws RemoteException {
+	private void heartbeatClients(int frequency, int maxFails, int pingTimeout) throws RemoteException, InterruptedException {
 		int failCount;
+		CryptoClient client;
 		String clientName;
 		Future<?> pingFuture;
 		
@@ -96,21 +111,22 @@ public class CentralServer implements CryptoServer {
 		Map<String, Integer> failedAttempts = new ConcurrentHashMap<String, Integer>();
 		
 		while (true) {
+			Thread.sleep(frequency * 1000);
+			
 			futureMap.clear();
 			
 			/*
 			 * Ping all clients
 			 */
-			for (final CryptoClient client : clients.values()) {
-				pingFuture = pool.submit(new Runnable() { public void run() {
-					try {
-						client.ping();
-					} catch (RemoteException e) {
-						e.printStackTrace();
-					}
-				}});
+			for (final Entry<String, CryptoClient> entry : clients.entrySet()) {
+				clientName = entry.getKey();
+				client = entry.getValue();
 				
-				futureMap.put(client.getName(), pingFuture);
+				
+				// TODO: wrap this in a class...
+				pingFuture = pool.submit(new ClientPingCallable(client));
+				
+				futureMap.put(clientName, pingFuture);
 			}
 			
 			/*
@@ -123,6 +139,8 @@ public class CentralServer implements CryptoServer {
 				try {
 					pingFuture.get(pingTimeout, TimeUnit.SECONDS);
 					
+					System.out.println(String.format("%s responded to ping", clientName));
+					
 					// the client successfully responded to the ping 
 					failedAttempts.put(clientName, 0);
 				}
@@ -133,6 +151,8 @@ public class CentralServer implements CryptoServer {
 					 */
 					failCount = failedAttempts.containsKey(clientName) ?
 							failedAttempts.get(clientName) + 1 : 1;
+					
+					System.out.println(String.format("%s failed ping (%d)", clientName, failCount));
 					
 					if (failCount >= maxFails) {
 						unregisterClient(clientName);
