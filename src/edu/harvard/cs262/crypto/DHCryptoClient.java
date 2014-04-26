@@ -5,7 +5,11 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
+import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,6 +23,7 @@ public class DHCryptoClient implements CryptoClient {
 	private CryptoServer server;
 	private Map<String, CryptoCipher> ciphers;
 	private Map<String, CryptoMessage> sessions;
+	private Map<ClientPair, List<CryptoMessage>> messages;
 	
 	/**
 	 * 
@@ -38,6 +43,7 @@ public class DHCryptoClient implements CryptoClient {
 		this.server = server;
 		this.ciphers = new ConcurrentHashMap<String, CryptoCipher>();
 		this.sessions = new ConcurrentHashMap<String, CryptoMessage>();
+		this.messages = new ConcurrentHashMap<ClientPair, List<CryptoMessage>>();
 	}
 
 	@Override
@@ -45,6 +51,18 @@ public class DHCryptoClient implements CryptoClient {
 		System.out.println(String.format("(%s) recvMessage(%s, %s, m)", name, from, to));
 		
 		String plaintext;
+		
+		// add received message to appropriate list
+		ClientPair myPair = new ClientPair(from, to);
+		if(messages.containsKey(myPair)){
+			List<CryptoMessage> messageList = messages.get(myPair);
+			messageList.add(m); 
+		}
+		else{
+			List<CryptoMessage> messageList = new LinkedList<CryptoMessage>();
+			messageList.add(m);
+			messages.put(myPair,messageList);
+		}
 		
 		if (m.hasSessionID() && to.equals(name)) {
 			System.out.println(String.format("(%s) got message with sid %s", name, m.getSessionID()));
@@ -139,7 +157,8 @@ public class DHCryptoClient implements CryptoClient {
 
 	@Override
 	public boolean ping() {
-		System.out.println("pinged");
+		// console interactions are difficult if pinged message keeps printing
+		// System.out.println("pinged");
 		return true;
 	}
 
@@ -151,6 +170,11 @@ public class DHCryptoClient implements CryptoClient {
 	@Override 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	@Override
+	public Map<ClientPair, List<CryptoMessage>> getMessages() {
+		return this.messages;
 	}
 
 	@Override
@@ -180,7 +204,8 @@ public class DHCryptoClient implements CryptoClient {
 	}
 	
 	public static void main(String args[]) {
-		if (args.length != 4) {
+		// not sending clientName?
+		if (args.length < 3) {
 			System.err.println("usage: java DHCryptoClient rmiHost rmiPort serverName clientName");
 			System.exit(1);
 		}
@@ -228,6 +253,7 @@ public class DHCryptoClient implements CryptoClient {
 				}
 				
 				// TODO: need some way to escape back to main menu
+				// TODO: should have some way to escape back to main menu?
 				while(reg){
 					//Menu
         	System.out.println("\n====== Help Menu ======");
@@ -235,8 +261,9 @@ public class DHCryptoClient implements CryptoClient {
         	System.out.println("c: see list of registered clients");
         	System.out.println("m: send message to client");
         	System.out.println("e: listen to a client's communications");
+        	System.out.println("s: stop listening to a client's communications");
         	System.out.println("r: see list of all received messages");
-        	System.out.println("\n>>");
+        	System.out.print("\n>>");
         	String s = scan.nextLine();
 					
 					// unregsiter client
@@ -262,7 +289,7 @@ public class DHCryptoClient implements CryptoClient {
 					// send message to client
 	        else if(s.equals("m"))
 	        {
-	        	String encr = "!";
+	        	String encr = "";
 	        		        	
 	        	System.out.print("To: ");
 	        	String to = scan.nextLine();
@@ -270,7 +297,7 @@ public class DHCryptoClient implements CryptoClient {
 	        	String msg = scan.nextLine();
 	        	
 	        	while(!encr.equals("y") && !encr.equals("n")){
-	        		System.out.println("Would you like to encrypt this message (y/n)?");
+	        		System.out.print("Would you like to encrypt this message (y/n)? ");
 	        		encr = scan.nextLine();
 	        	}
 	        	
@@ -281,6 +308,44 @@ public class DHCryptoClient implements CryptoClient {
 	        	
 	        	else{
 	        		myClient.sendMessage(to, msg, "");
+	        	}
+					}
+					
+					// listen to a client's communications
+	        else if(s.equals("e"))
+	        {
+	        	System.out.print("Eavesdrop on: ");
+	        	String vic = scan.nextLine();
+	        	server.eavesdrop(clientName, vic);
+					}
+
+					// stop listening to a client's communications
+	        else if(s.equals("s"))
+	        {
+	        	System.out.print("Stop eavesdropping on: ");
+	        	String vic = scan.nextLine();
+	        	server.stopEavesdrop(clientName, vic);
+					}
+					
+					// see list of all received messages
+	        else if(s.equals("r"))
+	        {
+						Map<ClientPair, List<CryptoMessage>> messageMap = myClient.getMessages();
+	        	for(Map.Entry<ClientPair, List<CryptoMessage>> entry : messageMap.entrySet()) {
+	        		// print "From: ..., To: ..."
+	        		ClientPair myPair = entry.getKey();
+		        	System.out.println("\n" + myPair +"\n=================");
+		        	List<CryptoMessage> messageList = entry.getValue();
+		        		
+		        	for (CryptoMessage m : messageList) {
+		        		// always output encrypted version
+		        		System.out.println("Encrypted: " + m.getCipherText());
+		        			
+		        		// output decrypted version only if myClient was intended target
+		        		if(myPair.getTo().equals(myClient.getName())){
+		        			System.out.println("Decrypted: " + m.getPlainText());
+		        		}
+		        	}
 	        	}
 					}
 					

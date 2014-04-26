@@ -1,5 +1,7 @@
 package edu.harvard.cs262.crypto;
 
+import java.util.Map;
+import java.util.List;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -8,6 +10,7 @@ import java.rmi.RemoteException;
 public interface CryptoClient extends Remote {
 	public String getName() throws RemoteException;
 	public void setName(String name) throws RemoteException;
+	public Map<ClientPair, List<CryptoMessage>> getMessages() throws RemoteException;
 	public boolean ping() throws RemoteException;
 	
 	/*

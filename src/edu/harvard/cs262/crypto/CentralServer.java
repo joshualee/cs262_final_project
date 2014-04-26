@@ -104,7 +104,7 @@ public class CentralServer implements CryptoServer {
 		}
 		
 		public Boolean call() throws RemoteException {
-			System.out.println(String.format("Pinging %s...", client.getName()));
+			//System.out.println(String.format("Pinging %s...", client.getName()));
 			return client.ping();
 		}
 	}
@@ -155,7 +155,7 @@ public class CentralServer implements CryptoServer {
 				try {
 					pingFuture.get(pingTimeout, TimeUnit.SECONDS);
 					
-					System.out.println(String.format("%s responded to ping", clientName));
+					//System.out.println(String.format("%s responded to ping", clientName));
 					
 					// the client successfully responded to the ping 
 					failedAttempts.put(clientName, 0);
