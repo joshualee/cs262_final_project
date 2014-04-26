@@ -148,6 +148,11 @@ public class DHCryptoClient implements CryptoClient {
 		return name;
 	}
 
+	@Override 
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	@Override
 	public void sendMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException {
 		System.out.println(String.format("(%s) sending message to %s with session %s: %s", name, to, sid, text));
@@ -195,39 +200,94 @@ public class DHCryptoClient implements CryptoClient {
 		}
 		
 		try {
+			String clientName = "";
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
-			//CryptoClient myClient = new DHCryptoClient(clientName, server);
-			//CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
+			CryptoClient myClient = new DHCryptoClient(clientName, server);
+			CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
 
       //Create new Scanner
       Scanner scan = new Scanner(System.in);
       			
 			// boolean to keep track of whether the Client is registered
       boolean reg = false;
-			
+
 			while(true){
 				
 				// make client register before it can do anything else
 				while(!reg){
 					System.out.print("Enter your name: ");
-					String clientName = scan.nextLine();							
-					CryptoClient myClient = new DHCryptoClient(clientName, server);
-					CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
+					clientName = scan.nextLine();							
+					myClient.setName(clientName);
+					
 					if(server.registerClient(myClientSer)){
 						reg = true;
 						break;
 					}
-					else{
-						System.out.println("Client with name " + clientName + " already exists.");
-					}
+					System.out.println("Client with name " + clientName + " already exists.");
 				}
 				
+				// TODO: need some way to escape back to main menu
 				while(reg){
-					System.out.print("hi!");
-					String temp = scan.nextLine();
+					//Menu
+        	System.out.println("\n====== Help Menu ======");
+        	System.out.println("u: unregister");
+        	System.out.println("c: see list of registered clients");
+        	System.out.println("m: send message to client");
+        	System.out.println("e: listen to a client's communications");
+        	System.out.println("r: see list of all received messages");
+        	System.out.println("\n>>");
+        	String s = scan.nextLine();
+					
+					// unregsiter client
+	        if(s.equals("u"))
+	        {
+						if(server.unregisterClient(clientName)){
+							reg = false;
+							break;
+						}
+						
+						// note: this case *shouldn't* happen
+						else{
+							System.out.println("Error: you are not registered");
+						}
+	        }
+	        
+	        // show list of registered clients
+	        else if(s.equals("c"))
+	        {
+						System.out.println(server.getClients());
+					}
+					
+					// send message to client
+	        else if(s.equals("m"))
+	        {
+	        	String encr = "!";
+	        		        	
+	        	System.out.print("To: ");
+	        	String to = scan.nextLine();
+	        	System.out.print("Message: ");
+	        	String msg = scan.nextLine();
+	        	
+	        	while(!encr.equals("y") && !encr.equals("n")){
+	        		System.out.println("Would you like to encrypt this message (y/n)?");
+	        		encr = scan.nextLine();
+	        	}
+	        	
+	        	if(encr.equals("y"))
+	        	{
+	        		myClient.sendEncryptedMessage(to, msg, "");
+	        	}
+	        	
+	        	else{
+	        		myClient.sendMessage(to, msg, "");
+	        	}
+					}
+					
+					else{
+						System.out.println("Unrecognized command.");
+					}
 				}
-
 			}
 			
 

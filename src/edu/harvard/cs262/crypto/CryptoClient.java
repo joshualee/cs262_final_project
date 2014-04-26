@@ -7,6 +7,7 @@ import java.rmi.RemoteException;
 // Interface needs to be remote so a stub can be generated.
 public interface CryptoClient extends Remote {
 	public String getName() throws RemoteException;
+	public void setName(String name) throws RemoteException;
 	public boolean ping() throws RemoteException;
 	
 	/*
