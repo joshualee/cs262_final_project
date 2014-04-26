@@ -1,3 +1,8 @@
+/**
+ * A CryptoClient that uses DiffieHellman key exchange and ElGamal encryption.
+ * This client also supports evoting.  
+ */
+
 package edu.harvard.cs262.crypto;
 
 import java.math.BigInteger;
@@ -5,85 +10,91 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.List;
 import java.util.LinkedList;
-import java.util.ListIterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class DHCryptoClient implements CryptoClient {
-	private final int VERBOSE;
+	private final static int VERBOSITY = VPrint.ALL;
+	
 	private String name;
 	private CryptoServer server;
+	private VPrint log;
+	
 	private Map<String, CryptoCipher> ciphers;
 	private Map<String, CryptoMessage> sessions;
 	private Map<ClientPair, List<CryptoMessage>> messages;
 	
-	/**
-	 * 
-	 * 
-	 * @param s the string to print
-	 * @param threshold the verbosity level
-	 */
-	private void verbosePrint(String s, int threshold) {
-		if (VERBOSE >= threshold) {
-			System.out.println(s);	
-		}
-	}
-	
 	public DHCryptoClient(String name, CryptoServer server) {
-		VERBOSE = 1;
 		this.name = name;
 		this.server = server;
+		
+		Timestamp ts = new Timestamp((new Date()).getTime()); 
+		String logName = String.format("%s %s", name, ts);
+		log = new VPrint(VERBOSITY, logName);
+		
 		this.ciphers = new ConcurrentHashMap<String, CryptoCipher>();
 		this.sessions = new ConcurrentHashMap<String, CryptoMessage>();
 		this.messages = new ConcurrentHashMap<ClientPair, List<CryptoMessage>>();
 	}
 
+	@SuppressWarnings("static-access")
 	@Override
 	public void recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
-//		System.out.println(String.format("(%s) recvMessage(%s, %s, m)", name, from, to));
+		log.print(log.DEBUG2, "(%s) recvMessage(%s, %s, m)", name, from, to);
 		
 		String plaintext;
 		
-		// add received message to appropriate list
+		/*
+		 * Add message to message history
+		 */
 		ClientPair myPair = new ClientPair(from, to);
-		if(messages.containsKey(myPair)){
+		if (messages.containsKey(myPair)) {
 			List<CryptoMessage> messageList = messages.get(myPair);
-			messageList.add(m); 
-		}
-		else{
+			messageList.add(m);
+		} else {
 			List<CryptoMessage> messageList = new LinkedList<CryptoMessage>();
 			messageList.add(m);
-			messages.put(myPair,messageList);
+			messages.put(myPair, messageList);
 		}
 		
+		/*
+		 * Add message to session queue if it has a session id in order to
+		 * pass the message to the appropriate waiting thread.
+		 */
 		if (m.hasSessionID() && to.equals(name)) {
-//			System.out.println(String.format("(%s) got message with sid %s", name, m.getSessionID()));
-			
 			String sid = m.getSessionID();
+			log.print(log.DEBUG, "(%s) got message with sid %s", name, sid);
 			/*
-			 * If there is already a waiting message, wait for
-			 * message to be processed before adding to queue.
+			 * If there is already a waiting message, wait for message to be
+			 * processed before adding to queue.
 			 */
-			synchronized(sessions) {
+			synchronized (sessions) {
 				while (sessions.containsKey(sid)) {
-					verbosePrint(String.format("(%s) warning: session " + sid + " already has a waiting message", name), 1);
+					log.print(log.WARN,
+							"session %s already has a waiting message", sid);
 					sessions.wait();
 				}
 				sessions.put(sid, m);
 				sessions.notifyAll();
 			}
-//			System.out.println(String.format("(%s) done recvMessage", name));
+			log.print(log.DEBUG2, "(%s) done recvMessage", name);
 			return;
 		}
 		
+		/*
+		 * Process message
+		 */
 		if (!m.isEncrypted()) {
 			plaintext = m.getPlainText();
 		}
@@ -93,27 +104,26 @@ public class DHCryptoClient implements CryptoClient {
 				plaintext = key.decrypt(m);
 				
 				if (!plaintext.equals(m.getPlainText())) {
-					System.out.println("Warning: plaintext does not match original message");
+					log.print(log.WARN, "decryption '%s' does not match original plaintext '%s'", plaintext, m.getPlainText());
 				}
-				verbosePrint(from + " (ciphertext): " + m.getCipherText(), 0);	
+				log.print(log.LOUD, "%s-%s (ciphertext): %s", from, to, m.getCipherText());
 			}
 			else {
 				plaintext = m.getCipherText();
 			}
 		}
-		
-		System.out.println(String.format("(%s) %s-%s: %s", name, from, to, plaintext));
+		log.print(log.QUIET, "%s-%s: %s", from, to, plaintext);
 	}
 	
+	@SuppressWarnings("static-access")
 	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
 		CryptoMessage m;
-		
 		synchronized(sessions) {
 			while (!sessions.containsKey(sid)) {
-//				System.out.println(String.format("(%s) waiting for session: %s", name, sid));
+				log.print(log.DEBUG, "(%s) waiting for session '%s'", name, sid);
 				sessions.wait();
 			}
-//			System.out.println(String.format("(%s) got message for session: %s", name, sid));
+			log.print(log.DEBUG, "(%s) got message for session '%s'", name, sid);
 			m = sessions.remove(sid);
 			sessions.notifyAll();
 		}
@@ -121,54 +131,109 @@ public class DHCryptoClient implements CryptoClient {
 		return m;
 	}
 	
+	@SuppressWarnings("static-access")
 	public void recvSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, InterruptedException, ClientNotFound {
-		try{
+		try {
 			if (ciphers.containsKey(counterParty)) {
-				verbosePrint("Warning: key for " + counterParty + " already exists", 1);
+				log.print(log.WARN, "encryption key for %s already exists", counterParty);
 			}
-			
+
 			CryptoKey key = kx.reciprocate(this, counterParty);
 			cipher.setKey(key);
 			ciphers.put(counterParty, cipher);
-		}catch (ClientNotFound e) {
-			System.out.println("\nError: " + e.getErrorMessage());
-		}	
+		} catch (ClientNotFound e) {
+			log.print(log.ERROR, e.getMessage());
+		}
 	}
 	
+	private class initSecureChannelCallable implements Callable<CryptoKey> {
+		private String counterParty;
+		private KeyExchangeProtocol kx;
+		private CryptoClient client;
+		
+		public initSecureChannelCallable(String cp, KeyExchangeProtocol kx, CryptoClient client) {
+			this.counterParty = cp;
+			this.kx = kx;
+			this.client = client;
+		}
+		
+		@Override
+		public CryptoKey call() throws Exception {
+			CryptoKey key = kx.initiate(client, counterParty);
+			return key;
+		}
+	}
+	
+	private class recvSecureChannelCallable implements Callable<Object> {
+		private String counterParty;
+		private KeyExchangeProtocol kx;
+		private CryptoCipher cipher;
+		
+		public recvSecureChannelCallable(String cp, KeyExchangeProtocol kx, CryptoCipher cipher) {
+			this.counterParty = cp;
+			this.kx = kx;
+			this.cipher = cipher;
+		}
+		
+		@Override
+		public Object call() throws Exception {
+			server.relaySecureChannel(name, counterParty, kx, cipher);
+			// the result of this call is stored in the counterParty
+			// thus we don't care about the return result, only the exceptions that may be thrown
+			return null;
+		}
+	}
+	
+	@SuppressWarnings("static-access")
 	public void initSecureChannel(final String counterParty, final KeyExchangeProtocol kx, final CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException {
-		try{
-			System.out.println(String.format("%s: initSecureChannel", name));
-			
-			if (ciphers.containsKey(counterParty)) {
-				verbosePrint("Warning: key for " + counterParty + " already exists", 1);
-			}
-			
-			// indirectly invoke the counterpart of the key exchange on remote client
-			
-			Helpers.doAsync(new Runnable() { public void run() {
-				try {
-					server.relaySecureChannel(name, counterParty, kx, cipher);
-				}catch (ClientNotFound e) {
-					System.out.println("\nError: " + e.getErrorMessage());
-				}catch (Exception e) {
-					e.printStackTrace();
-				}
-			} });
-			
-			System.out.println(String.format("%s: about to kx.initiate", name));
-			CryptoKey key = kx.initiate(this, counterParty);
-			System.out.println(String.format("%s: finished kx.initiate", name));
-			cipher.setKey(key);
-			ciphers.put(counterParty, cipher);
-		}catch (ClientNotFound e) {
-			System.out.println("\nError: " + e.getErrorMessage());
-		}	
+		CryptoKey key;
+		Future<CryptoKey> myFuture = null;
+		Future<Object> cpFuture;
+		
+		log.print(log.DEBUG2, "%s: initSecureChannel", name);
+
+		if (ciphers.containsKey(counterParty)) {
+			log.print(log.WARN, "encryption key for %s already exists", counterParty);
+		}
+		
+		ExecutorService pool = Executors.newFixedThreadPool(2);
+		myFuture = pool.submit(new initSecureChannelCallable(counterParty, kx, this));
+		cpFuture = pool.submit(new recvSecureChannelCallable(counterParty, kx, cipher));
+		
+		while (!cpFuture.isDone()) {
+			// myFuture doesn't finish until cpFuture finishes 
+		}
+		
+		/*
+		 * Check if counter party succeeded or threw an error
+		 * (e.g. ClientNotFound)
+		 */
+		try {
+			cpFuture.get();
+		}
+		catch (ExecutionException e) {			
+			myFuture.cancel(true);
+			log.print(log.ERROR, e.getCause().getMessage());
+		}
+		
+		/*
+		 * Make sure we succeeded
+		 */
+		try {
+			key = myFuture.get();
+		} catch (ExecutionException e) {
+			log.print(log.ERROR, e.getCause().getMessage());
+			return;
+		}
+		
+		cipher.setKey(key);
+		ciphers.put(counterParty, cipher);
 	}
 
+	@SuppressWarnings("static-access")
 	@Override
 	public boolean ping() {
-		// console interactions are difficult if pinged message keeps printing
-		// System.out.println("pinged");
+		log.print(log.DEBUG2, "pinged");
 		return true;
 	}
 
@@ -187,24 +252,25 @@ public class DHCryptoClient implements CryptoClient {
 		return this.messages;
 	}
 
+	@SuppressWarnings("static-access")
 	@Override
-	public void sendMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException {
-		try{
-			System.out.println(String.format("(%s) sending message to %s with session %s: %s", name, to, sid, text));
+	public void sendMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
+		try {
+			log.print(log.DEBUG, "(%s) sending message to %s with session %s: %s", name, to, sid, text);
 			CryptoMessage m = new CryptoMessage(text, sid);
 			if (sid.length() > 0) {
-				m.setSessionID(sid);	
+				m.setSessionID(sid);
 			}
-			
 			server.sendMessage(name, to, m);
-		}catch (ClientNotFound e) {
-			System.out.println("\nError: " + e.getErrorMessage());
+		} catch (ClientNotFound e) {
+			log.print(log.ERROR, e.getMessage());
 		}
 	}
 	
 	// To do: hangs if Client 'to' is unregistered
-	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException {
-		try{
+	@SuppressWarnings("static-access")
+	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
+		try {
 			CryptoCipher c = ciphers.get(to);
 			if (c == null) {
 				DiffieHellman dh = new DiffieHellman();
@@ -213,40 +279,40 @@ public class DHCryptoClient implements CryptoClient {
 				sendEncryptedMessage(to, text, sid);
 				return;
 			}
-			
+
 			CryptoMessage m = c.encrypt(text);
 			m.setSessionID(sid);
 			server.sendMessage(name, to, m);
-		}catch (ClientNotFound e) {
-			System.out.println("\nError: " + e.getErrorMessage());
-		}	
+		} catch (ClientNotFound e) {
+			log.print(log.ERROR, e.getMessage());
+		}
 	}
 	
 
+	@SuppressWarnings("static-access")
 	@Override
-	public void eavesdrop(String victim) throws RemoteException, ClientNotFound {
-		try{
+	public void eavesdrop(String victim) throws RemoteException {
+		try {
 			server.eavesdrop(name, victim);
-		}catch (ClientNotFound e) {
-			System.out.println("\nError: " + e.getErrorMessage());
-		}	
+		} catch (ClientNotFound e) {
+			log.print(log.ERROR, e.getMessage());
+		}
 	}
 
+	@SuppressWarnings("static-access")
 	@Override
-	public void stopEavesdrop(String victim) throws RemoteException, ClientNotFound {
-		try{
+	public void stopEavesdrop(String victim) throws RemoteException {
+		try {
 			server.stopEavesdrop(name, victim);
-		
-		}catch (ClientNotFound e) {
-			System.out.println("\nError: " + e.getErrorMessage());
-		}		
+		} catch (ClientNotFound e) {
+			log.print(log.ERROR, e.getMessage());
+		}
 	}
 
 	// does this need to throw ClientNotFound?	
 	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
 		Random rand = new Random(262);
 		String sid = evote.id.toString();
-		Scanner scan = new Scanner(System.in);
 		
 		/*
 		 * EVote phase one: 
@@ -264,6 +330,8 @@ public class DHCryptoClient implements CryptoClient {
 		System.out.println("y: vote in favor");
 		System.out.println("n: vote against");
 		
+		Scanner scan = new Scanner(System.in);
+		
 		while (true) {
 			clientVote = scan.nextLine();
 			if (clientVote.equals("y")) {
@@ -280,6 +348,8 @@ public class DHCryptoClient implements CryptoClient {
 				System.out.print("try again [y\n]: ");
 			}
 		}
+		
+		scan.close();
 		
 		System.out.println("Tallying vote...");
 		
@@ -367,166 +437,164 @@ public class DHCryptoClient implements CryptoClient {
 			System.err.println("usage: java DHCryptoClient rmiHost rmiPort serverName");
 			System.exit(1);
 		}
-		
-		// args[0]: IP (registry)
-		// args[1]: Port (registry)
-		// args[2]: Server name
-		
+
 		String rmiHost = args[0];
 		int rmiPort = Integer.parseInt(args[1]);
 		String serverName = args[2];
-		
+
 		if (System.getSecurityManager() == null) {
 			System.setSecurityManager(new SecurityManager());
 		}
-		
+
 		try {
 			String clientName = "";
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
 			CryptoClient myClient = new DHCryptoClient(clientName, server);
-			CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
+			CryptoClient myClientSer = ((CryptoClient) UnicastRemoteObject
+					.exportObject(myClient, 0));
 
-      //Create new Scanner
-      Scanner scan = new Scanner(System.in);
-      			
+			// Create new Scanner
+			Scanner scan = new Scanner(System.in);
+
 			// boolean to keep track of whether the Client is registered
-      boolean reg = false;
+			boolean reg = false;
 
-      //Menu
-      String menu = "\n====== Help Menu ======\nu: unregister\nc: see list of registered clients\nm: send message to client"
-      	+ "\ne: listen to a client's communications\ns: stop listening to a client's communications\nr: see list of all received messages"
-      	+ "\nh: display this menu";
+			// Menu
+			String menu = 
+				"\n====== Help Menu ======\n" +
+			    "u: unregister\n" +
+			    "c: see list of registered clients\n" +
+				"m: send message to client\n" +
+				"e: listen to a client's communications\n" +
+				"s: stop listening to a client's communications\n" +
+				"r: see list of all received messages\n" +
+				"h: display this menu";
 
-			while(true){
-				
+			while (true) {
+
 				// make client register before it can do anything else
-				while(!reg){
+				while (!reg) {
 					System.out.print("Enter your name: ");
-					clientName = scan.nextLine();							
+					clientName = scan.nextLine();
 					myClient.setName(clientName);
-					
-					if(server.registerClient(myClientSer)){
+
+					if (server.registerClient(myClientSer)) {
 						System.out.println(menu);
 						reg = true;
 						break;
 					}
 					System.out.println("Client with name " + clientName + " already exists.");
 				}
-				
+
 				// TODO: need some way to escape back to main menu
 				// TODO: should have some way to escape back to main menu?
-				while(reg){
-        	System.out.print("\n>>");
-        	String s = scan.nextLine();
-					
+				while (reg) {
+					System.out.print("\n>>");
+					String s = scan.nextLine();
+
 					// unregsiter client
-	        if(s.equals("u"))
-	        {
-						if(server.unregisterClient(clientName)){
+					if (s.equals("u")) {
+						if (server.unregisterClient(clientName)) {
 							System.out.println("You have successfully been unregistered.");
 							reg = false;
 							break;
 						}
-						
+
 						// note: this case *shouldn't* happen
-						else{
+						else {
 							System.out.println("Error: you are not registered");
 						}
-	        }
-	        
-	        // show list of registered clients
-	        else if(s.equals("c"))
-	        {
+					}
+
+					// show list of registered clients
+					else if (s.equals("c")) {
 						System.out.println(server.getClients());
 					}
-					
+
 					// send message to client
-	        else if(s.equals("m"))
-	        {
-	        	String encr = "";
-	        		        	
-	        	System.out.print("To: ");
-	        	String to = scan.nextLine();
-	        	System.out.print("Message: ");
-	        	String msg = scan.nextLine();
-	        	
-	        	while(!encr.equals("y") && !encr.equals("n")){
-	        		System.out.print("Would you like to encrypt this message (y/n)? ");
-	        		encr = scan.nextLine();
-	        	}
-	        	
-	        	if(encr.equals("y"))
-	        	{
-	        		myClient.sendEncryptedMessage(to, msg, "");
-	        	}
-	        	
-	        	else{
-	        		myClient.sendMessage(to, msg, "");
-	        	}
+					else if (s.equals("m")) {
+						String encr = "";
+
+						System.out.print("To: ");
+						String to = scan.nextLine();
+						System.out.print("Message: ");
+						String msg = scan.nextLine();
+
+						while (!encr.equals("y") && !encr.equals("n")) {
+							System.out.print("Would you like to encrypt this message (y/n)? ");
+							encr = scan.nextLine();
+						}
+
+						if (encr.equals("y")) {
+							myClient.sendEncryptedMessage(to, msg, "");
+						}
+
+						else {
+							myClient.sendMessage(to, msg, "");
+						}
 					}
-					
+
 					// listen to a client's communications
-	        else if(s.equals("e"))
-	        {
-	        	System.out.print("Eavesdrop on: ");
-	        	String vic = scan.nextLine();
-	        	myClient.eavesdrop(vic);
+					else if (s.equals("e")) {
+						System.out.print("Eavesdrop on: ");
+						String vic = scan.nextLine();
+						myClient.eavesdrop(vic);
 					}
 
 					// stop listening to a client's communications
-	        else if(s.equals("s"))
-	        {
-	        	System.out.print("Stop eavesdropping on: ");
-	        	String vic = scan.nextLine();
-	        	myClient.stopEavesdrop(vic);
+					else if (s.equals("s")) {
+						System.out.print("Stop eavesdropping on: ");
+						String vic = scan.nextLine();
+						myClient.stopEavesdrop(vic);
 					}
-					
+
 					// see list of all received messages
-	        else if(s.equals("r"))
-	        {
+					else if (s.equals("r")) {
 						Map<ClientPair, List<CryptoMessage>> messageMap = myClient.getMessages();
-						
-						if(!messageMap.isEmpty()){
-						
-		        	for(Map.Entry<ClientPair, List<CryptoMessage>> entry : messageMap.entrySet()) {
-		        		// print "From: ..., To: ..."
-		        		ClientPair myPair = entry.getKey();
-			        	System.out.println("\n" + myPair +"\n=================");
-			        	List<CryptoMessage> messageList = entry.getValue();
-			        		
-			        	for (CryptoMessage m : messageList) {
-			        		// always output encrypted version
-			        		System.out.println("Encrypted: " + m.getCipherText());
-			        			
-			        		// output decrypted version only if myClient was intended target
-			        		if(myPair.getTo().equals(myClient.getName())){
-			        			System.out.println("Decrypted: " + m.getPlainText());
-			        		}
-			        	}
-		        	}
-		        }
-		        else{
-		        	System.out.println("You have not received or eavesdropped on any messages.");
-		        }
+
+						if (!messageMap.isEmpty()) {
+
+							for (Map.Entry<ClientPair, List<CryptoMessage>> entry : messageMap
+									.entrySet()) {
+								// print "From: ..., To: ..."
+								ClientPair myPair = entry.getKey();
+								System.out.println("\n" + myPair + "\n=================");
+								List<CryptoMessage> messageList = entry.getValue();
+
+								for (CryptoMessage m : messageList) {
+									// always output encrypted version
+									System.out.println("Encrypted: " + m.getCipherText());
+
+									// output decrypted version only if myClient
+									// was intended target
+									if (myPair.getTo().equals(myClient.getName())) {
+										System.out.println("Decrypted: " + m.getPlainText());
+									}
+								}
+							}
+						} else {
+							System.out
+									.println("You have not received or eavesdropped on any messages.");
+						}
 					}
 
 					// print help menu
-					else if(s.equals("h")){
+					else if (s.equals("h")) {
 						System.out.println(menu);
-					}					
+					}
 
-					else{
+					else {
 						System.out.println("Unrecognized command.");
 					}
 				}
+				
 			}
-			
-
-			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}			
+		}
+		
+		
 	}
 }

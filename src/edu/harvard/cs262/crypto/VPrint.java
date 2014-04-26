@@ -17,13 +17,16 @@ public class VPrint {
 	 * verbosity V, it will print all messages at level V and below.
 	 * So a warn verbosity prints warning messages as well as normal messages.
 	 */
-	public static final int ALL = 3;
-	public static final int DEBUG = 2;
-	public static final int WARN = 1;
-	public static final int NORMAL = 0;
+	public static final int ALL = 8;
+	public static final int DEBUG2 = 7;
+	public static final int DEBUG = 6;
+	public static final int WARN = 5;
+	public static final int ERROR = 4;
+	public static final int LOUD = 2;
+	public static final int QUIET = 1;
+	public static final int NONE = 0;
 	public int verbosity;
 	public BufferedWriter log;
-	
 	
 	public VPrint(int verbosity, String logFileName) {
 		this.verbosity = verbosity;
@@ -42,12 +45,20 @@ public class VPrint {
 	
 	private String getLevel(int v) {
 		switch (v) {
-		case NORMAL:
+		case NONE:
+		case QUIET:
+		case LOUD:
 			return "";
+		case ERROR:
+			return "[ERROR] ";
 		case WARN:
 			return "[WARN] ";
 		case DEBUG:
 			return "[DEBUG] ";
+		case DEBUG2:
+			return "[DEBUG+] ";
+		case ALL:
+			return "[ALL] ";
 		}
 		return "";
 	}
