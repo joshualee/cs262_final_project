@@ -1,15 +1,31 @@
-general.policy: policy file
+Distributed Cryptography
+=============
 
-CryptoClient.java: client interface
+Project description goes here.
 
-CryptoServer.java: server interface
+Completed as a final project for CS262: Introduction to Distributed Systems (Harvard Spring 2014).
 
-CryptoMessage.java: message class
+Authors
+-------
+* Joshua Lee (joshualee@college.harvard.edu)
+* Tracy Lu (tlu@college.harvard.edu)
+* Holly Anderson (hollyanderson@fas.harvard.edu)
 
-ProtocolType.java: type class
+CryptoClient
+-------------
 
-ClientNotFound.java: exception class
+####Simple Client
 
-CentralServer.java:	server class
+Implements basic sending/receiving/eavesdropping of messages.
 
-Client.java: client class
+####DiffieHellman Client
+
+Extends simple client but also has the ability to perform encrypted communcation.
+
+####EVote Client
+
+Extends DiffieHellman Client but also has the ability to do evoting.
+
+
+Usage
+-----------------
