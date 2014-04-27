@@ -86,6 +86,10 @@ public class SimpleCryptoClient implements CryptoClient {
 
 	@Override
 	public void sendMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
+		if (name.equals(to)) {
+			log.print(VPrint.ERROR, "cannot send messages to yourself");
+			return;
+		}
 		try {
 			log.print(VPrint.DEBUG, "(%s) sending message to %s with session %s: %s", name, to, sid, text);
 			CryptoMessage m = new CryptoMessage(text, sid);
@@ -100,6 +104,10 @@ public class SimpleCryptoClient implements CryptoClient {
 	
 	@Override
 	public void eavesdrop(String victim) throws RemoteException {
+		if (name.equals(victim)) {
+			log.print(VPrint.ERROR, "cannot eavesdrop on yourself");
+			return;
+		}
 		try {
 			server.eavesdrop(name, victim);
 		} catch (ClientNotFound e) {
