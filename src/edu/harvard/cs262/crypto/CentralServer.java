@@ -28,7 +28,7 @@ import edu.harvard.cs262.crypto.CryptoClient;
 import edu.harvard.cs262.crypto.ClientNotFound;
 
 public class CentralServer implements CryptoServer {
-	private final static int VERBOSITY = VPrint.DEBUG; 
+	private final static int VERBOSITY = VPrint.WARN; 
 	
 	private String name;
 	private VPrint log;

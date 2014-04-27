@@ -26,7 +26,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class DHCryptoClient implements CryptoClient {
-	private final static int VERBOSITY = VPrint.DEBUG;
+	private final static int VERBOSITY = VPrint.WARN;
 	
 	private String name;
 	private CryptoServer server;
@@ -333,43 +333,41 @@ public class DHCryptoClient implements CryptoClient {
 		 * EVote phase one: 
 		 * client receives a ballot from the server
 		 */
-		System.out.println("Initiating e-vote:");
-		System.out.print(String.format("Ballot (%s): ", sid));
-		System.out.println(evote.ballot + "\n");
+		log.print(VPrint.QUIET, "initiating e-vote...");
+		log.print(VPrint.QUIET, "ballot %s: %s", sid, evote.ballot);
 		
 		//int yay_or_nay = rand.nextInt(2);
+		
 		int yay_or_nay;
 		String clientVote = "";
-	
-		System.out.println("Vote [y\\n]:");
-		System.out.println("y: vote in favor");
-		System.out.println("n: vote against");
+		
+		log.print(VPrint.QUIET, "y: vote in favor");
+		log.print(VPrint.QUIET, "n: vote against");
+		log.print(VPrint.QUIET, "vote [y\\n]: ");
 		
 		Scanner scan = new Scanner(System.in);
 		
 		while (true) {
 			clientVote = scan.nextLine();
 			if (clientVote.equals("y")) {
-				System.out.println("You voted in favor");
+				log.print(VPrint.LOUD, "you voted in favor ballot %s", sid);
 				yay_or_nay = 1;
 				break;
 			}
 			else if (clientVote.equals("n")) {
-				System.out.println("You voted against");
+				log.print(VPrint.LOUD, "you voted in against ballot %s", sid);
 				yay_or_nay = 0;
 				break;
 			}
 			else {
-				System.out.print("try again [y\n]: ");
+				log.print(VPrint.QUIET, "try again [y\\n]: ");
 			}
 		}
 		
 		scan.close();
 		
-		System.out.println("Tallying vote...");
+		log.print(VPrint.QUIET, "tallying vote...");
 		
-		
-//		int yay_or_nay = rand.nextInt(2);
 		
 		/*
 		 * EVote phase two: 
@@ -378,8 +376,9 @@ public class DHCryptoClient implements CryptoClient {
 		BigInteger sk_i = (new BigInteger(evote.BITS, rand)).mod(evote.p);
 		BigInteger pk_i = evote.g.modPow(sk_i, evote.p);
 		
-		System.out.println(String.format("g=%s, p=%s", evote.g, evote.p));
-		System.out.println(String.format("sk_i=%s, pk_i=%s", sk_i, pk_i));
+		
+		log.print(VPrint.DEBUG, "g=%s, p=%s", evote.g, evote.p);
+		log.print(VPrint.DEBUG, "sk_i=%s, pk_i=%s", sk_i, pk_i);
 		
 		CryptoMessage phaseTwo = new CryptoMessage(pk_i.toString(), sid);
 		server.recvMessage(getName(), server.getName(), phaseTwo);
@@ -428,7 +427,7 @@ public class DHCryptoClient implements CryptoClient {
 		 * EVote phase 8:
 		 * clients use decodingKey to decode message 
 		 */
-		int numYays;
+		int numYays, numNays;
 		int numVoters = evote.voters.size();
 		
 		CryptoMessage decodingKeyMsg = waitForMessage(sid);
@@ -437,14 +436,22 @@ public class DHCryptoClient implements CryptoClient {
 		
 		try {
 			numYays = evote.countYays(voteResult, numVoters);
+			numNays = numVoters - numYays;
 		} catch (EVoteInvalidResult e) {
-			System.out.println(String.format("evote failed (%s)", e.getMessage()));
+			log.print(VPrint.ERROR, "evote failed: %s", e.getMessage());
 			return;
 		}
 		
-		System.out.println(String.format("VOTERESULT: %s", voteResult.toString()));
-		System.out.println(String.format("Ballot (%s): %d yes, %d no", 
-			sid, numYays, numVoters - numYays));
+		log.print(VPrint.DEBUG, "raw vote result: %s", voteResult.toString());
+		
+		log.print(VPrint.QUIET, "ballot %s vote results: %d voted yes, %d voted no", sid, numYays, numNays);
+
+		if (numYays > numNays) {
+			log.print(VPrint.QUIET, "ballot %s has passed");
+		}
+		else {
+			log.print(VPrint.QUIET, "ballot %s has NOT passed", sid);
+		}
 	}
 	
 	public static void main(String args[]) {
