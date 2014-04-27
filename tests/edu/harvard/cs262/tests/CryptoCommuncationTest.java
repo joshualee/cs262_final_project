@@ -17,6 +17,7 @@ import edu.harvard.cs262.crypto.CryptoMessage;
 import edu.harvard.cs262.crypto.CryptoServer;
 import edu.harvard.cs262.crypto.DHCryptoClient;
 import edu.harvard.cs262.crypto.DHTuple;
+import edu.harvard.cs262.crypto.EVoteClient;
 import edu.harvard.cs262.crypto.ElGamalCipher;
 
 /**
@@ -45,7 +46,7 @@ public class CryptoCommuncationTest {
 	}
 	
 	private static CryptoClient createClient(String name, CryptoServer server) throws RemoteException {
-		CryptoClient myClient = new DHCryptoClient(name, server);
+		CryptoClient myClient = new EVoteClient(name, server);
 		CryptoClient myClientSer = ((CryptoClient)
 	    		  UnicastRemoteObject.exportObject(myClient, 0));
 		
