@@ -149,14 +149,23 @@ public class ClientConsole {
 								List<CryptoMessage> messageList = entry.getValue();
 
 								for (CryptoMessage m : messageList) {
-									// always output encrypted version
-									System.out.println("Encrypted: " + m.getCipherText());
-
 									// output decrypted version only if myClient
-									// was intended target
-									if (myPair.getTo().equals(myClient.getName())) {
-										System.out.println("Decrypted: " + m.getPlainText());
+									// was intended target or message wasn't encrypted
+									String dec = "\nDecrypted: ";
+									if (myPair.getTo().equals(myClient.getName()) || !m.isEncrypted()) {
+										dec += m.getPlainText();
 									}
+									else
+									{
+										dec += "N/A";
+									}
+									System.out.println(dec);
+									
+									// output encrypted version if message was encrypted
+									if (m.isEncrypted()){ 
+										System.out.println("Encrypted: " + m.getCipherText());
+									}
+									
 								}
 							}
 						} else {
