@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class VPrint {
@@ -78,13 +79,12 @@ public class VPrint {
 		}
 		
 		// log to file regardless of verbosity
-		Timestamp ts = new Timestamp((new Date()).getTime());
 		String s = String.format(format, args);
-		s = String.format("%s: %s%s", ts, getLevel(v), s);
+		s = String.format("%s%s", getLevel(v), s);
 		
 		try {
 			if (log != null) {
-				log.write(s + "\n");
+				log.write(String.format("[%s] %s\n", Helpers.currentTime(), s));
 				log.flush();
 			}
 		} catch (IOException e) {

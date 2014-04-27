@@ -10,6 +10,7 @@ import java.rmi.RemoteException;
 public interface CryptoClient extends Remote {
 	public String getName() throws RemoteException;
 	public Map<ClientPair, List<CryptoMessage>> getMessages() throws RemoteException;
+	public VPrint getLog() throws RemoteException;
 	public boolean ping() throws RemoteException;
 	
 	/*

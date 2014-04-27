@@ -7,6 +7,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
 import java.rmi.registry.LocateRegistry;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -39,8 +40,7 @@ public class CentralServer implements CryptoServer {
 	public CentralServer(String name) {
 		this.name = name;
 		
-		Timestamp ts = new Timestamp((new Date()).getTime()); 
-		String logName = String.format("%s %s", name, ts);
+		String logName = String.format("%s %s.log", name, Helpers.currentTimeForFile());
 		log = new VPrint(VERBOSITY, logName);
 		
 		clients = new ConcurrentHashMap<String, CryptoClient>();

@@ -40,13 +40,19 @@ public class DHCryptoClient implements CryptoClient {
 		this.name = name;
 		this.server = server;
 		
-		Timestamp ts = new Timestamp((new Date()).getTime()); 
-		String logName = String.format("%s %s", name, ts);
+		String logName = String.format("%s %s.log", name, Helpers.currentTimeForFile());
 		log = new VPrint(VERBOSITY, logName);
 		
 		this.ciphers = new ConcurrentHashMap<String, CryptoCipher>();
 		this.sessions = new ConcurrentHashMap<String, CryptoMessage>();
 		this.messages = new ConcurrentHashMap<ClientPair, List<CryptoMessage>>();
+	}
+	
+	/**
+	 * Expose log so other modules can log actions 
+	 */
+	public VPrint getLog() {
+		return log;
 	}
 
 	@SuppressWarnings("static-access")
@@ -273,6 +279,11 @@ public class DHCryptoClient implements CryptoClient {
 	// To do: hangs if Client 'to' is unregistered
 	@SuppressWarnings("static-access")
 	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
+		if (name.equals(to)) {
+			log.print(VPrint.ERROR, "cannot send encrypted messages to yourself");
+			return;
+		}
+		
 		try {
 			CryptoCipher c = ciphers.get(to);
 			if (c == null) {

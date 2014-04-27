@@ -11,6 +11,4 @@ public interface CryptoCipher {
 	CryptoMessage encryptInteger(BigInteger plaintext);
 	String decrypt(CryptoMessage cm);
 	String decryptInteger(CryptoMessage cm);
-	
-	void init(CryptoClient c1, CryptoClient c2);
 }
