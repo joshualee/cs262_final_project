@@ -1,10 +1,15 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.cipher;
 
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.rmi.RemoteException;
 import java.util.Random;
 import java.util.UUID;
+
+import edu.harvard.cs262.crypto.CryptoMessage;
+import edu.harvard.cs262.crypto.VPrint;
+import edu.harvard.cs262.crypto.client.CryptoClient;
+import edu.harvard.cs262.crypto.exception.ClientNotFound;
 
 public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	private static final long serialVersionUID = 1L;

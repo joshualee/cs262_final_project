@@ -1,4 +1,4 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.exception;
 
 /**
  * Thrown when the result of the evote is not decodeable. This most likely

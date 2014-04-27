@@ -1,4 +1,4 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.client;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -6,6 +6,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+
+import edu.harvard.cs262.crypto.CryptoMessage;
+import edu.harvard.cs262.crypto.server.CryptoServer;
 
 public class ClientConsole {
 	

@@ -1,4 +1,4 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.cipher;
 
 public class CryptoKey {
 	private int bits;

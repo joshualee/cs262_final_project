@@ -3,7 +3,7 @@
  * This client also supports evoting.  
  */
 
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.client;
 
 import java.rmi.RemoteException;
 import java.util.Map;
@@ -14,6 +14,17 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import edu.harvard.cs262.crypto.CryptoMessage;
+import edu.harvard.cs262.crypto.EVote;
+import edu.harvard.cs262.crypto.VPrint;
+import edu.harvard.cs262.crypto.cipher.CryptoCipher;
+import edu.harvard.cs262.crypto.cipher.CryptoKey;
+import edu.harvard.cs262.crypto.cipher.DiffieHellman;
+import edu.harvard.cs262.crypto.cipher.ElGamalCipher;
+import edu.harvard.cs262.crypto.cipher.KeyExchangeProtocol;
+import edu.harvard.cs262.crypto.exception.ClientNotFound;
+import edu.harvard.cs262.crypto.server.CryptoServer;
 
 public class DHCryptoClient extends SimpleCryptoClient {
 	protected Map<String, CryptoCipher> ciphers;

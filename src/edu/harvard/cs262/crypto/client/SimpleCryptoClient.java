@@ -1,10 +1,19 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.client;
 
 import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import edu.harvard.cs262.crypto.CryptoMessage;
+import edu.harvard.cs262.crypto.EVote;
+import edu.harvard.cs262.crypto.Helpers;
+import edu.harvard.cs262.crypto.VPrint;
+import edu.harvard.cs262.crypto.cipher.CryptoCipher;
+import edu.harvard.cs262.crypto.cipher.KeyExchangeProtocol;
+import edu.harvard.cs262.crypto.exception.ClientNotFound;
+import edu.harvard.cs262.crypto.server.CryptoServer;
 
 public class SimpleCryptoClient implements CryptoClient {
 	protected final static int VERBOSITY = VPrint.WARN;

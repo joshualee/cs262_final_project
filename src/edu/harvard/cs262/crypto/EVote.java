@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
+
 /**
  * 
  * @author joshualee

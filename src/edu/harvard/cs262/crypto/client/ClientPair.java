@@ -1,4 +1,4 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.client;
 
 // hashCode() adapted from http://stackoverflow.com/questions/156275/what-is-the-equivalent-of-the-c-pairl-r-in-java
 // equals(Obj c) adapted from http://www.javaranch.com/journal/2002/10/newsletteroct2002.jsp#equalandhash

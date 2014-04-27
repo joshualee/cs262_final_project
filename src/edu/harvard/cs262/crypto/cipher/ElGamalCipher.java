@@ -1,10 +1,12 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.cipher;
 
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Random;
 
 import javax.crypto.Cipher;
+
+import edu.harvard.cs262.crypto.CryptoMessage;
 
 // Note: doesn't compile on my machine (Holly)
 //import com.sun.org.apache.xml.internal.security.utils.Base64;

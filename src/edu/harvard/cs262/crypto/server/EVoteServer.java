@@ -1,10 +1,11 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.server;
 
 import java.net.InetAddress;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
+
 
 public class EVoteServer {
 	

@@ -1,6 +1,8 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.cipher;
 
 import java.math.BigInteger;
+
+import edu.harvard.cs262.crypto.CryptoMessage;
 
 public interface CryptoCipher {
 	void seed(long s);

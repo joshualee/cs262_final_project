@@ -1,4 +1,4 @@
-package edu.harvard.cs262.crypto;
+package edu.harvard.cs262.crypto.client;
 
 import java.math.BigInteger;
 import java.rmi.RemoteException;
@@ -7,6 +7,16 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Random;
 import java.util.Scanner;
+
+import edu.harvard.cs262.crypto.CryptoMessage;
+import edu.harvard.cs262.crypto.EVote;
+import edu.harvard.cs262.crypto.VPrint;
+import edu.harvard.cs262.crypto.cipher.CryptoKey;
+import edu.harvard.cs262.crypto.cipher.DHTuple;
+import edu.harvard.cs262.crypto.cipher.ElGamalCipher;
+import edu.harvard.cs262.crypto.exception.ClientNotFound;
+import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
+import edu.harvard.cs262.crypto.server.CryptoServer;
 
 public class EVoteClient extends DHCryptoClient {
 	
@@ -26,34 +36,34 @@ public class EVoteClient extends DHCryptoClient {
 		log.print(VPrint.QUIET, "initiating e-vote...");
 		log.print(VPrint.QUIET, "ballot %s: %s", sid, evote.ballot);
 		
-//		int yay_or_nay;
-		int yay_or_nay = rand.nextInt(2);
+		int yay_or_nay;
+//		int yay_or_nay = rand.nextInt(2);
 		String clientVote = "";
 		
 		log.print(VPrint.QUIET, "y: vote in favor");
 		log.print(VPrint.QUIET, "n: vote against");
 		log.print(VPrint.QUIET, "vote [y\\n]: ");
 		
-//		Scanner scan = new Scanner(System.in);
-//		
-//		while (true) {
-//			clientVote = scan.nextLine();
-//			if (clientVote.equals("y")) {
-//				log.print(VPrint.LOUD, "you voted in favor ballot %s", sid);
-//				yay_or_nay = 1;
-//				break;
-//			}
-//			else if (clientVote.equals("n")) {
-//				log.print(VPrint.LOUD, "you voted in against ballot %s", sid);
-//				yay_or_nay = 0;
-//				break;
-//			}
-//			else {
-//				log.print(VPrint.QUIET, "try again [y\\n]: ");
-//			}
-//		}
-//		
-//		scan.close();
+		Scanner scan = new Scanner(System.in);
+		
+		while (true) {
+			clientVote = scan.nextLine();
+			if (clientVote.equals("y")) {
+				log.print(VPrint.LOUD, "you voted in favor ballot %s", sid);
+				yay_or_nay = 1;
+				break;
+			}
+			else if (clientVote.equals("n")) {
+				log.print(VPrint.LOUD, "you voted in against ballot %s", sid);
+				yay_or_nay = 0;
+				break;
+			}
+			else {
+				log.print(VPrint.QUIET, "try again [y\\n]: ");
+			}
+		}
+		
+		scan.close();
 		
 		log.print(VPrint.QUIET, "tallying vote...");
 		
