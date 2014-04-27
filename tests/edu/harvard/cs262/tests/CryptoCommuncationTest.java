@@ -14,11 +14,11 @@ import edu.harvard.cs262.crypto.cipher.CryptoKey;
 import edu.harvard.cs262.crypto.cipher.DHTuple;
 import edu.harvard.cs262.crypto.cipher.ElGamalCipher;
 import edu.harvard.cs262.crypto.client.CryptoClient;
-import edu.harvard.cs262.crypto.client.DHCryptoClient;
 import edu.harvard.cs262.crypto.client.EVoteClient;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.server.CentralServer;
 import edu.harvard.cs262.crypto.server.CryptoServer;
+import edu.harvard.cs262.crypto.server.EVoteServer;
 
 /**
  * 
@@ -33,7 +33,7 @@ public class CryptoCommuncationTest {
 	private final static String serverName = "server";
 	
 	private static void setupServer() throws RemoteException {
-		CentralServer server = new CentralServer(serverName);
+		CentralServer server = new EVoteServer(serverName);
 		CryptoServer serverStub = (CryptoServer) UnicastRemoteObject
 				.exportObject(server, 0);
 

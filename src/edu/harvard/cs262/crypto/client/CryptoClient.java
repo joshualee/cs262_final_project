@@ -35,7 +35,4 @@ public interface CryptoClient extends Remote {
 	public void recvSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, InterruptedException, ClientNotFound;
 	
 	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException;
-		
-//	boolean supportsKeyExchange(Class<?> keyExchange);
-//	boolean supportsEncryptionScheme(Class<?> encryptionScheme);
 }
