@@ -61,15 +61,14 @@ public class CentralServer implements CryptoServer {
 	
 	@Override
 	public String getClients() throws RemoteException{
-		String ret = "";
+		String clientString = "";
 		Set<String> clientSet = clients.keySet();
 		String[] clientArray = clientSet.toArray(new String[0]);
 		Arrays.sort(clientArray);
-		for(String temp: clientArray){
-			ret += "\n" + temp;
+		for(String c : clientArray){
+			clientString += "\n" + c;
 		}
-					
-		return ret;
+		return clientString;
 	}
 	
 	@Override
