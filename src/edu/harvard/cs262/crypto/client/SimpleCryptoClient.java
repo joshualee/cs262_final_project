@@ -13,10 +13,11 @@ import edu.harvard.cs262.crypto.VPrint;
 import edu.harvard.cs262.crypto.cipher.CryptoCipher;
 import edu.harvard.cs262.crypto.cipher.KeyExchangeProtocol;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
+import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
 public class SimpleCryptoClient implements CryptoClient {
-	protected final static int VERBOSITY = VPrint.WARN;
+	protected final static int VERBOSITY = VPrint.DEBUG;
 	
 	protected String name;
 	protected CryptoServer server;
@@ -148,7 +149,7 @@ public class SimpleCryptoClient implements CryptoClient {
 
 
 	@Override
-	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
+	public void evote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult {
 		log.print(VPrint.ERROR, "simple client does not support evoting");
 		return;
 	}

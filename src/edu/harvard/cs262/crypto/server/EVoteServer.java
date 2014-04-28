@@ -6,14 +6,19 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import edu.harvard.cs262.crypto.CryptoMessage;
 import edu.harvard.cs262.crypto.EVote;
@@ -39,7 +44,6 @@ public class EVoteServer extends CentralServer {
 	 * @throws InterruptedException 
 	 */
 	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
-		log.print(VPrint.ERROR, "central server does not implement waiting for messages");
 		Map<String, CryptoMessage> clientMap;
 		
 		synchronized (sessions) {
@@ -121,7 +125,7 @@ public class EVoteServer extends CentralServer {
 		log.print(VPrint.QUIET, "%s: %s", from, m.getPlainText());
 	}
 	
-	protected class clientEVote implements Runnable {
+	protected class clientEVote implements Callable<Object> {
 		private CryptoClient client;
 		private EVote evote;
 		
@@ -130,34 +134,16 @@ public class EVoteServer extends CentralServer {
 			this.evote = evote;
 		}
 		
-		public void run() {
-			try {
-				client.eVote(evote);
-			} 
-			catch (Exception e) {
-				e.printStackTrace();
-			}
+		public Object call() throws Exception {
+			client.evote(evote);
+			return null;		
 		}
 	}
 
-	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
-		ExecutorService pool = Executors.newCachedThreadPool();
-		Set<String> votingClients = clients.keySet();
-		
-		// hack b/c concurrentset is not serializable
-		Set<String> votingClientsSer = new HashSet<String>(votingClients);
-		EVote evote = new EVote(ballot, votingClientsSer);
+	private void doEvote(EVote evote, Set<String> votingClients) throws InterruptedException, RemoteException, ClientNotFound {
 		
 		String sid = evote.id.toString();
 		log.print(VPrint.LOUD, "initiating ballot %s", sid);
-		
-		/*
-		 * EVote phase one:
-		 * initiates vote by sending evote to each client
-		 */
-		for (String clientName : votingClients) {
-			pool.execute(new clientEVote(getClient(clientName), evote));			
-		}
 		
 		/*
 		 * EVote phase 3:
@@ -240,6 +226,50 @@ public class EVoteServer extends CentralServer {
 		}
 		
 		log.print(VPrint.LOUD, "%d voters: %d voted yes", numVoters, positiveVotes);
+		
+	}
+	
+	protected class serverEVote implements Callable<Object> {
+		private EVote evote;
+		private Set<String> votingClients;
+		
+		public serverEVote(EVote evote, Set<String> votingClients) {
+			this.evote = evote;
+			this.votingClients = votingClients;
+		}
+		
+		public Object call() throws Exception {
+			doEvote(evote, votingClients);
+			return null;		
+		}
+	}
+	
+	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
+		Future<Object> clientFuture = null;
+		Future<Object> serverFuture = null;
+		ExecutorService pool = Executors.newCachedThreadPool();
+		Set<String> votingClients = clients.keySet();
+		
+		// hack b/c concurrentset is not serializable
+		Set<String> votingClientsSer = new HashSet<String>(votingClients);
+		EVote evote = new EVote(ballot, votingClientsSer);
+		
+		
+		Map<String, Future<Object>> clientFutures = new HashMap<String, Future<Object>>();
+		
+		/*
+		 * EVote phase one:
+		 * initiates vote by sending evote to each client
+		 */
+		for (String clientName : votingClients) {
+			clientFuture = pool.submit(new clientEVote(getClient(clientName), evote));
+			clientFutures.put(clientName, clientFuture);
+		}
+		
+		serverFuture = pool.submit(new serverEVote(evote, votingClients));
+		
+		// do abortion handling...
+
 	}
 	
 	public static void main(String args[]) {

@@ -7,6 +7,12 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import edu.harvard.cs262.crypto.CryptoMessage;
 import edu.harvard.cs262.crypto.EVote;
@@ -20,12 +26,19 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 
 public class EVoteClient extends DHCryptoClient {
 	
+	private Scanner userInput;
+	Object currentVoteLock;
+	Future<Object> currentVote;
+	
 	public EVoteClient(String name, CryptoServer server) {
 		super(name, server);
+		currentVoteLock = new Object();
+		currentVote = null;
+		userInput = new Scanner(System.in);
 	}
 	
 	// does this need to throw ClientNotFound?	
-	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
+	private void doEvote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
 		Random rand = new Random(262);
 		String sid = evote.id.toString();
 		
@@ -37,17 +50,14 @@ public class EVoteClient extends DHCryptoClient {
 		log.print(VPrint.QUIET, "ballot %s: %s", sid, evote.ballot);
 		
 		int yay_or_nay;
-//		int yay_or_nay = rand.nextInt(2);
 		String clientVote = "";
 		
 		log.print(VPrint.QUIET, "y: vote in favor");
 		log.print(VPrint.QUIET, "n: vote against");
 		log.print(VPrint.QUIET, "vote [y\\n]: ");
 		
-		Scanner scan = new Scanner(System.in);
-		
 		while (true) {
-			clientVote = scan.nextLine();
+			clientVote = userInput.nextLine();
 			if (clientVote.equals("y")) {
 				log.print(VPrint.LOUD, "you voted in favor ballot %s", sid);
 				yay_or_nay = 1;
@@ -62,8 +72,6 @@ public class EVoteClient extends DHCryptoClient {
 				log.print(VPrint.QUIET, "try again [y\\n]: ");
 			}
 		}
-		
-		scan.close();
 		
 		log.print(VPrint.QUIET, "tallying vote...");
 		
@@ -82,6 +90,11 @@ public class EVoteClient extends DHCryptoClient {
 		CryptoMessage phaseTwo = new CryptoMessage(pk_i.toString(), sid);
 		server.recvMessage(getName(), server.getName(), phaseTwo);
 		CryptoMessage pkMsg = waitForMessage(sid);
+		
+//		if (pkMsg.getPlainText().equals("aborted")) {
+//			print aborted
+//			return;
+//		}
 		
 		/*
 		 * EVote phase four:
@@ -151,6 +164,70 @@ public class EVoteClient extends DHCryptoClient {
 		else {
 			log.print(VPrint.QUIET, "ballot %s has NOT passed", sid);
 		}
+	}
+	
+	private class evoteCallable implements Callable<Object> {
+		private EVote evote;
+		
+		public evoteCallable(EVote evote) {
+			this.evote = evote;
+		}
+		
+		@Override
+		public Object call() throws Exception {
+			doEvote(evote);
+			return null;
+		}
+		
+	}
+	
+	public void evoteAbort(String reason) {
+		synchronized (currentVoteLock) {
+			if (currentVote == null) {
+				log.print(VPrint.WARN, "asked to abort vote, but not currently voting");
+			}
+			else {
+				currentVote.cancel(true);
+				currentVote = null;
+			}
+		}
+	}
+	
+	public void evote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult {
+		Future<Object> evoteFuture;
+		
+		synchronized (currentVoteLock) {
+			if (currentVote != null) {
+				String error = String.format("%s already participating in evote", name);
+				log.print(VPrint.ERROR, error);
+				throw new EVoteInvalidResult(error);
+			}
+			else {
+				ExecutorService pool = Executors.newSingleThreadExecutor();
+				evoteCallable evoteCall = new evoteCallable(evote);
+				evoteFuture = pool.submit(evoteCall);
+				currentVote = evoteFuture;
+			}
+		}
+		
+		while (!evoteFuture.isDone()) {
+			// block until the vote finishes or throws an error
+		}
+		
+		// TODO: use finally block here, but not sure how
+		try {
+			evoteFuture.get();
+		} catch (ExecutionException e) {
+			String msg = e.getCause().getMessage();
+			synchronized (currentVoteLock) {
+				currentVote = null;
+			}
+			throw new EVoteInvalidResult(msg); 
+		}
+		synchronized (currentVoteLock) {
+			currentVote = null;
+		}
+				
 	}
 
 	public static void main(String args[]) {

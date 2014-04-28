@@ -11,6 +11,7 @@ import edu.harvard.cs262.crypto.VPrint;
 import edu.harvard.cs262.crypto.cipher.CryptoCipher;
 import edu.harvard.cs262.crypto.cipher.KeyExchangeProtocol;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
+import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 
 // All methods need to throw RemoteException in order for interface to be remote.
 // Interface needs to be remote so a stub can be generated.
@@ -34,5 +35,5 @@ public interface CryptoClient extends Remote {
 	public boolean initSecureChannel(String recip, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException;
 	public void recvSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, InterruptedException, ClientNotFound;
 	
-	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException;
+	public void evote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult;
 }

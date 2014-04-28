@@ -9,3 +9,5 @@ synchronization concerns:
 how to gracefully abort vote when a client unregisters during voting
 
 general exception handling and making sure functions only throw the exceptions they should
+
+print votes of other clients from your client

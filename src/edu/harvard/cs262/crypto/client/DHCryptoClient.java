@@ -24,6 +24,7 @@ import edu.harvard.cs262.crypto.cipher.DiffieHellman;
 import edu.harvard.cs262.crypto.cipher.ElGamalCipher;
 import edu.harvard.cs262.crypto.cipher.KeyExchangeProtocol;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
+import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
 public class DHCryptoClient extends SimpleCryptoClient {
@@ -205,6 +206,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 			log.print(VPrint.ERROR, e.getCause().getMessage());
 			return false;
 		} catch (CancellationException e) {
+			
 			log.print(VPrint.ERROR, "%s failed to reciprocate key exchange", counterParty);
 			return false;
 		}
@@ -240,7 +242,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	}
 
 	@Override
-	public void eVote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
+	public void evote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult {
 		log.print(VPrint.ERROR, "diffie hellman client does not support evoting");
 		return;
 	}

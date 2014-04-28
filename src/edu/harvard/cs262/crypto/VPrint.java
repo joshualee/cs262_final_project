@@ -35,7 +35,7 @@ public class VPrint {
 		try {
 			log = Files.newBufferedWriter(writeFile, 
 				Charset.forName("UTF-8"), 
-				new OpenOption[] {StandardOpenOption.CREATE, StandardOpenOption.APPEND}
+				new OpenOption[] {StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE}
 			);
 		} catch (IOException e) {
 			System.out.println("[VPrint] Failed to open log file...");
