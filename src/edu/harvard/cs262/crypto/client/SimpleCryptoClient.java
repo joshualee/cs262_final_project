@@ -154,4 +154,10 @@ public class SimpleCryptoClient implements CryptoClient {
 		return;
 	}
 
+
+	@Override
+	public void evoteAbort(String reason) throws RemoteException {
+		log.print(VPrint.ERROR, "client does not support evoting");
+	}
+
 }

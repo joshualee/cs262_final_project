@@ -2,6 +2,7 @@ package edu.harvard.cs262.crypto.server;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -12,10 +13,12 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -239,7 +242,12 @@ public class EVoteServer extends CentralServer {
 		}
 		
 		public Object call() throws Exception {
-			doEvote(evote, votingClients);
+			try {
+				doEvote(evote, votingClients);
+			} catch (InterruptedException e) {
+				log.print(VPrint.ERROR, "aborting evote for ballot %s", evote.id);
+			}
+			
 			return null;		
 		}
 	}
@@ -269,9 +277,44 @@ public class EVoteServer extends CentralServer {
 		serverFuture = pool.submit(new serverEVote(evote, votingClients));
 		
 		// do abortion handling...
-
+		
+		
+		while (!serverFuture.isDone()) {
+			for (Entry<String, Future<Object>> entry : clientFutures.entrySet()) {
+				String clientName = entry.getKey();
+				clientFuture = entry.getValue();
+				if (clientFuture.isDone()) {
+					try {
+						clientFuture.get();
+					} catch (ExecutionException e) {
+						// client failed
+						String reason = String.format("abort vote for ballot %s because %s failed", clientName);
+						abortEVote(reason, serverFuture, votingClients);
+					}
+				}
+			}
+		}
 	}
 	
+	private void abortEVote(String reason, Future<Object> serverFuture,
+			Set<String> votingClients) {
+		
+		// abort client threads
+		for (String clientName: votingClients) {
+			try {
+				getClient(clientName).evoteAbort(reason);
+			} catch (ClientNotFound e) {
+				// do nothing -- client probably died and we automatically unregistered 
+			} catch (RemoteException e) {
+				// do nothing -- probably the client that failed
+			}
+		}
+		
+		// abort server thread
+		serverFuture.cancel(true);
+	}
+
+
 	public static void main(String args[]) {
 		if (args.length != 2) {
 			System.err.println("usage: java EVoteServer rmiport servername");

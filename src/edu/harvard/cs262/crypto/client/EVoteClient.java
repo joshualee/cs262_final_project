@@ -181,13 +181,14 @@ public class EVoteClient extends DHCryptoClient {
 		
 	}
 	
-	public void evoteAbort(String reason) {
+	public void evoteAbort(String abortMessage) throws RemoteException {
 		synchronized (currentVoteLock) {
 			if (currentVote == null) {
 				log.print(VPrint.WARN, "asked to abort vote, but not currently voting");
 			}
 			else {
 				currentVote.cancel(true);
+				log.print(VPrint.ERROR, "%s", abortMessage);
 				currentVote = null;
 			}
 		}
