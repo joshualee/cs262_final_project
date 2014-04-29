@@ -30,7 +30,7 @@ public class CryptoCommuncationTest {
 	
 	private static String rmiHost;
 	private final static int rmiPort = 8082;
-	private final static String serverName = "server";
+	private final static String serverName = "testserver";
 	
 	private static void setupServer() throws RemoteException {
 		CentralServer server = new EVoteServer(serverName);
@@ -105,7 +105,7 @@ public class CryptoCommuncationTest {
 	public static void main(String args[]) {		
 		try {
 			rmiHost = InetAddress.getLocalHost().getHostAddress();
-			System.setProperty("java.security.policy", "all.policy");
+			System.setProperty("java.security.policy", "policies/all.policy");
 			
 			if (System.getSecurityManager() == null) {
 				System.setSecurityManager(new SecurityManager());
@@ -118,7 +118,15 @@ public class CryptoCommuncationTest {
 			CryptoClient c1 = createClient("c1", server);
 			CryptoClient c2 = createClient("c2", server);
 			CryptoClient e1 = createClient("e1", server);
+//			CryptoClient c3 = createClient("c3", server);
+//			CryptoClient c4 = createClient("c4", server);
+//			CryptoClient c5 = createClient("c5", server);
+//			CryptoClient c6 = createClient("c6", server);
+//			CryptoClient c7 = createClient("c7", server);
+//			CryptoClient c8 = createClient("c8", server);
+//			CryptoClient c9 = createClient("c9", server);
 			
+//			Thread.sleep(1000);
 			server.initiateEVote("test ballot josh");
 //			testElGamal();
 			

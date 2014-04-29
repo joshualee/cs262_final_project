@@ -47,7 +47,9 @@ public class EVoteClient extends DHCryptoClient {
 		 * client receives a ballot from the server
 		 */
 		log.print(VPrint.QUIET, "initiating e-vote...");
-		log.print(VPrint.QUIET, "ballot %s: %s", sid, evote.ballot);
+		log.print(VPrint.QUIET, "ballot %s", sid);
+		log.print(VPrint.QUIET, "--------------------------------------");
+		log.print(VPrint.QUIET, "proposal: %s", evote.ballot);
 		
 		int yay_or_nay;
 		String clientVote = "";
@@ -59,12 +61,12 @@ public class EVoteClient extends DHCryptoClient {
 		while (true) {
 			clientVote = userInput.nextLine();
 			if (clientVote.equals("y")) {
-				log.print(VPrint.LOUD, "you voted in favor ballot %s", sid);
+				log.print(VPrint.QUIET, "you voted in favor of ballot %s", sid);
 				yay_or_nay = 1;
 				break;
 			}
 			else if (clientVote.equals("n")) {
-				log.print(VPrint.LOUD, "you voted in against ballot %s", sid);
+				log.print(VPrint.QUIET, "you voted in against ballot %s", sid);
 				yay_or_nay = 0;
 				break;
 			}
@@ -75,14 +77,12 @@ public class EVoteClient extends DHCryptoClient {
 		
 		log.print(VPrint.QUIET, "tallying vote...");
 		
-		
 		/*
 		 * EVote phase two: 
 		 * each client generates own secret key and sends to server
 		 */
 		BigInteger sk_i = (new BigInteger(evote.BITS, rand)).mod(evote.p);
 		BigInteger pk_i = evote.g.modPow(sk_i, evote.p);
-		
 		
 		log.print(VPrint.DEBUG, "g=%s, p=%s", evote.g, evote.p);
 		log.print(VPrint.DEBUG, "sk_i=%s, pk_i=%s", sk_i, pk_i);
@@ -156,13 +156,16 @@ public class EVoteClient extends DHCryptoClient {
 		
 		log.print(VPrint.DEBUG, "raw vote result: %s", voteResult.toString());
 		
-		log.print(VPrint.QUIET, "ballot %s vote results: %d voted yes, %d voted no", sid, numYays, numNays);
-
+		log.print(VPrint.QUIET, "ballot %s vote results", sid);
+		log.print(VPrint.QUIET, "---------------------------------------------------------");
+		log.print(VPrint.QUIET, "in favor: %s", numYays);
+		log.print(VPrint.QUIET, "against: %s", numNays);
+		
 		if (numYays > numNays) {
-			log.print(VPrint.QUIET, "ballot %s has passed", sid);
+			log.print(VPrint.QUIET, "[PASSED] ballot %s", sid);
 		}
 		else {
-			log.print(VPrint.QUIET, "ballot %s has NOT passed", sid);
+			log.print(VPrint.QUIET, "[REJECTED] ballot %s", sid);
 		}
 	}
 	

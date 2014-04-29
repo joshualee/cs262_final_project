@@ -46,7 +46,7 @@ public class EVoteServer extends CentralServer {
 	 * @param sid the session id to wait on
 	 * @throws InterruptedException 
 	 */
-	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
+	public Map<String, CryptoMessage> waitForAll(Set<String> clientList, String sid) throws InterruptedException {
 		Map<String, CryptoMessage> clientMap;
 		
 		synchronized (sessions) {
@@ -142,19 +142,23 @@ public class EVoteServer extends CentralServer {
 			return null;		
 		}
 	}
+	
+	private void broadcastMessage(Set<String> clientList, CryptoMessage m) throws RemoteException, InterruptedException, ClientNotFound {
+		for (String client : clientList) {
+			getClient(client).recvMessage(name, client, m);
+		}
+	}
 
 	private void doEvote(EVote evote, Set<String> votingClients) throws InterruptedException, RemoteException, ClientNotFound {
-		
 		String sid = evote.id.toString();
-		log.print(VPrint.LOUD, "initiating ballot %s", sid);
+		log.print(VPrint.QUIET, "initiating ballot %s", sid);
 		
 		/*
 		 * EVote phase 3:
 		 * server receives g^(sk_i) from each client and calculates shared public key
 		 */
 		
-		// TODO: wait for all should take list of clients
-		Map<String, CryptoMessage> pkMsgs = waitForAll(sid);
+		Map<String, CryptoMessage> pkMsgs = waitForAll(votingClients, sid);
 		BigInteger publicKey = BigInteger.valueOf(1L);
 		for (CryptoMessage pkMsg : pkMsgs.values()) {
 			BigInteger pk = new BigInteger(pkMsg.getPlainText());
@@ -164,16 +168,13 @@ public class EVoteServer extends CentralServer {
 		log.print(VPrint.DEBUG2, "publicKey: %s", publicKey);
 		CryptoMessage publicKeyMessage = new CryptoMessage(publicKey.toString(), sid);
 		
-		// TODO: broadcast function
-		for (String clientName: votingClients) {
-			getClient(clientName).recvMessage(name, clientName, publicKeyMessage);
-		}
+		broadcastMessage(votingClients, publicKeyMessage);
 		
 		/*
 		 * EVote phase 4:
 		 * server combines c_i from clients to form combined cipher text
 		 */
-		Map<String, CryptoMessage> cipherMsgs = waitForAll(sid);
+		Map<String, CryptoMessage> cipherMsgs = waitForAll(votingClients, sid);
 		BigInteger c1 = BigInteger.valueOf(1L);
 		BigInteger c2 = BigInteger.valueOf(1L);
 		for (CryptoMessage cipherMsg : cipherMsgs.values()) {
@@ -189,16 +190,14 @@ public class EVoteServer extends CentralServer {
 		CryptoMessage combinedCipherMsg = new CryptoMessage(c2.toString(), sid);
 		combinedCipherMsg.setEncryptionState(c1);
 		
-		for (String clientName: votingClients) {
-			getClient(clientName).recvMessage(name, clientName, combinedCipherMsg);
-		}
+		broadcastMessage(votingClients, combinedCipherMsg);
 		
 		/*
 		 * EVote phase 7:
 		 * compute the decryption key and share with all clients
 		 */
 		
-		Map<String, CryptoMessage> decryptMsgs = waitForAll(sid);
+		Map<String, CryptoMessage> decryptMsgs = waitForAll(votingClients, sid);
 		BigInteger decrypt = BigInteger.valueOf(1L);
 		for (CryptoMessage decryptMsg : decryptMsgs.values()) {
 			BigInteger decrypt_i = new BigInteger(decryptMsg.getPlainText());
@@ -208,27 +207,36 @@ public class EVoteServer extends CentralServer {
 		log.print(VPrint.DEBUG2, "decrypt: %s", decrypt);
 		
 		CryptoMessage decryptKeyMsg = new CryptoMessage(decrypt.toString(), sid);
-		for (String clientName: votingClients) {
-			getClient(clientName).recvMessage(name, clientName, decryptKeyMsg);
-		}
+		broadcastMessage(votingClients, decryptKeyMsg);
 		
 		/*
 		 * EVote phase 8:
 		 * decrypt vote
 		 */
 
-		int positiveVotes;
+		int positiveVotes, negativeVotes;
 		BigInteger voteResult = c2.multiply(decrypt.modInverse(evote.p)).mod(evote.p);
-		int numVoters = votingClients.size();
+		int numVoters = votingClients.size();		
 		
 		try {
 			positiveVotes = evote.countYays(voteResult, numVoters);
+			negativeVotes = numVoters - positiveVotes;
 		} catch (EVoteInvalidResult e) {
 			log.print(VPrint.ERROR, "evote failed: %s", e.getMessage());
 			return;
 		}
 		
-		log.print(VPrint.LOUD, "%d voters: %d voted yes", numVoters, positiveVotes);
+		log.print(VPrint.QUIET, "ballot %s vote results", sid);
+		log.print(VPrint.QUIET, "---------------------------------------------------------");
+		log.print(VPrint.QUIET, "in favor: %s", positiveVotes);
+		log.print(VPrint.QUIET, "against: %s", negativeVotes);
+		
+		if (positiveVotes > negativeVotes) {
+			log.print(VPrint.QUIET, "[PASSED] ballot %s", sid);
+		}
+		else {
+			log.print(VPrint.QUIET, "[REJECTED] ballot %s", sid);
+		}
 		
 	}
 	
@@ -245,7 +253,7 @@ public class EVoteServer extends CentralServer {
 			try {
 				doEvote(evote, votingClients);
 			} catch (InterruptedException e) {
-				log.print(VPrint.ERROR, "aborting evote for ballot %s", evote.id);
+				// do nothing -- vote was aborted because client failed 
 			}
 			
 			return null;		
@@ -288,7 +296,7 @@ public class EVoteServer extends CentralServer {
 						clientFuture.get();
 					} catch (ExecutionException e) {
 						// client failed
-						String reason = String.format("abort vote for ballot %s because %s failed", clientName);
+						String reason = String.format("abort vote for ballot %s because %s failed", evote.id, clientName);
 						abortEVote(reason, serverFuture, votingClients);
 					}
 				}
@@ -296,13 +304,15 @@ public class EVoteServer extends CentralServer {
 		}
 	}
 	
-	private void abortEVote(String reason, Future<Object> serverFuture,
+	private void abortEVote(String abortMessage, Future<Object> serverFuture,
 			Set<String> votingClients) {
+		
+		log.print(VPrint.ERROR, "%s", abortMessage);
 		
 		// abort client threads
 		for (String clientName: votingClients) {
 			try {
-				getClient(clientName).evoteAbort(reason);
+				getClient(clientName).evoteAbort(abortMessage);
 			} catch (ClientNotFound e) {
 				// do nothing -- client probably died and we automatically unregistered 
 			} catch (RemoteException e) {

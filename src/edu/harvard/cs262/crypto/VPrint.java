@@ -47,8 +47,9 @@ public class VPrint {
 		switch (v) {
 		case NONE:
 		case QUIET:
-		case LOUD:
 			return "";
+		case LOUD:
+			return "[LOUD] ";
 		case ERROR:
 			return "[ERROR] ";
 		case WARN:
