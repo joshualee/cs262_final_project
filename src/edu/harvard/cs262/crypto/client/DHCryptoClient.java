@@ -93,7 +93,11 @@ public class DHCryptoClient extends SimpleCryptoClient {
 			}
 		}
 		
-		log.print(VPrint.QUIET, "%s-%s: %s", from, to, plaintext);
+		if (m.hasTag() && !to.equals(name)) {
+			log.print(VPrint.QUIET, "%s-%s (%s): %s", from, to, m.getTag(), plaintext);
+		} else {
+			log.print(VPrint.QUIET, "%s-%s: %s", from, to, plaintext);	
+		}
 	}
 	
 	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {

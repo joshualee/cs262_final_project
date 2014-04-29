@@ -88,13 +88,9 @@ public class EVoteClient extends DHCryptoClient {
 		log.print(VPrint.DEBUG, "sk_i=%s, pk_i=%s", sk_i, pk_i);
 		
 		CryptoMessage phaseTwo = new CryptoMessage(pk_i.toString(), sid);
+		phaseTwo.setTag("secret key partition");
 		server.recvMessage(getName(), server.getName(), phaseTwo);
 		CryptoMessage pkMsg = waitForMessage(sid);
-		
-//		if (pkMsg.getPlainText().equals("aborted")) {
-//			print aborted
-//			return;
-//		}
 		
 		/*
 		 * EVote phase four:
@@ -119,6 +115,7 @@ public class EVoteClient extends DHCryptoClient {
 		
 		// TODO: send tag with server message, so clients know what they are seeing when eaves dropping
 		// TODO: store server name
+		encryptedVote.setTag("encrypted vote");
 		server.recvMessage(name, server.getName(), encryptedVote);
 		
 		/*
@@ -133,8 +130,9 @@ public class EVoteClient extends DHCryptoClient {
 		BigInteger c2 = new BigInteger(combinedCipher.getPlainText());
 		BigInteger encryptedC1 = c1.modPow(sk_i, evote.p);
 		
-		server.recvMessage(name, server.getName(), 
-				new CryptoMessage(encryptedC1.toString(), sid));
+		CryptoMessage decryptKeyPart = new CryptoMessage(encryptedC1.toString(), sid);
+		decryptKeyPart.setTag("decryption key partition");
+		server.recvMessage(name, server.getName(), decryptKeyPart);
 		/*
 		 * EVote phase 8:
 		 * clients use decodingKey to decode message 

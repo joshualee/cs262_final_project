@@ -32,12 +32,13 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 
 
 public class EVoteServer extends CentralServer {
-	
+	private Set<String> currentVotingClients;
 	protected Map<String, Map<String, CryptoMessage>> sessions;
 	
 	public EVoteServer(String name) {
 		super(name);
 		sessions = new ConcurrentHashMap<String, Map<String, CryptoMessage>>();
+		currentVotingClients = null;
 	}
 	
 	
@@ -96,6 +97,13 @@ public class EVoteServer extends CentralServer {
 	
 	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		Map<String, CryptoMessage> sessionMap;
+		
+		CryptoMessage relayMessage = new CryptoMessage(m.getPlainText(), "");
+		relayMessage.setTag(m.getTag());
+		// relay message to all other voting clients
+		for (String clientName : currentVotingClients) {
+			getClient(clientName).recvMessage(from, "voters", relayMessage);
+		}
 		
 		if (m.hasSessionID()) {
 			String sid = m.getSessionID();
@@ -266,10 +274,16 @@ public class EVoteServer extends CentralServer {
 		ExecutorService pool = Executors.newCachedThreadPool();
 		Set<String> votingClients = clients.keySet();
 		
+		if (votingClients.size() == 0) {
+			log.print(VPrint.WARN, "cannot start evote because no clients are registered");
+			return;
+		}
+		
+		currentVotingClients = votingClients;
+		
 		// hack b/c concurrentset is not serializable
 		Set<String> votingClientsSer = new HashSet<String>(votingClients);
 		EVote evote = new EVote(ballot, votingClientsSer);
-		
 		
 		Map<String, Future<Object>> clientFutures = new HashMap<String, Future<Object>>();
 		
@@ -302,6 +316,11 @@ public class EVoteServer extends CentralServer {
 				}
 			}
 		}
+		
+		// evote successful!
+		// TODO: make currentVotingClients synchronous...
+		// right now we assume only one evote can happen at a time
+		currentVotingClients = null;
 	}
 	
 	private void abortEVote(String abortMessage, Future<Object> serverFuture,
@@ -322,6 +341,7 @@ public class EVoteServer extends CentralServer {
 		
 		// abort server thread
 		serverFuture.cancel(true);
+		currentVotingClients = null;
 	}
 
 

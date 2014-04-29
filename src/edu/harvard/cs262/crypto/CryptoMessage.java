@@ -5,6 +5,7 @@ import java.io.Serializable;
 public class CryptoMessage implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
+	private String tag;
 	private String sessionID;
 	private String plainText;
 	private String cipherText;
@@ -16,12 +17,14 @@ public class CryptoMessage implements Serializable {
 		sessionID = (sid.length() > 0) ? sid : "";
 		plainText = ptext;
 		cipherText = "";
+		tag = "";
 	}
 	
 	public CryptoMessage(String ptext, String ctext, String sid) {
 		sessionID = (sid.length() > 0) ? sid : "";
 		plainText = ptext;
 		cipherText = ctext;
+		tag = "";
 	}
 	
 	public String toString() {
@@ -66,5 +69,25 @@ public class CryptoMessage implements Serializable {
 
 	public void setEncryptionState(Object encryptionState) {
 		this.encryptionState = encryptionState;
+	}
+	
+	
+	/**
+	 * Tags are a mechanism to give context to the message.
+	 * For example an eavesdroping client will be able to
+	 * tell what the message is for. This makes the console
+	 * application a lot more interesting.
+	 * @return
+	 */
+	public String getTag() {
+		return tag;
+	}
+
+	public void setTag(String tag) {
+		this.tag = tag;
+	}
+	
+	public boolean hasTag() {
+		return tag.length() > 0;
 	}
 }
