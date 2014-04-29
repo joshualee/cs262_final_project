@@ -32,6 +32,7 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 
 
 public class EVoteServer extends CentralServer {
+	private static final int EVOTETIMEOUT = 5; // in seconds 
 	private Set<String> currentVotingClients;
 	protected Map<String, Map<String, CryptoMessage>> sessions;
 	
@@ -305,15 +306,14 @@ public class EVoteServer extends CentralServer {
 		serverFuture = pool.submit(new serverEVote(evote, votingClients));
 		
 		// do abortion handling...
+		long elapsedTime = 0;
 		long startTime = System.currentTimeMillis();
 		
 		
 		while (!serverFuture.isDone()) {
-			long currentTime = System.currentTimeMillis();
-			long elapsedTime = currentTime - startTime;
-			long maxTime = 15000;
-			if (elapsedTime > maxTime) {
-				String reason = String.format("abort vote for ballot %s because took longer than %sms", evote.id, maxTime);
+			elapsedTime = System.currentTimeMillis() - startTime;
+			if (elapsedTime > EVOTETIMEOUT * 1000) {
+				String reason = String.format("abort vote for ballot %s because took longer than %s", evote.id, EVOTETIMEOUT);
 				abortEVote(reason, serverFuture, votingClients);
 				return;
 			}

@@ -251,7 +251,6 @@ public class EVoteClient extends DHCryptoClient {
 		}
 		
 		
-		
 		try {
 			scan = new Scanner(System.in);
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
