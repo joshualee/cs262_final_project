@@ -305,9 +305,19 @@ public class EVoteServer extends CentralServer {
 		serverFuture = pool.submit(new serverEVote(evote, votingClients));
 		
 		// do abortion handling...
+		long startTime = System.currentTimeMillis();
 		
 		
 		while (!serverFuture.isDone()) {
+			long currentTime = System.currentTimeMillis();
+			long elapsedTime = currentTime - startTime;
+			long maxTime = 15000;
+			if (elapsedTime > maxTime) {
+				String reason = String.format("abort vote for ballot %s because took longer than %sms", evote.id, maxTime);
+				abortEVote(reason, serverFuture, votingClients);
+				return;
+			}
+			
 			for (Entry<String, Future<Object>> entry : clientFutures.entrySet()) {
 				String clientName = entry.getKey();
 				clientFuture = entry.getValue();
@@ -319,6 +329,7 @@ public class EVoteServer extends CentralServer {
 						String reason = String.format("abort vote for ballot %s because %s failed", evote.id, clientName);
 						unregisterClient(clientName);
 						abortEVote(reason, serverFuture, votingClients);
+						return;
 					}
 				}
 			}
