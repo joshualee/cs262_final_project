@@ -266,6 +266,7 @@ public class EVoteServer extends CentralServer {
 			try {
 				doEvote(evote, votingClients);
 			} catch (InterruptedException e) {
+				// TODO: add debug+ message...
 				// do nothing -- vote was aborted because client failed 
 			}
 			
@@ -316,6 +317,7 @@ public class EVoteServer extends CentralServer {
 					} catch (ExecutionException e) {
 						// client failed
 						String reason = String.format("abort vote for ballot %s because %s failed", evote.id, clientName);
+						unregisterClient(clientName);
 						abortEVote(reason, serverFuture, votingClients);
 					}
 				}
