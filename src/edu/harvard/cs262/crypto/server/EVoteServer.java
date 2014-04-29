@@ -32,7 +32,7 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 
 
 public class EVoteServer extends CentralServer {
-	private static final int EVOTETIMEOUT = 5; // in seconds 
+	private static final int EVOTETIMEOUT = 30; // in seconds 
 	private Set<String> currentVotingClients;
 	protected Map<String, Map<String, CryptoMessage>> sessions;
 	
@@ -103,7 +103,7 @@ public class EVoteServer extends CentralServer {
 		// relay message to all other voting clients
 		
 		CryptoMessage relayMessage = new CryptoMessage(m.getPlainText(), m.getCipherText(), "");
-		System.out.println(m.getTag() + ": " + m.getPlainText() + " || " + m.getCipherText());
+//		System.out.println(m.getTag() + ": " + m.getPlainText() + " || " + m.getCipherText());
 		relayMessage.setTag(m.getTag());
 		for (String clientName : currentVotingClients) {
 			if (!clientName.equals(from)) {

@@ -200,7 +200,7 @@ public class CentralServer implements CryptoServer {
 							failedAttempts.get(clientName) + 1 : 1;
 					
 					
-					log.print(VPrint.DEBUG, "%s failed ping (%d)", clientName, failCount);
+					log.print(VPrint.LOUD, "%s failed ping (%d)", clientName, failCount);
 					
 					if (failCount >= maxFails) {
 						unregisterClient(clientName);

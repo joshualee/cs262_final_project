@@ -189,7 +189,7 @@ public class EVoteClient extends DHCryptoClient {
 				log.print(VPrint.WARN, "asked to abort vote, but not currently voting");
 			}
 			else {
-				currentVote.cancel(true);
+//				currentVote.cancel(true);
 				log.print(VPrint.ERROR, "%s", abortMessage);
 				currentVote = null;
 			}
