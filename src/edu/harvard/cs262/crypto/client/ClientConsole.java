@@ -51,6 +51,7 @@ public class ClientConsole {
 				"r: see list of all received messages\n" +
 				"q: quit\n" +
 				"h: display this menu";
+			String s = "";
 
 			while (true) {
 
@@ -75,7 +76,7 @@ public class ClientConsole {
 				// TODO: should have some way to escape back to main menu?
 				while (reg) {
 					System.out.print("\n>> ");
-					String s = scan.nextLine();
+					s = scan.nextLine();
 
 					// unregsiter client
 					if (s.equals("u")) {
