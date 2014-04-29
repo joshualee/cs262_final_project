@@ -98,9 +98,12 @@ public class EVoteServer extends CentralServer {
 	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		Map<String, CryptoMessage> sessionMap;
 		
-		CryptoMessage relayMessage = new CryptoMessage(m.getPlainText(), "");
-		relayMessage.setTag(m.getTag());
+		
 		// relay message to all other voting clients
+		
+		CryptoMessage relayMessage = new CryptoMessage(m.getPlainText(), m.getCipherText(), "");
+		System.out.println(m.getTag() + ": " + m.getPlainText() + " || " + m.getCipherText());
+		relayMessage.setTag(m.getTag());
 		for (String clientName : currentVotingClients) {
 			if (!clientName.equals(from)) {
 				getClient(clientName).recvMessage(from, "voters", relayMessage);	

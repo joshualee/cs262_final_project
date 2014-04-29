@@ -67,7 +67,9 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 //		System.out.println(String.format("DHT: (%s, %s, %s)", dht.g, dht.p, dht.xhat));
 		
 		BigInteger y = new BigInteger(key.getBits(), rand).mod(dht.p);
+		System.out.println("y:" + y );
 		BigInteger yhat = dht.g.modPow(y, dht.p);
+		System.out.println("yhat:" + yhat);
 		
 		BigInteger ciphertext = dht.xhat.modPow(y, dht.p).multiply(plaintext).mod(dht.p);
 		
