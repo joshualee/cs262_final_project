@@ -1,6 +1,7 @@
 package edu.harvard.cs262.crypto.client;
 
 import java.math.BigInteger;
+import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -39,7 +40,8 @@ public class EVoteClient extends DHCryptoClient {
 	
 	// does this need to throw ClientNotFound?	
 	private void doEvote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException {
-		Random rand = new Random(262);
+		long seed = (int) (Math.random() * 1000);
+		Random rand = new Random(seed);
 		String sid = evote.id.toString();
 		
 		/*
@@ -249,18 +251,29 @@ public class EVoteClient extends DHCryptoClient {
 			System.setSecurityManager(new SecurityManager());
 		}
 		
+		
+		
 		try {
 			scan = new Scanner(System.in);
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
 		
+			// TODO: take out label... 
 			System.out.print("Enter your name: ");
 			String clientName = scan.nextLine();
 			
 			CryptoClient myClient = new EVoteClient(clientName, server);
 			CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
-			
-			server.registerClient(myClientSer);
+			boolean registered = server.registerClient(myClientSer);
+			if (registered) {
+				System.out.println(String.format("Successfully registered with server: %s", serverName));
+				System.out.println(String.format("Please wait. Server will initiate evotes soon..."));
+			} else {
+				System.out.println(String.format("Registration with server %s failed. Please try to reconnect.", serverName));
+			}
+		}
+		catch (ConnectException e) {
+			System.out.println("Failed to find RMI registery. Either the server hasn't started yet, you have the wrong host/port, or you have a firewall issue...");
 		}
 		catch (Exception e) {
 			e.printStackTrace();

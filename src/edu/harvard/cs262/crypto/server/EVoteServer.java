@@ -102,7 +102,9 @@ public class EVoteServer extends CentralServer {
 		relayMessage.setTag(m.getTag());
 		// relay message to all other voting clients
 		for (String clientName : currentVotingClients) {
-			getClient(clientName).recvMessage(from, "voters", relayMessage);
+			if (!clientName.equals(from)) {
+				getClient(clientName).recvMessage(from, "voters", relayMessage);	
+			}
 		}
 		
 		if (m.hasSessionID()) {

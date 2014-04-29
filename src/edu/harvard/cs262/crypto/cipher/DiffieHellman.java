@@ -26,7 +26,8 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		P = BigInteger.valueOf(31123L);
 		G = BigInteger.valueOf(2341L);
 		
-		seed = 262;
+//		seed = 262;
+		seed = (int) (Math.random() * 1000);
 		rand = new Random(seed);
 		id = UUID.randomUUID();
 	}

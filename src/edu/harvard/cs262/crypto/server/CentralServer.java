@@ -59,13 +59,33 @@ public class CentralServer implements CryptoServer {
 		return name;
 	}
 	
+	protected String getClientList() {
+		String clientString = "[";
+		Set<String> clientSet = clients.keySet();
+		String[] clientArray = clientSet.toArray(new String[0]);
+		Arrays.sort(clientArray);
+		
+		for (int i = 0; i < clientArray.length; i++) {
+			if (i != clientArray.length - 1) {
+				clientString += (clientArray[i] + ", ");	
+			} else {
+				clientString += clientArray[i];
+			}
+			
+		}
+		
+		clientString += "]";
+		
+		return clientString;
+	}
+	
 	@Override
 	public String getClients() throws RemoteException{
 		String clientString = "";
 		Set<String> clientSet = clients.keySet();
 		String[] clientArray = clientSet.toArray(new String[0]);
 		Arrays.sort(clientArray);
-		for(String c : clientArray){
+		for(String c : clientArray) {
 			clientString += "\n" + c;
 		}
 		return clientString;
@@ -88,6 +108,7 @@ public class CentralServer implements CryptoServer {
 		notifications.put(clientName, newList);
 		
 		log.print(VPrint.QUIET, "registered new client: %s", clientName);
+		log.print(VPrint.QUIET, "clients: %s", getClientList());
 		return true;
 	}
 	
@@ -104,7 +125,8 @@ public class CentralServer implements CryptoServer {
 			clientList.remove(clientName);
 		}
 
-		log.print(VPrint.QUIET, "unregistered client: %s", clientName);		
+		log.print(VPrint.QUIET, "unregistered client: %s", clientName);
+		log.print(VPrint.QUIET, "clients: %s", getClientList());
 		return true;
 	}
 	
