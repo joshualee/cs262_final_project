@@ -15,8 +15,8 @@ public class ClientConsole {
 	public static void main(String args[]) {
 		Scanner scan;
 		
-		if (args.length < 3) {
-			System.err.println("usage: java DHCryptoClient rmiHost rmiPort serverName");
+		if (args.length != 3) {
+			System.err.println("usage: java ClientConsole rmiHost rmiPort serverName");
 			System.exit(1);
 		}
 
@@ -57,8 +57,12 @@ public class ClientConsole {
 
 				// make client register before it can do anything else
 				while (!reg) {
-					System.out.print("Enter your name: ");
-					clientName = scan.nextLine();
+
+					while(clientName.length() == 0){
+						System.out.print("Enter your name: ");
+						// trim trailing and leading whitespace from name
+						clientName = scan.nextLine().trim();
+					}
 					
 					myClient = new DHCryptoClient(clientName, server);
 					CryptoClient myClientSer = ((CryptoClient) UnicastRemoteObject
@@ -66,6 +70,7 @@ public class ClientConsole {
 
 					if (server.registerClient(myClientSer)) {
 						System.out.println(menu);
+						System.out.println("\nWelcome, " + clientName + ". Please choose an action.");
 						reg = true;
 						break;
 					}
@@ -82,6 +87,7 @@ public class ClientConsole {
 					if (s.equals("u")) {
 						if (server.unregisterClient(clientName)) {
 							System.out.println("You have successfully been unregistered.");
+							clientName = "";
 							reg = false;
 							break;
 						}

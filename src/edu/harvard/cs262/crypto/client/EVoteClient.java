@@ -67,7 +67,7 @@ public class EVoteClient extends DHCryptoClient {
 				break;
 			}
 			else if (clientVote.equals("n")) {
-				log.print(VPrint.QUIET, "you voted in against ballot %s", sid);
+				log.print(VPrint.QUIET, "you voted against ballot %s", sid);
 				yay_or_nay = 0;
 				break;
 			}
@@ -237,7 +237,7 @@ public class EVoteClient extends DHCryptoClient {
 		Scanner scan;
 		
 		if (args.length != 3) {
-			System.err.println("usage: java DHCryptoClient rmiHost rmiPort serverName");
+			System.err.println("usage: java EVoteClient rmiHost rmiPort serverName");
 			System.exit(1);
 		}
 		
@@ -257,8 +257,12 @@ public class EVoteClient extends DHCryptoClient {
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
 		
 			// TODO: take out label... 
-			System.out.print("Enter your name: ");
-			String clientName = scan.nextLine();
+			String clientName = "";
+			while(clientName.length() == 0){
+				System.out.print("Enter your name: ");
+				// trim trailing and leading whitespace from name
+				clientName = scan.nextLine().trim();
+			}
 			
 			CryptoClient myClient = new EVoteClient(clientName, server);
 			CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
