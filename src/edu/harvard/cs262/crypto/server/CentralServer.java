@@ -59,33 +59,33 @@ public class CentralServer implements CryptoServer {
 		return name;
 	}
 	
-	// TODO: do we need both getClients() and getClientList() ??
 	@Override
-	public String getClients() throws RemoteException{
-		String clientString = "";
-		Set<String> clientSet = clients.keySet();
-		String[] clientArray = clientSet.toArray(new String[0]);
-		Arrays.sort(clientArray);
-		for(String c : clientArray) {
-			clientString += "\n" + c;
+	public String getClientList(boolean arrayFormat) throws RemoteException {
+		String delim;
+
+		if(arrayFormat) {
+			delim = ", ";
 		}
-		return clientString;
-	}
-	
-	protected String getClientList() {
-		String clientString = "[";
+		else {
+			delim = "\n";
+		}
+		
+		String clientString = "";
 		Set<String> clientSet = clients.keySet();
 		String[] clientArray = clientSet.toArray(new String[0]);
 		Arrays.sort(clientArray);
 		
 		for (int i = 0; i < clientArray.length; i++) {
 			if (i != clientArray.length - 1) {
-				clientString += (clientArray[i] + ", ");	
+				clientString += (clientArray[i] + delim);	
 			} else {
 				clientString += clientArray[i];
 			}	
 		}
-		clientString += "]";
+		
+		if(arrayFormat){
+			clientString = "[" + clientString + "]";
+		}
 		return clientString;
 	}
 	
@@ -117,7 +117,7 @@ public class CentralServer implements CryptoServer {
 		notifications.put(clientName, newList);
 		
 		log.print(VPrint.QUIET, "registered new client: %s", clientName);
-		log.print(VPrint.QUIET, "clients: %s", getClientList());
+		log.print(VPrint.QUIET, "clients: %s", getClientList(true));
 		return true;
 	}
 	
@@ -135,7 +135,7 @@ public class CentralServer implements CryptoServer {
 		}
 
 		log.print(VPrint.QUIET, "unregistered client: %s", clientName);
-		log.print(VPrint.QUIET, "clients: %s", getClientList());
+		log.print(VPrint.QUIET, "clients: %s", getClientList(true));
 		return true;
 	}
 

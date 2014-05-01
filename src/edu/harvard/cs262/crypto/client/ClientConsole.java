@@ -77,8 +77,6 @@ public class ClientConsole {
 					System.out.println("Client with name " + clientName + " already exists.");
 				}
 
-				// TODO: need some way to escape back to main menu
-				// TODO: should have some way to escape back to main menu?
 				while (reg) {
 					System.out.print("\n>> ");
 					s = scan.nextLine();
@@ -100,7 +98,7 @@ public class ClientConsole {
 
 					// show list of registered clients
 					else if (s.equals("c")) {
-						System.out.println(server.getClients());
+						System.out.println("\n" + server.getClientList(false));
 					}
 
 					// send message to client
@@ -172,7 +170,6 @@ public class ClientConsole {
 									if (m.isEncrypted()){ 
 										System.out.println("Encrypted: " + m.getCipherText());
 									}
-									
 								}
 							}
 						} else {
@@ -185,9 +182,13 @@ public class ClientConsole {
 					else if (s.equals("h")) {
 						System.out.println(menu);
 					}
+					
+					// quit system
 					else if (s.equals("q")) {
 						System.exit(0);
 					}
+					
+					// other
 					else {
 						System.out.println("Unrecognized command.");
 					}

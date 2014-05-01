@@ -15,7 +15,7 @@ public interface CryptoServer extends Remote {
 	
 	String getName() throws RemoteException;
 	
-	String getClients() throws RemoteException;
+	String getClientList(boolean arrayFormat) throws RemoteException;
 	
 	/*
 	 * Return reference to client
