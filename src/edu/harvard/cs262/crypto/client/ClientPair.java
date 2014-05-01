@@ -36,11 +36,11 @@ public class ClientPair {
 	}
 	
 	public String getFrom() {
-		return this.from;
+		return from;
 	}
 	
 	public String getTo() {
-		return this.to;
+		return to;
 	}
 
 }

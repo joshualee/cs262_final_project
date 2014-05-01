@@ -41,8 +41,53 @@ public class EVoteServer extends CentralServer {
 		sessions = new ConcurrentHashMap<String, Map<String, CryptoMessage>>();
 		currentVotingClients = null;
 	}
-	
-	
+		
+	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+		Map<String, CryptoMessage> sessionMap;
+		
+		
+		// relay message to all other voting clients
+		
+		CryptoMessage relayMessage = new CryptoMessage(m.getPlainText(), m.getCipherText(), "");
+//		System.out.println(m.getTag() + ": " + m.getPlainText() + " || " + m.getCipherText());
+		relayMessage.setTag(m.getTag());
+		for (String clientName : currentVotingClients) {
+			if (!clientName.equals(from)) {
+				getClient(clientName).recvMessage(from, "voters", relayMessage);	
+			}
+		}
+		
+		if (m.hasSessionID()) {
+			String sid = m.getSessionID();
+			
+			synchronized (sessions) {
+				sessionMap = sessions.get(sid);
+				
+				if (sessionMap == null) {
+					sessionMap = new Hashtable<String, CryptoMessage>();
+					sessions.put(sid, sessionMap);
+				}
+				
+				sessions.notifyAll();
+			}
+			
+			
+			synchronized (sessionMap) {
+				while (sessionMap.containsKey(from)) {
+					log.print(VPrint.WARN, "(%s, %s) already has a waiting message", sid, from);
+					sessionMap.wait();
+				}
+				sessionMap.put(from, m);
+				sessionMap.notifyAll();
+			}
+			
+			// don't print message, because another thread will handle it
+			return;
+		}
+		
+		log.print(VPrint.QUIET, "%s: %s", from, m.getPlainText());
+	}
+
 	/**
 	 * Blocks until all registered clients have sent a message with sid 
 	 * @param sid the session id to wait on
@@ -93,53 +138,6 @@ public class EVoteServer extends CentralServer {
 		}
 		
 		return m;
-	}
-
-	
-	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
-		Map<String, CryptoMessage> sessionMap;
-		
-		
-		// relay message to all other voting clients
-		
-		CryptoMessage relayMessage = new CryptoMessage(m.getPlainText(), m.getCipherText(), "");
-//		System.out.println(m.getTag() + ": " + m.getPlainText() + " || " + m.getCipherText());
-		relayMessage.setTag(m.getTag());
-		for (String clientName : currentVotingClients) {
-			if (!clientName.equals(from)) {
-				getClient(clientName).recvMessage(from, "voters", relayMessage);	
-			}
-		}
-		
-		if (m.hasSessionID()) {
-			String sid = m.getSessionID();
-			
-			synchronized (sessions) {
-				sessionMap = sessions.get(sid);
-				
-				if (sessionMap == null) {
-					sessionMap = new Hashtable<String, CryptoMessage>();
-					sessions.put(sid, sessionMap);
-				}
-				
-				sessions.notifyAll();
-			}
-			
-			
-			synchronized (sessionMap) {
-				while (sessionMap.containsKey(from)) {
-					log.print(VPrint.WARN, "(%s, %s) already has a waiting message", sid, from);
-					sessionMap.wait();
-				}
-				sessionMap.put(from, m);
-				sessionMap.notifyAll();
-			}
-			
-			// don't print message, because another thread will handle it
-			return;
-		}
-		
-		log.print(VPrint.QUIET, "%s: %s", from, m.getPlainText());
 	}
 	
 	protected class clientEVote implements Callable<Object> {
@@ -361,7 +359,6 @@ public class EVoteServer extends CentralServer {
 		serverFuture.cancel(true);
 		currentVotingClients = null;
 	}
-
 
 	public static void main(String args[]) {
 		if (args.length != 2) {

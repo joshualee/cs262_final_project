@@ -34,6 +34,17 @@ public class SimpleCryptoClient implements CryptoClient {
 	
 		this.messages = new ConcurrentHashMap<ClientPair, List<CryptoMessage>>();
 	}
+
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public Map<ClientPair, List<CryptoMessage>> getMessages() {
+		return this.messages;
+	}
 	
 	
 	/**
@@ -42,7 +53,13 @@ public class SimpleCryptoClient implements CryptoClient {
 	public VPrint getLog() {
 		return log;
 	}
-	
+
+	@Override
+	public boolean ping() {
+		log.print(VPrint.DEBUG2, "pinged");
+		return true;
+	}
+		
 	protected void recordMessage(String from, String to, CryptoMessage m) {
 		ClientPair myPair = new ClientPair(from, to);
 		if (messages.containsKey(myPair)) {
@@ -66,24 +83,6 @@ public class SimpleCryptoClient implements CryptoClient {
 		String plaintext = !m.isEncrypted() ? m.getPlainText() : m.getCipherText();
 		log.print(VPrint.QUIET, "%s-%s: %s", from, to, plaintext);
 	}
-	
-
-	@Override
-	public boolean ping() {
-		log.print(VPrint.DEBUG2, "pinged");
-		return true;
-	}
-
-	@Override
-	public String getName() {
-		return name;
-	}
-
-	@Override
-	public Map<ClientPair, List<CryptoMessage>> getMessages() {
-		return this.messages;
-	}
-	
 
 	@Override
 	public void sendMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
@@ -102,6 +101,18 @@ public class SimpleCryptoClient implements CryptoClient {
 			log.print(VPrint.ERROR, e.getMessage());
 		}
 	}
+	
+	@Override
+	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException,
+			ClientNotFound, InterruptedException {
+		log.print(VPrint.ERROR, "simple client does not support sending encrypted message");
+	}	
+	
+	@Override
+	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
+		log.print(VPrint.ERROR, "simple client does not support waiting for messages");
+		return null;
+	}	
 	
 	@Override
 	public void eavesdrop(String victim) throws RemoteException {
@@ -125,28 +136,12 @@ public class SimpleCryptoClient implements CryptoClient {
 		}
 	}
 
-
-	@Override
-	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException,
-			ClientNotFound, InterruptedException {
-		log.print(VPrint.ERROR, "simple client does not support sending encrypted message");
-	}
-
-
-	@Override
-	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
-		log.print(VPrint.ERROR, "simple client does not support waiting for messages");
-		return null;
-	}
-
-
 	@Override
 	public boolean initSecureChannel(String recip, KeyExchangeProtocol kx, CryptoCipher cipher)
 			throws RemoteException, ClientNotFound, InterruptedException {
 		log.print(VPrint.ERROR, "simple client does not support secure channels");
 		return false;
 	}
-
 
 	@Override
 	public void recvSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher)
@@ -155,17 +150,14 @@ public class SimpleCryptoClient implements CryptoClient {
 		return;
 	}
 
-
+	@Override
+	public void evoteAbort(String reason) throws RemoteException {
+		log.print(VPrint.ERROR, "client does not support evoting");
+	}
+	
 	@Override
 	public void evote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult {
 		log.print(VPrint.ERROR, "simple client does not support evoting");
 		return;
 	}
-
-
-	@Override
-	public void evoteAbort(String reason) throws RemoteException {
-		log.print(VPrint.ERROR, "client does not support evoting");
-	}
-
 }
