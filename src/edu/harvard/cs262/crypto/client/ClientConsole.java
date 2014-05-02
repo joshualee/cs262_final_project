@@ -173,8 +173,7 @@ public class ClientConsole {
 								}
 							}
 						} else {
-							System.out
-									.println("You have not received or eavesdropped on any messages.");
+							System.out.println("You have not received or eavesdropped on any messages.");
 						}
 					}
 
