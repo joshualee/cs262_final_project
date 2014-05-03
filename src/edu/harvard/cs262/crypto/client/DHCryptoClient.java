@@ -27,7 +27,7 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
-public class DHCryptoClient extends SimpleCryptoClient {
+public class DHCryptoClient extends SimpleCryptoClient {	
 	protected Map<String, CryptoCipher> ciphers;
 	protected Map<String, CryptoMessage> sessions;
 	

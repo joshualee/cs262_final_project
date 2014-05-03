@@ -32,14 +32,30 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 
 
 public class EVoteServer extends CentralServer {
-	private static final int EVOTETIMEOUT = 30; // in seconds 
+	protected static final int EVOTETIMEOUT = 300; // in seconds 
 	private Set<String> currentVotingClients;
 	protected Map<String, Map<String, CryptoMessage>> sessions;
 	
 	public EVoteServer(String name) {
 		super(name);
 		sessions = new ConcurrentHashMap<String, Map<String, CryptoMessage>>();
-		currentVotingClients = null;
+		currentVotingClients = new HashSet<String>();
+	}
+	
+	@Override
+	public boolean unregisterClient(String clientName) throws RemoteException {
+		
+		synchronized (currentVotingClients) {
+			if (currentVotingClients.contains(clientName)) {
+				String msg = String.format("aborting vote because %s unregistered midvote", clientName);
+				// since we don't have a reference to the server thread doing the vote here
+				// we don't cancel it. in the future, we can make the server thread into
+				// an instance variable so we have a reference
+				abortEVote(msg, null, currentVotingClients);
+			}
+		}
+		
+		return super.unregisterClient(clientName);
 	}
 	
 	
@@ -105,9 +121,13 @@ public class EVoteServer extends CentralServer {
 		CryptoMessage relayMessage = new CryptoMessage(m.getPlainText(), m.getCipherText(), "");
 //		System.out.println(m.getTag() + ": " + m.getPlainText() + " || " + m.getCipherText());
 		relayMessage.setTag(m.getTag());
-		for (String clientName : currentVotingClients) {
-			if (!clientName.equals(from)) {
-				getClient(clientName).recvMessage(from, "voters", relayMessage);	
+		
+		
+		synchronized (currentVotingClients) {
+			for (String clientName : currentVotingClients) {
+				if (!clientName.equals(from)) {
+					getClient(clientName).recvMessage(from, "voters", relayMessage);	
+				}
 			}
 		}
 		
@@ -165,7 +185,7 @@ public class EVoteServer extends CentralServer {
 
 	private void doEvote(EVote evote, Set<String> votingClients) throws InterruptedException, RemoteException, ClientNotFound {
 		String sid = evote.id.toString();
-		log.print(VPrint.QUIET, "initiating ballot %s", sid);
+		log.print(VPrint.QUIET, "initiating ballot %s with %d voters", sid, votingClients.size());
 		
 		/*
 		 * EVote phase 3:
@@ -267,6 +287,7 @@ public class EVoteServer extends CentralServer {
 			try {
 				doEvote(evote, votingClients);
 			} catch (InterruptedException e) {
+				log.print(VPrint.ERROR, "serverEVote: %s", e.getCause().getMessage());
 				// TODO: add debug+ message...
 				// do nothing -- vote was aborted because client failed 
 			}
@@ -286,7 +307,10 @@ public class EVoteServer extends CentralServer {
 			return;
 		}
 		
-		currentVotingClients = votingClients;
+		synchronized (currentVotingClients) {
+			currentVotingClients.addAll(votingClients);
+		}
+		
 		
 		// hack b/c concurrentset is not serializable
 		Set<String> votingClientsSer = new HashSet<String>(votingClients);
@@ -320,11 +344,14 @@ public class EVoteServer extends CentralServer {
 			
 			for (Entry<String, Future<Object>> entry : clientFutures.entrySet()) {
 				String clientName = entry.getKey();
+//				System.out.println(String.format("Testing: %s", clientName));
 				clientFuture = entry.getValue();
 				if (clientFuture.isDone()) {
 					try {
 						clientFuture.get();
 					} catch (ExecutionException e) {
+						log.print(VPrint.DEBUG, "ExecutionException: %s", e.getMessage());
+						log.print(VPrint.DEBUG, "ExecutionException reason: %s", e.getCause().getMessage());
 						// client failed
 						String reason = String.format("abort vote for ballot %s because %s failed", evote.id, clientName);
 						unregisterClient(clientName);
@@ -338,17 +365,27 @@ public class EVoteServer extends CentralServer {
 		// evote successful!
 		// TODO: make currentVotingClients synchronous...
 		// right now we assume only one evote can happen at a time
-		currentVotingClients = null;
+		synchronized (currentVotingClients) {
+			currentVotingClients.clear();
+		}
 	}
 	
 	private void abortEVote(String abortMessage, Future<Object> serverFuture,
 			Set<String> votingClients) {
+		
+		// make sure a vote is actually going on
+		if (votingClients.size() == 0) {
+			return;
+		}
+		
+		log.print(VPrint.DEBUG, "abortEvote(%s)", abortMessage);
 		
 		log.print(VPrint.ERROR, "%s", abortMessage);
 		
 		// abort client threads
 		for (String clientName: votingClients) {
 			try {
+				log.print(VPrint.DEBUG, "calling %s.evoteAbort", clientName);
 				getClient(clientName).evoteAbort(abortMessage);
 			} catch (ClientNotFound e) {
 				// do nothing -- client probably died and we automatically unregistered 
@@ -358,8 +395,13 @@ public class EVoteServer extends CentralServer {
 		}
 		
 		// abort server thread
-		serverFuture.cancel(true);
-		currentVotingClients = null;
+		if (serverFuture != null) {
+			serverFuture.cancel(true);
+		}
+		
+		synchronized (currentVotingClients) {
+			currentVotingClients.clear();
+		}
 	}
 
 
