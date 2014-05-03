@@ -13,4 +13,5 @@ public interface CryptoCipher {
 	CryptoMessage encryptInteger(BigInteger plaintext);
 	String decrypt(CryptoMessage cm);
 	String decryptInteger(CryptoMessage cm);
+	CryptoCipher copy();
 }

@@ -43,6 +43,16 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		return id.toString();
 	}
 	
+	// for testing
+	public UUID getFullProtocolId() {
+		return id;
+	}
+	
+	// for testing
+	public void setProtocolId(UUID id) {
+		this.id = id;
+	}
+	
 	public int getBits() {
 		return BITS;
 	}
@@ -82,5 +92,12 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		
 		me.getLog().print(VPrint.DEBUG, "(%s) DiffieHellman exchange successful", me.getName());
 		return ck;
+	}
+
+	@Override
+	public KeyExchangeProtocol copy() {
+		DiffieHellman dh = new DiffieHellman();
+		dh.setProtocolId(id);
+		return dh;
 	}
 }

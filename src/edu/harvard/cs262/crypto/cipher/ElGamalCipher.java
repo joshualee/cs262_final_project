@@ -19,7 +19,6 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 	
 	public ElGamalCipher() {
 		key = null;
-//		seed = 262;
 		seed = (int) (Math.random() * 1000);
 		rand = new Random(seed);
 	}
@@ -37,7 +36,6 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 
 	@Override
 	public CryptoMessage encrypt(String plaintext) {
-//		System.out.println(String.format("Encrypting: %s", plaintext));
 		DHTuple dht = (DHTuple) key.getPublic();
 		
 		BigInteger y = new BigInteger(key.getBits(), rand).mod(dht.p);
@@ -52,7 +50,7 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 			BigInteger m = BigInteger.valueOf(cs[i]);
 			BigInteger tmp = dht.xhat.modPow(y, dht.p).multiply(m).mod(dht.p);
 			new_cs[i] = (char) tmp.intValue();
-//			System.out.println(String.format("cs[i]=%s, m=%s, tmp=%s, new_cs[i]=%s", cs[i], m.toString(), tmp.toString(), (int) new_cs[i]));
+			System.out.println(String.format("enc: cs[i]=%s, m=%s, tmp=%s, new_cs[i]=%s", cs[i], m.toString(), tmp.toString(), (int) new_cs[i]));
 		}
 		
 		String ciphertext = new String(new_cs);
@@ -64,16 +62,11 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 	// TODO: I duplicate code from above...
 	public CryptoMessage encryptInteger(BigInteger plaintext) {
 		DHTuple dht = (DHTuple) key.getPublic();
-//		System.out.println(String.format("DHT: (%s, %s, %s)", dht.g, dht.p, dht.xhat));
 		
 		BigInteger y = new BigInteger(key.getBits(), rand).mod(dht.p);
-//		System.out.println("y:" + y );
 		BigInteger yhat = dht.g.modPow(y, dht.p);
-//		System.out.println("yhat:" + yhat);
 		
 		BigInteger ciphertext = dht.xhat.modPow(y, dht.p).multiply(plaintext).mod(dht.p);
-		
-//		System.out.println(String.format("plaintext=%s, ciphertext=%s, y=%s, yhat=%s", plaintext, ciphertext, y, yhat));
 		
 		CryptoMessage m = new CryptoMessage(plaintext.toString(), ciphertext.toString(), "");
 		m.setEncryptionState(yhat);
@@ -108,14 +101,16 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 			
 			BigInteger tmp = yhat.modPow(x, dht.p).modInverse(dht.p).multiply(m).mod(dht.p);
 			new_cs[i] = (char) tmp.intValue();
-			
-//			System.out.println(String.format("cs[i]=%s, m=%s, tmp=%s, new_cs[i]=%s", cs[i], m.toString(), tmp.toString(), new_cs[i]));
 		}
 		
 		String plaintext = new String(new_cs);
 		
-//		System.out.println(String.format("Decrypted: %s", plaintext));
-		
 		return plaintext;
+	}
+
+	@Override
+	public CryptoCipher copy() {
+		ElGamalCipher eg = new ElGamalCipher();
+		return eg;
 	}
 }

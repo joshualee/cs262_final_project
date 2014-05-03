@@ -203,9 +203,12 @@ public class DHCryptoClient extends SimpleCryptoClient {
 			log.print(VPrint.WARN, "encryption key for %s already exists", counterParty);
 		}
 		
+		KeyExchangeProtocol kx2 = kx.copy();
+		CryptoCipher cipher2 = cipher.copy();
+		
 		ExecutorService pool = Executors.newFixedThreadPool(2);
 		myFuture = pool.submit(new initSecureChannelCallable(counterParty, kx, this));
-		cpFuture = pool.submit(new recvSecureChannelCallable(counterParty, kx, cipher));
+		cpFuture = pool.submit(new recvSecureChannelCallable(counterParty, kx2, cipher2));
 		
 		while (!cpFuture.isDone()) {
 			// myFuture doesn't finish until cpFuture finishes 
@@ -249,5 +252,13 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	public void evote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult {
 		log.print(VPrint.ERROR, "diffie hellman client does not support evoting");
 		return;
+	}
+	
+	public void dropKeys() {
+		ciphers.clear();
+	}
+	
+	public void setKey(String name, CryptoCipher c) {
+		ciphers.put(name, c);
 	}
 }
