@@ -47,7 +47,7 @@ public class CentralServer implements CryptoServer {
 		
 		Executors.newSingleThreadExecutor().submit(new Runnable() { public void run() {
 			try {
-				heartbeatClients(2, 2, 1);
+				heartbeatClients(20, 2, 1);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -167,8 +167,16 @@ public class CentralServer implements CryptoServer {
 		relayMessage(to, from, to, m);
 		relayMessage(from, from, to, m);
 
+		String msg;
 		// finally send message to intended recipient
-		return getClient(to).recvMessage(from, to, m);			
+		try {
+			msg = getClient(to).recvMessage(from, to, m);
+		} catch (RemoteException e) {
+			// client failed before we detected failure using ping
+			throw new ClientNotFound(String.format("server unable to reach client %s", to));
+		}
+		
+		return msg;			
 	}	
 
 	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
