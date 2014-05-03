@@ -153,12 +153,13 @@ public class CentralServer implements CryptoServer {
 	}
 	
 	@Override
-	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		log.print(VPrint.ERROR, "central server does not implement receive messages");
+		return "";
 	}
 	
 	@Override
-	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+	public String sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		assertClientRegistered(from);
 		assertClientRegistered(to);
 		
@@ -167,7 +168,7 @@ public class CentralServer implements CryptoServer {
 		relayMessage(from, from, to, m);
 
 		// finally send message to intended recipient
-		getClient(to).recvMessage(from, to, m);			
+		return getClient(to).recvMessage(from, to, m);			
 	}	
 
 	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {

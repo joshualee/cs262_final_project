@@ -24,9 +24,9 @@ public interface CryptoClient extends Remote {
 	/*
 	 * Handlers for client to send/receive messages.
 	 */
-	void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, InterruptedException;
-	void sendMessage(String to, String msg, String sid) throws RemoteException, ClientNotFound, InterruptedException;
-	void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException;
+	String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, InterruptedException;
+	String sendMessage(String to, String msg, String sid) throws RemoteException, ClientNotFound, InterruptedException;
+	String sendEncryptedMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException;
 	CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException;
 	
 	void eavesdrop(String victim) throws RemoteException, ClientNotFound;

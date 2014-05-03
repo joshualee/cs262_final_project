@@ -111,7 +111,7 @@ public class EVoteServer extends CentralServer {
 		return m;
 	}
 	
-	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		Map<String, CryptoMessage> sessionMap;
 		
 		
@@ -155,10 +155,11 @@ public class EVoteServer extends CentralServer {
 			}
 			
 			// don't print message, because another thread will handle it
-			return;
+			return "";
 		}
 		
 		log.print(VPrint.QUIET, "%s: %s", from, m.getPlainText());
+		return m.getPlainText();
 	}
 	
 	protected class clientEVote implements Callable<Object> {

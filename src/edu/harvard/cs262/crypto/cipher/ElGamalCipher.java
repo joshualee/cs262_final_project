@@ -50,7 +50,6 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 			BigInteger m = BigInteger.valueOf(cs[i]);
 			BigInteger tmp = dht.xhat.modPow(y, dht.p).multiply(m).mod(dht.p);
 			new_cs[i] = (char) tmp.intValue();
-			System.out.println(String.format("enc: cs[i]=%s, m=%s, tmp=%s, new_cs[i]=%s", cs[i], m.toString(), tmp.toString(), (int) new_cs[i]));
 		}
 		
 		String ciphertext = new String(new_cs);

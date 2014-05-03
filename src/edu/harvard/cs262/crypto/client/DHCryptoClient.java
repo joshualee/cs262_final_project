@@ -38,7 +38,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	}
 	
 	@Override
-	public void recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
+	public String recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
 		String plaintext;
 		
 		log.print(VPrint.DEBUG2, "(%s) recvMessage(%s, %s, m)", name, from, to);
@@ -69,7 +69,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 				sessions.notifyAll();
 			}
 			log.print(VPrint.DEBUG2, "(%s) done recvMessage", name);
-			return;
+			return "";
 		}
 
 		/*
@@ -98,12 +98,14 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		} else {
 			log.print(VPrint.QUIET, "%s-%s: %s", from, to, plaintext);	
 		}
+		
+		return plaintext;
 	}
 
-	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
+	public String sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
 		if (name.equals(to)) {
 			log.print(VPrint.ERROR, "cannot send encrypted messages to yourself");
-			return;
+			return "";
 		}
 		
 		try {
@@ -112,17 +114,19 @@ public class DHCryptoClient extends SimpleCryptoClient {
 				DiffieHellman dh = new DiffieHellman();
 				ElGamalCipher eg = new ElGamalCipher();
 				if (initSecureChannel(to, dh, eg)) {
-					sendEncryptedMessage(to, text, sid);	
+					return sendEncryptedMessage(to, text, sid);	
 				}
-				return;
+				return "";
 			}
 
 			CryptoMessage m = c.encrypt(text);
 			m.setSessionID(sid);
-			server.sendMessage(name, to, m);
+			return server.sendMessage(name, to, m);
 		} catch (ClientNotFound e) {
 			log.print(VPrint.ERROR, e.getMessage());
 		}
+		
+		return "";
 	}
 		
 	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {

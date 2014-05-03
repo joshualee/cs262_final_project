@@ -73,7 +73,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 
 	@Override
-	public void recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
+	public String recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
 		log.print(VPrint.DEBUG2, "(%s) recvMessage(%s, %s, m)", name, from, to);
 		
 		// add message to message history
@@ -82,13 +82,15 @@ public class SimpleCryptoClient implements CryptoClient {
 		// process message (we can't deal with encrypted messages)
 		String plaintext = !m.isEncrypted() ? m.getPlainText() : m.getCipherText();
 		log.print(VPrint.QUIET, "%s-%s: %s", from, to, plaintext);
+		
+		return plaintext;
 	}
 
 	@Override
-	public void sendMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
+	public String sendMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
 		if (name.equals(to)) {
 			log.print(VPrint.ERROR, "cannot send messages to yourself");
-			return;
+			return "";
 		}
 		try {
 			log.print(VPrint.DEBUG, "(%s) sending message to %s with session %s: %s", name, to, sid, text);
@@ -96,16 +98,19 @@ public class SimpleCryptoClient implements CryptoClient {
 			if (sid.length() > 0) {
 				m.setSessionID(sid);
 			}
-			server.sendMessage(name, to, m);
+			return server.sendMessage(name, to, m);
 		} catch (ClientNotFound e) {
 			log.print(VPrint.ERROR, e.getMessage());
 		}
+		
+		return "";
 	}
 	
 	@Override
-	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException,
+	public String sendEncryptedMessage(String to, String text, String sid) throws RemoteException,
 			ClientNotFound, InterruptedException {
 		log.print(VPrint.ERROR, "simple client does not support sending encrypted message");
+		return "";
 	}	
 	
 	@Override

@@ -84,7 +84,7 @@ public class CryptoCipherTests {
 		assertEquals("19968", k2DHT.xhat.toString());
     }
 	
-	
+	@Test
 	public void ElGamal() {
 		// set up valid key
 		CryptoKey k = new CryptoKey();
@@ -119,8 +119,11 @@ public class CryptoCipherTests {
 		String testMessage = "hello c2"; 
 		String testMessage2 = "whats up c1"; 
 		
-		c1.sendEncryptedMessage("c2", testMessage, "");
-		c2.sendEncryptedMessage("c1", testMessage2, "");
+		String recvMessage = c1.sendEncryptedMessage("c2", testMessage, "");
+		String recvMessage2 = c2.sendEncryptedMessage("c1", testMessage2, "");
+		
+		assertEquals(testMessage, recvMessage);
+		assertEquals(testMessage2, recvMessage2);
 	}
 
 }
