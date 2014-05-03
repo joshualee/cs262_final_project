@@ -15,8 +15,8 @@ public class ClientConsole {
 	public static void main(String args[]) {
 		Scanner scan;
 		
-		if (args.length < 3) {
-			System.err.println("usage: java DHCryptoClient rmiHost rmiPort serverName");
+		if (args.length != 3) {
+			System.err.println("usage: java ClientConsole rmiHost rmiPort serverName");
 			System.exit(1);
 		}
 
@@ -57,8 +57,12 @@ public class ClientConsole {
 
 				// make client register before it can do anything else
 				while (!reg) {
-					System.out.print("Enter your name: ");
-					clientName = scan.nextLine();
+
+					while(clientName.length() == 0){
+						System.out.print("Enter your name: ");
+						// trim trailing and leading whitespace from name
+						clientName = scan.nextLine().trim();
+					}
 					
 					myClient = new DHCryptoClient(clientName, server);
 					CryptoClient myClientSer = ((CryptoClient) UnicastRemoteObject
@@ -66,14 +70,13 @@ public class ClientConsole {
 
 					if (server.registerClient(myClientSer)) {
 						System.out.println(menu);
+						System.out.println("\nWelcome, " + clientName + ". Please choose an action.");
 						reg = true;
 						break;
 					}
 					System.out.println("Client with name " + clientName + " already exists.");
 				}
 
-				// TODO: need some way to escape back to main menu
-				// TODO: should have some way to escape back to main menu?
 				while (reg) {
 					System.out.print("\n>> ");
 					s = scan.nextLine();
@@ -82,6 +85,7 @@ public class ClientConsole {
 					if (s.equals("u")) {
 						if (server.unregisterClient(clientName)) {
 							System.out.println("You have successfully been unregistered.");
+							clientName = "";
 							reg = false;
 							break;
 						}
@@ -94,7 +98,7 @@ public class ClientConsole {
 
 					// show list of registered clients
 					else if (s.equals("c")) {
-						System.out.println(server.getClients());
+						System.out.println("\n" + server.getClientList(false));
 					}
 
 					// send message to client
@@ -166,12 +170,10 @@ public class ClientConsole {
 									if (m.isEncrypted()){ 
 										System.out.println("Encrypted: " + m.getCipherText());
 									}
-									
 								}
 							}
 						} else {
-							System.out
-									.println("You have not received or eavesdropped on any messages.");
+							System.out.println("You have not received or eavesdropped on any messages.");
 						}
 					}
 
@@ -179,9 +181,13 @@ public class ClientConsole {
 					else if (s.equals("h")) {
 						System.out.println(menu);
 					}
+					
+					// quit system
 					else if (s.equals("q")) {
 						System.exit(0);
 					}
+					
+					// other
 					else {
 						System.out.println("Unrecognized command.");
 					}

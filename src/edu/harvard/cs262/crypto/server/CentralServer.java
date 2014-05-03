@@ -59,37 +59,46 @@ public class CentralServer implements CryptoServer {
 		return name;
 	}
 	
-	protected String getClientList() {
-		String clientString = "[";
+	@Override
+	public String getClientList(boolean arrayFormat) throws RemoteException {
+		String delim;
+
+		if(arrayFormat) {
+			delim = ", ";
+		}
+		else {
+			delim = "\n";
+		}
+		
+		String clientString = "";
 		Set<String> clientSet = clients.keySet();
 		String[] clientArray = clientSet.toArray(new String[0]);
 		Arrays.sort(clientArray);
 		
 		for (int i = 0; i < clientArray.length; i++) {
 			if (i != clientArray.length - 1) {
-				clientString += (clientArray[i] + ", ");	
+				clientString += (clientArray[i] + delim);	
 			} else {
 				clientString += clientArray[i];
-			}
-			
+			}	
 		}
 		
-		clientString += "]";
-		
+		if(arrayFormat){
+			clientString = "[" + clientString + "]";
+		}
 		return clientString;
 	}
 	
 	@Override
-	public String getClients() throws RemoteException{
-		String clientString = "";
-		Set<String> clientSet = clients.keySet();
-		String[] clientArray = clientSet.toArray(new String[0]);
-		Arrays.sort(clientArray);
-		for(String c : clientArray) {
-			clientString += "\n" + c;
-		}
-		return clientString;
+	public CryptoClient getClient(String clientName) throws RemoteException, ClientNotFound {
+		assertClientRegistered(clientName);
+		return clients.get(clientName);
 	}
+
+	@Override
+	public boolean ping() throws RemoteException{
+		return true;
+	}	
 	
 	@Override
 	public boolean registerClient(CryptoClient c) throws RemoteException {
@@ -108,7 +117,7 @@ public class CentralServer implements CryptoServer {
 		notifications.put(clientName, newList);
 		
 		log.print(VPrint.QUIET, "registered new client: %s", clientName);
-		log.print(VPrint.QUIET, "clients: %s", getClientList());
+		log.print(VPrint.QUIET, "clients: %s", getClientList(true));
 		return true;
 	}
 	
@@ -126,8 +135,86 @@ public class CentralServer implements CryptoServer {
 		}
 
 		log.print(VPrint.QUIET, "unregistered client: %s", clientName);
-		log.print(VPrint.QUIET, "clients: %s", getClientList());
+		log.print(VPrint.QUIET, "clients: %s", getClientList(true));
 		return true;
+	}
+
+	private void assertClientRegistered(String clientName) throws ClientNotFound {
+		if (!clients.containsKey(clientName)) {
+			throw new ClientNotFound(clientName + " is not registered.");
+		}
+	}
+	
+	private void relayMessage(String relayTarget, String from, String to, CryptoMessage m) throws RemoteException, InterruptedException, ClientNotFound {
+		List<String> listeners = notifications.get(relayTarget);
+		for (String cname : listeners) {
+			getClient(cname).recvMessage(from, to, m);
+		}
+	}
+	
+	@Override
+	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+		log.print(VPrint.ERROR, "central server does not implement receive messages");
+	}
+	
+	@Override
+	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+		assertClientRegistered(from);
+		assertClientRegistered(to);
+		
+		// first send message to all clients in notification lists (to and from)
+		relayMessage(to, from, to, m);
+		relayMessage(from, from, to, m);
+
+		// finally send message to intended recipient
+		getClient(to).recvMessage(from, to, m);			
+	}	
+
+	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
+		log.print(VPrint.ERROR, "central server does not implement waiting for messages");
+		return null;
+	}
+	
+	public CryptoMessage waitForMessage(String from, String sid) throws InterruptedException {
+		log.print(VPrint.ERROR, "central server does not implement waiting for messages");
+		return null;
+	}
+
+	@Override
+	public void eavesdrop(String listener, String victim) throws RemoteException, ClientNotFound {
+		assertClientRegistered(listener);
+		assertClientRegistered(victim);
+		
+		// TODO: assumes if victim is a client, then vicList won't be null
+		List<String> vicList = notifications.get(victim);
+			
+		if (!vicList.contains(listener)) {
+			vicList.add(listener);
+		}
+		else {
+			log.print(VPrint.WARN, "%s is already listening to %s", listener, victim);
+		}
+	}
+	
+	@Override
+	public void stopEavesdrop(String listener, String victim) throws RemoteException, ClientNotFound {
+		assertClientRegistered(listener);
+		assertClientRegistered(victim);
+		
+		List<String> vicList = notifications.get(victim);
+		vicList.remove(listener);
+	}
+
+	@Override
+	public void relaySecureChannel(String from, String to, KeyExchangeProtocol kx, CryptoCipher cipher) throws ClientNotFound, RemoteException, InterruptedException {
+		assertClientRegistered(from);
+		assertClientRegistered(to);
+		
+		getClient(to).recvSecureChannel(from, kx, cipher);
+	}	
+
+	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
+		log.print(VPrint.ERROR, "central server does not implement evoting");
 	}
 	
 	private class ClientPingCallable implements Callable<Boolean> {
@@ -213,97 +300,7 @@ public class CentralServer implements CryptoServer {
 			}
 		}
 	}
-	
-	private void assertClientRegistered(String clientName) throws ClientNotFound {
-		if (!clients.containsKey(clientName)) {
-			throw new ClientNotFound(clientName + " is not registered.");
-		}
-	}
-
-	@Override
-	public void eavesdrop(String listener, String victim) throws RemoteException, ClientNotFound {
-		assertClientRegistered(listener);
-		assertClientRegistered(victim);
 		
-		// TODO: assumes if victim is a client, then vicList won't be null
-		List<String> vicList = notifications.get(victim);
-			
-		if (!vicList.contains(listener)) {
-			vicList.add(listener);
-		}
-		else {
-			log.print(VPrint.WARN, "%s is already listening to %s", listener, victim);
-		}
-	}
-	
-	@Override
-	public void stopEavesdrop(String listener, String victim) throws RemoteException, ClientNotFound {
-		assertClientRegistered(listener);
-		assertClientRegistered(victim);
-		
-		List<String> vicList = notifications.get(victim);
-		vicList.remove(listener);
-	}
-	
-	private void relayMessage(String relayTarget, String from, String to, CryptoMessage m) throws RemoteException, InterruptedException, ClientNotFound {
-		List<String> listeners = notifications.get(relayTarget);
-		for (String cname : listeners) {
-			getClient(cname).recvMessage(from, to, m);
-		}
-	}
-	
-	@Override
-	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
-		assertClientRegistered(from);
-		assertClientRegistered(to);
-		
-		// first send message to all clients in notification lists (to and from)
-		relayMessage(to, from, to, m);
-		relayMessage(from, from, to, m);
-
-		// finally send message to intended recipient
-		getClient(to).recvMessage(from, to, m);			
-	}
-
-	@Override
-	public CryptoClient getClient(String clientName) throws RemoteException, ClientNotFound {
-		assertClientRegistered(clientName);
-		return clients.get(clientName);
-	}
-
-	@Override
-	public boolean ping() throws RemoteException{
-		return true;
-	}
-	
-
-	@Override
-	public void relaySecureChannel(String from, String to, KeyExchangeProtocol kx, CryptoCipher cipher) throws ClientNotFound, RemoteException, InterruptedException {
-		assertClientRegistered(from);
-		assertClientRegistered(to);
-		
-		getClient(to).recvSecureChannel(from, kx, cipher);
-	}	
-
-	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
-		log.print(VPrint.ERROR, "central server does not implement waiting for messages");
-		return null;
-	}
-	
-	public CryptoMessage waitForMessage(String from, String sid) throws InterruptedException {
-		log.print(VPrint.ERROR, "central server does not implement waiting for messages");
-		return null;
-	}
-
-	
-	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
-		log.print(VPrint.ERROR, "central server does not implement receive messages");
-	}
-	
-	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
-		log.print(VPrint.ERROR, "central server does not implement evoting");
-	}
-	
 	public static void main(String args[]) {
 		if (args.length != 2) {
 			System.err.println("usage: java CentralServer rmiport servername");

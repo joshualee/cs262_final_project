@@ -15,7 +15,14 @@ public interface CryptoServer extends Remote {
 	
 	String getName() throws RemoteException;
 	
-	String getClients() throws RemoteException;
+	String getClientList(boolean arrayFormat) throws RemoteException;
+	
+	/*
+	 * Return reference to client
+	 */
+	CryptoClient getClient(String clientName) throws RemoteException, ClientNotFound;
+	
+	public boolean ping() throws RemoteException;
 	
 	/*
 	 * Register client so server can forward it messages.
@@ -23,20 +30,6 @@ public interface CryptoServer extends Remote {
 	public boolean registerClient(CryptoClient c) throws RemoteException;
 	public boolean unregisterClient(String clientName) throws RemoteException;
 
-	/* 
-	 * Allow client "listener" to listen to all incoming
-	 * and outgoing communication of client "victim"
-	 */
-	public void eavesdrop(String listener, String victim) throws RemoteException, ClientNotFound;
-	public void stopEavesdrop(String listener, String victim) throws RemoteException, ClientNotFound;
-
-	/*
-	 * Send message "m" from client "from" to client "to".
-	 * Blocks until message has successfully been delivered.
-	 */
-	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
-	
-	
 	/**
 	 * Handle messages sent by clients directed towards server.
 	 * CryptoMessage may have session id. Sessions are distinguished
@@ -50,6 +43,19 @@ public interface CryptoServer extends Remote {
 	 */
 	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
 	
+	/*
+	 * Send message "m" from client "from" to client "to".
+	 * Blocks until message has successfully been delivered.
+	 */
+	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
+	
+		/* 
+	 * Allow client "listener" to listen to all incoming
+	 * and outgoing communication of client "victim"
+	 */
+	public void eavesdrop(String listener, String victim) throws RemoteException, ClientNotFound;
+	public void stopEavesdrop(String listener, String victim) throws RemoteException, ClientNotFound;
+	
 	/**
 	 * 
 	 * @param from
@@ -61,12 +67,5 @@ public interface CryptoServer extends Remote {
 	 */
 	public void relaySecureChannel(String from, String to, KeyExchangeProtocol kx, CryptoCipher c) throws ClientNotFound, RemoteException, InterruptedException;
 
-	/*
-	 * Return reference to client
-	 */
-	CryptoClient getClient(String clientName) throws RemoteException, ClientNotFound;
-	
 	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException;
-
-	public boolean ping() throws RemoteException;
 }

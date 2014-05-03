@@ -99,7 +99,32 @@ public class DHCryptoClient extends SimpleCryptoClient {
 			log.print(VPrint.QUIET, "%s-%s: %s", from, to, plaintext);	
 		}
 	}
-	
+
+	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
+		if (name.equals(to)) {
+			log.print(VPrint.ERROR, "cannot send encrypted messages to yourself");
+			return;
+		}
+		
+		try {
+			CryptoCipher c = ciphers.get(to);
+			if (c == null) {
+				DiffieHellman dh = new DiffieHellman();
+				ElGamalCipher eg = new ElGamalCipher();
+				if (initSecureChannel(to, dh, eg)) {
+					sendEncryptedMessage(to, text, sid);	
+				}
+				return;
+			}
+
+			CryptoMessage m = c.encrypt(text);
+			m.setSessionID(sid);
+			server.sendMessage(name, to, m);
+		} catch (ClientNotFound e) {
+			log.print(VPrint.ERROR, e.getMessage());
+		}
+	}
+		
 	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
 		CryptoMessage m;
 		synchronized(sessions) {
@@ -218,31 +243,6 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		cipher.setKey(key);
 		ciphers.put(counterParty, cipher);
 		return true;
-	}
-	
-	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
-		if (name.equals(to)) {
-			log.print(VPrint.ERROR, "cannot send encrypted messages to yourself");
-			return;
-		}
-		
-		try {
-			CryptoCipher c = ciphers.get(to);
-			if (c == null) {
-				DiffieHellman dh = new DiffieHellman();
-				ElGamalCipher eg = new ElGamalCipher();
-				if (initSecureChannel(to, dh, eg)) {
-					sendEncryptedMessage(to, text, sid);	
-				}
-				return;
-			}
-
-			CryptoMessage m = c.encrypt(text);
-			m.setSessionID(sid);
-			server.sendMessage(name, to, m);
-		} catch (ClientNotFound e) {
-			log.print(VPrint.ERROR, e.getMessage());
-		}
 	}
 
 	@Override

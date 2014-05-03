@@ -57,8 +57,8 @@ public class EVoteServer extends CentralServer {
 		
 		return super.unregisterClient(clientName);
 	}
-	
-	
+		
+
 	/**
 	 * Blocks until all registered clients have sent a message with sid 
 	 * @param sid the session id to wait on
@@ -110,7 +110,6 @@ public class EVoteServer extends CentralServer {
 		
 		return m;
 	}
-
 	
 	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		Map<String, CryptoMessage> sessionMap;
@@ -403,7 +402,6 @@ public class EVoteServer extends CentralServer {
 			currentVotingClients.clear();
 		}
 	}
-
 
 	public static void main(String args[]) {
 		if (args.length != 2) {
