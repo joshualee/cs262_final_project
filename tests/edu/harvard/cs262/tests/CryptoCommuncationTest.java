@@ -1,3 +1,7 @@
+/**
+ * Sandbox for testing client server interaction.
+ */
+
 package edu.harvard.cs262.tests;
 
 import java.math.BigInteger;

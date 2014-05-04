@@ -65,8 +65,7 @@ public class ClientConsole {
 					}
 					
 					myClient = new DHCryptoClient(clientName, server);
-					CryptoClient myClientSer = ((CryptoClient) UnicastRemoteObject
-							.exportObject(myClient, 0));
+					CryptoClient myClientSer = ((CryptoClient) UnicastRemoteObject.exportObject(myClient, 0));
 
 					if (server.registerClient(myClientSer)) {
 						System.out.println(menu);
@@ -75,6 +74,7 @@ public class ClientConsole {
 						break;
 					}
 					System.out.println("Client with name " + clientName + " already exists.");
+					clientName="";
 				}
 
 				while (reg) {

@@ -227,7 +227,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		}
 		catch (ExecutionException e) {
 			myFuture.cancel(true);
-			log.print(VPrint.ERROR, e.getCause().getMessage());
+			log.print(VPrint.ERROR, "key exchange failed because of error with %s", counterParty);
 			return false;
 		}
 		

@@ -18,7 +18,7 @@ public class VPrint {
 	private final String logDirectory = "logs/";
 	private final Path logPath;
 	
-	/*
+	/**
 	 * The verbosity hierarchy is cascading, so if you specify
 	 * verbosity V, it will print all messages at level V and below.
 	 * So a warn verbosity prints warning messages as well as normal messages.

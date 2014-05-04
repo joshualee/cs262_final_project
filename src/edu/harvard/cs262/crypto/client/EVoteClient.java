@@ -29,12 +29,14 @@ public class EVoteClient extends DHCryptoClient {
 	private Object currentVoteLock;
 	private Future<Object> currentVote;
 	private Scanner userInput;
+	private Integer testVote;
 	
 	public EVoteClient(String name, CryptoServer server) {
 		super(name, server);
 		currentVoteLock = new Object();
 		currentVote = null;
 		userInput = Helpers.nonClosingScanner(System.in);
+		setTestVote(null);
 	}
 	
 	// does this need to throw ClientNotFound?	
@@ -62,13 +64,19 @@ public class EVoteClient extends DHCryptoClient {
 			log.print(VPrint.QUIET, "n: vote against");
 			log.print(VPrint.QUIET, "vote [y\\n]: ");
 			
-//			synchronized (currentVoteLock) {
-//				userInput = new BufferedReader(inputStream);	
-//			}
+			// only accept input when not testings
+			if (testVote != null) {
+				yay_or_nay = testVote.intValue();
+				
+				// this simulates a nonresponsive client
+				// for now we simulate failing whenever we are in test mode and
+				// we supply an invalid vote
+				if (yay_or_nay != 0 && yay_or_nay != 1) {
+					while (true) { }
+				}
+			}
 			
-//			userInput = new Scanner(new UnClosableDecorator(System.in));
-			
-			while (true) {
+			while (testVote == null) {
 				while (!Helpers.concurrentHasNextLine(userInput)) {
 					try {
 						Thread.sleep(1000);
@@ -240,12 +248,7 @@ public class EVoteClient extends DHCryptoClient {
 				log.print(VPrint.ERROR, error);
 				throw new EVoteInvalidResult(error);
 			}
-			else {
-				// create a new input stream each time we have a new evote
-				// this is because we cancel an input stream in order to
-				// interrupt user input prompt  
-//				inputStream = new InputStreamReader(System.in);
-				
+			else {				
 				ExecutorService pool = Executors.newSingleThreadExecutor();
 				evoteCallable evoteCall = new evoteCallable(evote);
 				evoteFuture = pool.submit(evoteCall);
@@ -283,8 +286,7 @@ public class EVoteClient extends DHCryptoClient {
 		if (args.length != 3) {
 			System.err.println("usage: java EVoteClient rmiHost rmiPort serverName");
 			System.exit(1);
-		}
-		
+		}		
 		
 		String rmiHost = args[0];
 		int rmiPort = Integer.parseInt(args[1]);
@@ -294,28 +296,33 @@ public class EVoteClient extends DHCryptoClient {
 			System.setSecurityManager(new SecurityManager());
 		}
 		
-		
 		try {
+			String clientName = "";
 			scan = new Scanner(System.in);
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
 		 
-			String clientName = "";
-			while(clientName.length() == 0){
-				System.out.print("Enter your name: ");
-				// trim trailing and leading whitespace from name
-				clientName = scan.nextLine().trim();
-			}
+			while(true)
+			{
+				while(clientName.length() == 0){
+					System.out.print("Enter your name: ");
+					// trim trailing and leading whitespace from name
+					clientName = scan.nextLine().trim();
+				}
 			
-			CryptoClient myClient = new EVoteClient(clientName, server);
-			CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
-			boolean registered = server.registerClient(myClientSer);
-			if (registered) {
-				System.out.println(String.format("Hello, %s. You have successfully registered with server: %s", clientName, serverName));
-				System.out.println(String.format("Please wait. Server will initiate evotes soon..."));
-			} else {
-				System.out.println(String.format("Registration with server %s failed. Please try to reconnect.", serverName));
-			}
+				CryptoClient myClient = new EVoteClient(clientName, server);
+				CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
+				
+				if (server.registerClient(myClientSer)) {
+					System.out.println(String.format("Hello, %s. You have successfully registered with server: %s", clientName, serverName));
+					System.out.println(String.format("Please wait. Server will initiate evotes soon..."));
+					break;
+				} 
+				else {
+					System.out.println("Client with name " + clientName + " already exists.");
+					clientName="";
+				}
+			}	
 		}
 		catch (ConnectException e) {
 			System.out.println("Failed to find RMI registery. Either the server hasn't started yet, you have the wrong host/port, or you have a firewall issue...");
@@ -323,5 +330,13 @@ public class EVoteClient extends DHCryptoClient {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public Integer getTestVote() {
+		return testVote;
+	}
+
+	public void setTestVote(Integer testVote) {
+		this.testVote = testVote;
 	}
 }

@@ -21,7 +21,7 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
  *
  */
 
-public class BasicTest {
+public class ConsoleTest {
 	
 	private static String rmiHost;
 	private final static int rmiPort = 8080;

@@ -1,9 +1,21 @@
 Distributed Cryptography
 =============
 
-Project description goes here.
+Final project for CS262: Introduction to Distributed Systems (Harvard Spring 2014)
 
-Completed as a final project for CS262: Introduction to Distributed Systems (Harvard Spring 2014).
+This project provides a framework that can be used to test the security of cryptographic protocols through simulations. The architecture consists of multiple clients that talk to each other through a server. Clients can speak to each other using plaintext or encrypted messages. Different key exchange and encryption protocols can easily be swapped in and out. Clients can also eavesdrop on other clients, simulating attackers trying to listen in on and break a secure session.
+
+Ontop of this framework, we have built two simple applications:
+
+#### E-voting
+
+Distributed electronic voting allows n parties to all vote on a ballot in such a manner that no party learns anything from seeing all the encrypted ballots, except the result of the vote (in particular each party cannot learn any other party’s vote). This property has obvious privacy advantages which can be especially important for sensitive votes.
+
+Our application allows the server to start a vote by specifying a ballot. Clients are then able to vote in favor or against the ballot and the result is securely computed. Each client is also given each other client's public communication, giving other clients a chance to break the evoting protocol.
+
+#### Console Communicator
+
+A console line application that provides a simple interface to send messages to other clients. Clients can also eavesdrop on other clients, simulating an attacker who is listening to the wire.
 
 Authors
 -------
@@ -20,22 +32,22 @@ Implements basic sending/receiving/eavesdropping of messages.
 
 ####DiffieHellman Client
 
-Extends simple client but also has the ability to perform encrypted communcation.
+Extends simple client but also has the ability to perform encrypted communcation. Designed to connect to `CentralServer`.
 
 ####EVote Client
 
-Extends DiffieHellman Client but also has the ability to do evoting.
+Extends DiffieHellman Client but also has the ability to do evoting. Designed to connect to `EVoteServer`.
 
 CryptoServer
 -------------
 
 ####Central Server
 
-Facilitates basic sending/receiving/eavesdropping of encrypted messages.
+Facilitates basic sending/receiving/eavesdropping of encrypted messages. Ensures connection to clients by using a "heartbeat" ping to the clients. Designed to accept connections from `DHCryptoClient`.
 
 ####EVote Server
 
-Facilitates encrypted voting.
+Facilitates encrypted voting. Designed to accept connections from `EVoteClient`.
 
 Compilation
 -----------------
@@ -49,12 +61,42 @@ Run the following commands for the appropriate system from the top level, substi
 
 (1) Encrypted Message System
 
-    java -Djava.security.policy=policies/all.policy -classpath bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/all.policy -classpath bin edu.harvard.cs262.crypto.server.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.client.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
    
 (2) Encrypted Voting System
 
-    java -Djava.security.policy=policies/all.policy -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/all.policy -classpath bin edu.harvard.cs262.crypto.server.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.client.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+
+Testing
+--------------------
+
+#### Logs
+
+Log files are written to the `log/` directory. Each log is titled by the name of the client or server who the log belongs to followed by the timestamp of which the log was created. Log entries are written by the VPrint (`VerbosePrint`) module. Using VPrint, application writers are able to specify the verbosity levels that are displayed to the user and printed to the log:
+
+* Quiet: normal output
+* Loud: verbose output
+* Error: error messages
+* Warn: warnings
+* Debug: debugging information
+
+#### JUnit Tests
+
+* ClientServerTests: unit tests basic interaction between the client and server and among clients
+* CryptoCipherTests: unit tests DiffieHellman key exchange and ElGamal cipher; also tests more complex client interaction (key exchange)
+* EVoteTests: unit tests that evoting returns the expected result of the vote; also tests abort vote succeeds when a client fails to vote within a certain time window
+
+
+#### Console Tests
+
+* ConsoleTest: tests the sending and receiving of encrypted and non encrypted messages among clients; also tests eavesdropping
+
+#### Failure Tests
+
+The most difficult aspect of the project was dealing with failure. We have a few automated tests that ensure our system continues to run despite failure (e.g. if a client takes too long to submit a vote during evoting). However the majority of this testing was done manually, due to technical limitations to automate the specific failure conditions (did not have time to set up a mock object testing framework such as Mockito or EasyMock). 
+
+You can replicate our manual testing by starting up a server and multiple clients, running part of a task such as evoting or sending a message, and then shutting down one of the clients participating in the task. Our system should gracefully fail and notify the still-alive clients. Evote abortion and key exchange failure are good examples of this.

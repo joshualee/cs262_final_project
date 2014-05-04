@@ -25,7 +25,6 @@ import edu.harvard.cs262.crypto.cipher.CryptoCipher;
 import edu.harvard.cs262.crypto.cipher.KeyExchangeProtocol;
 import edu.harvard.cs262.crypto.client.CryptoClient;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
-import edu.harvard.cs262.crypto.security.DumbSecurityManager;
 
 public class CentralServer implements CryptoServer {
 	protected final static int VERBOSITY = VPrint.WARN; 
@@ -231,8 +230,9 @@ public class CentralServer implements CryptoServer {
 		getClient(to).recvSecureChannel(from, kx, cipher);
 	}	
 
-	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
+	public String initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
 		log.print(VPrint.ERROR, "central server does not implement evoting");
+		return "";
 	}
 	
 	private class ClientPingCallable implements Callable<Boolean> {
@@ -327,7 +327,7 @@ public class CentralServer implements CryptoServer {
 
 		try {
 			if (System.getSecurityManager() == null) {
-				System.setSecurityManager(new DumbSecurityManager());
+				System.setSecurityManager(new SecurityManager());
 			}
 			
 			String rmiHost = InetAddress.getLocalHost().getHostAddress();
