@@ -7,6 +7,8 @@ package edu.harvard.cs262.crypto.exception;
  *
  */
 public class EVoteInvalidResult extends Exception {	
+	private static final long serialVersionUID = 1L;
+
 	public EVoteInvalidResult(String msg)	 {
 		super(msg);
 	}

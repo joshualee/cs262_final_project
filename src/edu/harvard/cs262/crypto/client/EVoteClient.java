@@ -1,8 +1,5 @@
 package edu.harvard.cs262.crypto.client;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.rmi.ConnectException;
 import java.rmi.RemoteException;
@@ -31,14 +28,12 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 public class EVoteClient extends DHCryptoClient {	
 	private Object currentVoteLock;
 	private Future<Object> currentVote;
-	private InputStreamReader inputStream;
 	private Scanner userInput;
 	
 	public EVoteClient(String name, CryptoServer server) {
 		super(name, server);
 		currentVoteLock = new Object();
 		currentVote = null;
-		inputStream = null;
 		userInput = Helpers.nonClosingScanner(System.in);
 	}
 	
@@ -49,6 +44,7 @@ public class EVoteClient extends DHCryptoClient {
 			long seed = (int) (Math.random() * 1000);
 			Random rand = new Random(seed);
 			String sid = evote.id.toString();
+			String serverName = server.getName();
 			
 			/*
 			 * EVote phase one: 
@@ -116,7 +112,7 @@ public class EVoteClient extends DHCryptoClient {
 			
 			CryptoMessage phaseTwo = new CryptoMessage(pk_i.toString(), sid);
 			phaseTwo.setTag("secret key partition");
-			server.recvMessage(getName(), server.getName(), phaseTwo);
+			server.recvMessage(getName(), serverName, phaseTwo);
 			CryptoMessage pkMsg = waitForMessage(sid);
 			
 			/*
@@ -133,17 +129,12 @@ public class EVoteClient extends DHCryptoClient {
 			CryptoKey publicKey = new CryptoKey(null, dht, evote.BITS);
 			EGCipher.setKey(publicKey);
 			
-			// TODO: vote input instead of random
 			BigInteger vote = evote.g.pow(yay_or_nay).mod(evote.p);
-			// TODO: encrypt vote directly since it is already a number... instead of
-			// doing the string manipulation
 			CryptoMessage encryptedVote = EGCipher.encryptInteger(vote);
 			encryptedVote.setSessionID(sid);
 			
-			// TODO: send tag with server message, so clients know what they are seeing when eaves dropping
-			// TODO: store server name
 			encryptedVote.setTag("encrypted vote");
-			server.recvMessage(name, server.getName(), encryptedVote);
+			server.recvMessage(name, serverName, encryptedVote);
 			
 			/*
 			 * EVote phase 6:
@@ -159,7 +150,7 @@ public class EVoteClient extends DHCryptoClient {
 			
 			CryptoMessage decryptKeyPart = new CryptoMessage(encryptedC1.toString(), sid);
 			decryptKeyPart.setTag("decryption key partition");
-			server.recvMessage(name, server.getName(), decryptKeyPart);
+			server.recvMessage(name, serverName, decryptKeyPart);
 			/*
 			 * EVote phase 8:
 			 * clients use decodingKey to decode message 
@@ -208,14 +199,8 @@ public class EVoteClient extends DHCryptoClient {
 		public Object call() {
 			try {
 				doEvote(evote);
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (ClientNotFound e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			} catch (Exception e) {
-				e.printStackTrace();
+				log.print(VPrint.ERROR, e.getMessage());
 			}
 			
 			return null;
@@ -272,7 +257,6 @@ public class EVoteClient extends DHCryptoClient {
 			// block until the vote finishes or throws an error
 		}
 		
-		// TODO: use finally block here, but not sure how
 		try {
 			evoteFuture.get();
 		} catch (ExecutionException e) {
@@ -286,6 +270,7 @@ public class EVoteClient extends DHCryptoClient {
 		} catch (InterruptedException e) {
 			log.print(VPrint.ERROR, "interupted...");
 		}
+		
 		synchronized (currentVoteLock) {
 			currentVote = null;
 		}
@@ -314,8 +299,7 @@ public class EVoteClient extends DHCryptoClient {
 			scan = new Scanner(System.in);
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
-		
-			// TODO: take out label... 
+		 
 			String clientName = "";
 			while(clientName.length() == 0){
 				System.out.print("Enter your name: ");
@@ -327,7 +311,7 @@ public class EVoteClient extends DHCryptoClient {
 			CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
 			boolean registered = server.registerClient(myClientSer);
 			if (registered) {
-				System.out.println(String.format("Successfully registered with server: %s", serverName));
+				System.out.println(String.format("Hello, %s. You have successfully registered with server: %s", clientName, serverName));
 				System.out.println(String.format("Please wait. Server will initiate evotes soon..."));
 			} else {
 				System.out.println(String.format("Registration with server %s failed. Please try to reconnect.", serverName));

@@ -4,12 +4,7 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Random;
 
-import javax.crypto.Cipher;
-
 import edu.harvard.cs262.crypto.CryptoMessage;
-
-// Note: doesn't compile on my machine (Holly)
-//import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class ElGamalCipher implements CryptoCipher, Serializable {
 	private static final long serialVersionUID = 1L;
@@ -41,8 +36,9 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		BigInteger y = new BigInteger(key.getBits(), rand).mod(dht.p);
 		BigInteger yhat = dht.g.modPow(y, dht.p);
 		
-		
-		// TODO: consider using Base64 encoding instead
+		// for now we encrypt character by character
+		// future work is to use more standard practice
+		// such as Base64 encoding
 		char[] cs = plaintext.toCharArray();
 		char[] new_cs = new char[cs.length];
 		
@@ -58,7 +54,6 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		return m;
 	}
 	
-	// TODO: I duplicate code from above...
 	public CryptoMessage encryptInteger(BigInteger plaintext) {
 		DHTuple dht = (DHTuple) key.getPublic();
 		
@@ -91,7 +86,9 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		BigInteger x = (BigInteger) key.getPrivate();
 		BigInteger yhat = (BigInteger) cm.getEncryptionState();
 		
-		// for now, just decrypt each character separately
+		// for now we decrypy character by character
+		// future work is to use more standard practice
+		// such as Base64 encoding
 		char[] cs = cm.getCipherText().toCharArray();
 		char[] new_cs = new char[cs.length];
 		

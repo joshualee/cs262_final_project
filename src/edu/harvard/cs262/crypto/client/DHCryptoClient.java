@@ -226,9 +226,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 			cpFuture.get();
 		}
 		catch (ExecutionException e) {
-			// TODO: we should cancel the other thread here, but
-			// this closes the log file and causes IO exceptions...
-			// myFuture.cancel(true);
+			myFuture.cancel(true);
 			log.print(VPrint.ERROR, e.getCause().getMessage());
 			return false;
 		}

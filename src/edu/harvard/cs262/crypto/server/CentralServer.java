@@ -47,7 +47,7 @@ public class CentralServer implements CryptoServer {
 		
 		Executors.newSingleThreadExecutor().submit(new Runnable() { public void run() {
 			try {
-				heartbeatClients(20, 2, 1);
+				heartbeatClients(2, 2, 1);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -110,11 +110,15 @@ public class CentralServer implements CryptoServer {
 			return false;
 		}
 		
-		clients.put(clientName, c);
-		// TODO: possible race condition if we context switch here
-		// and client is in client list but not in notification map
-		List<String> newList = new LinkedList<String>();
-		notifications.put(clientName, newList);
+		// before adding client to client list, we lock notifications
+		// because if we context switch after adding client to clients but
+		// before we add an entry in the notification map, then someone
+		// may try to eavesdrop and we have a race condition for the notification reference
+		synchronized (notifications) {
+			clients.put(clientName, c);
+			List<String> newList = new LinkedList<String>();
+			notifications.put(clientName, newList);
+		}
 		
 		log.print(VPrint.QUIET, "registered new client: %s", clientName);
 		log.print(VPrint.QUIET, "clients: %s", getClientList(true));
@@ -194,9 +198,14 @@ public class CentralServer implements CryptoServer {
 		assertClientRegistered(listener);
 		assertClientRegistered(victim);
 		
-		// TODO: assumes if victim is a client, then vicList won't be null
 		List<String> vicList = notifications.get(victim);
-			
+		
+		if (vicList == null) {
+			// this should never happen because of our synchronization
+			log.print(VPrint.ERROR, "Notifications for %s have not yet been allocated. " +
+					"Potential race condition", victim);
+		}
+		
 		if (!vicList.contains(listener)) {
 			vicList.add(listener);
 		}

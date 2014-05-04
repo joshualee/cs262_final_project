@@ -115,8 +115,6 @@ public class ClientConsole {
 							encr = scan.nextLine();
 						}
 						
-						// TODO: have send message return a boolean and print
-						// when sending is successful
 						if (encr.equals("y")) {
 							myClient.sendEncryptedMessage(to, msg, "");
 						}
@@ -195,7 +193,6 @@ public class ClientConsole {
 				
 			}
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

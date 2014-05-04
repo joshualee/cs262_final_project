@@ -2,7 +2,6 @@ package edu.harvard.cs262.crypto.server;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
-import java.rmi.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -10,8 +9,6 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
@@ -287,8 +284,8 @@ public class EVoteServer extends CentralServer {
 			try {
 				doEvote(evote, votingClients);
 			} catch (InterruptedException e) {
+				log.print(VPrint.DEBUG2, e.getMessage());
 				log.print(VPrint.ERROR, "serverEVote: %s", e.getCause().getMessage());
-				// TODO: add debug+ message...
 				// do nothing -- vote was aborted because client failed 
 			}
 			
@@ -363,8 +360,6 @@ public class EVoteServer extends CentralServer {
 		}
 		
 		// evote successful!
-		// TODO: make currentVotingClients synchronous...
-		// right now we assume only one evote can happen at a time
 		synchronized (currentVotingClients) {
 			currentVotingClients.clear();
 		}
@@ -405,6 +400,8 @@ public class EVoteServer extends CentralServer {
 	}
 
 	public static void main(String args[]) {
+		Scanner scan;
+		
 		if (args.length != 2) {
 			System.err.println("usage: java EVoteServer rmiport servername");
 			System.exit(1);
@@ -435,7 +432,7 @@ public class EVoteServer extends CentralServer {
 			/*
 			 * Prompt user for ballot
 			 */
-			Scanner scan = new Scanner(System.in);
+			scan = new Scanner(System.in);
 			
 			while (true) {
 				System.out.println("Enter ballot:");

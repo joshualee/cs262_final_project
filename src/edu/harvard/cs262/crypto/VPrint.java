@@ -2,7 +2,6 @@ package edu.harvard.cs262.crypto;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
