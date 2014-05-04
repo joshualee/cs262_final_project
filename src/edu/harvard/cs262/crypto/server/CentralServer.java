@@ -46,7 +46,7 @@ public class CentralServer implements CryptoServer {
 		
 		Executors.newSingleThreadExecutor().submit(new Runnable() { public void run() {
 			try {
-				heartbeatClients(10, 2, 1);
+				heartbeatClients(2, 2, 1);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
