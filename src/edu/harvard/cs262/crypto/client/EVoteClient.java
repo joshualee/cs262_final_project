@@ -286,8 +286,7 @@ public class EVoteClient extends DHCryptoClient {
 		if (args.length != 3) {
 			System.err.println("usage: java EVoteClient rmiHost rmiPort serverName");
 			System.exit(1);
-		}
-		
+		}		
 		
 		String rmiHost = args[0];
 		int rmiPort = Integer.parseInt(args[1]);
@@ -297,29 +296,33 @@ public class EVoteClient extends DHCryptoClient {
 			System.setSecurityManager(new SecurityManager());
 		}
 		
-		
 		try {
+			String clientName = "";
 			scan = new Scanner(System.in);
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
 		 
-			String clientName = "";
-			while(clientName.length() == 0){
-				System.out.print("Enter your name: ");
-				// trim trailing and leading whitespace from name
-				clientName = scan.nextLine().trim();
-			}
+			while(true)
+			{
+				while(clientName.length() == 0){
+					System.out.print("Enter your name: ");
+					// trim trailing and leading whitespace from name
+					clientName = scan.nextLine().trim();
+				}
 			
-			CryptoClient myClient = new EVoteClient(clientName, server);
-			CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
-			boolean registered = server.registerClient(myClientSer);
-			if (registered) {
-				System.out.println(String.format("Hello, %s. You have successfully registered with server: %s", clientName, serverName));
-				System.out.println(String.format("Please wait. Server will initiate evotes soon..."));
-			} else {
-				System.out.println(String.format("Registration with server %s failed probably because of a duplicate client name. Please try to reconnect later.", serverName));
-				System.exit(1);
-			}
+				CryptoClient myClient = new EVoteClient(clientName, server);
+				CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
+				
+				if (server.registerClient(myClientSer)) {
+					System.out.println(String.format("Hello, %s. You have successfully registered with server: %s", clientName, serverName));
+					System.out.println(String.format("Please wait. Server will initiate evotes soon..."));
+					break;
+				} 
+				else {
+					System.out.println("Client with name " + clientName + " already exists.");
+					clientName="";
+				}
+			}	
 		}
 		catch (ConnectException e) {
 			System.out.println("Failed to find RMI registery. Either the server hasn't started yet, you have the wrong host/port, or you have a firewall issue...");
