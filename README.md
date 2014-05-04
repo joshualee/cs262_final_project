@@ -20,22 +20,22 @@ Implements basic sending/receiving/eavesdropping of messages.
 
 ####DiffieHellman Client
 
-Extends simple client but also has the ability to perform encrypted communcation.
+Extends simple client but also has the ability to perform encrypted communcation. Designed to connect to `CentralServer`.
 
 ####EVote Client
 
-Extends DiffieHellman Client but also has the ability to do evoting.
+Extends DiffieHellman Client but also has the ability to do evoting. Designed to connect to `EVoteServer`.
 
 CryptoServer
 -------------
 
 ####Central Server
 
-Facilitates basic sending/receiving/eavesdropping of encrypted messages.
+Facilitates basic sending/receiving/eavesdropping of encrypted messages. Designed to accept connections from `DHCryptoClient`.
 
 ####EVote Server
 
-Facilitates encrypted voting.
+Facilitates encrypted voting. Designed to accept connections from `EVoteClient`.
 
 Compilation
 -----------------
@@ -58,3 +58,18 @@ Run the following commands for the appropriate system from the top level, substi
     java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
 
     java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.client.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+
+Testing
+--------------------
+
+#### Logs
+
+#### JUnit Tests
+
+#### Console Tests
+
+#### Failure Tests
+Most difficult aspect of project and we did do extensive manually testing. Done by hand by causing clients to fail at various points. Difficult to do automatically without the use of a mock object testing framework. Didn't set up but we account for failures such as:
+
+(1) clients crashes (server heartbeat)
+(2) evote abortion

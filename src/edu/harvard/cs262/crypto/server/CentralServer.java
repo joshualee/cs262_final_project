@@ -231,8 +231,9 @@ public class CentralServer implements CryptoServer {
 		getClient(to).recvSecureChannel(from, kx, cipher);
 	}	
 
-	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
+	public String initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
 		log.print(VPrint.ERROR, "central server does not implement evoting");
+		return "";
 	}
 	
 	private class ClientPingCallable implements Callable<Boolean> {

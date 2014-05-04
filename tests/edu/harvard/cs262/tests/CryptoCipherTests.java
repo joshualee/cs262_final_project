@@ -1,3 +1,11 @@
+/**
+ * JUnit tests for the basic cryptography primitives used in our project.
+ * Here we test:
+ * (1) KeyExchange (DiffieHellman)
+ * (2) Encryption/Decryption (ElGamal)
+ * (3) Integration (proper client/server interaction)
+ */
+
 package edu.harvard.cs262.tests;
 
 import static org.junit.Assert.*;
@@ -23,7 +31,7 @@ import org.junit.Test;
 public class CryptoCipherTests {
 	
 	static CryptoServer server;
-	static DHCryptoClient c1, c2, c3, c4;
+	static DHCryptoClient c1, c2;
 	
 	@BeforeClass 
 	public static void setup() {
@@ -123,6 +131,17 @@ public class CryptoCipherTests {
 		
 		assertEquals(testMessage, recvMessage);
 		assertEquals(testMessage2, recvMessage2);
+		
+		String testMessage3 = "another test message"; 
+		String testMessage4 = "hello there"; 
+		
+		c1.dropKeys();
+		c2.dropKeys();
+		String recvMessage3 = c1.sendEncryptedMessage("c2", testMessage3, "");
+		String recvMessage4 = c2.sendEncryptedMessage("c1", testMessage4, "");
+		
+		assertEquals(testMessage3, recvMessage3);
+		assertEquals(testMessage4, recvMessage4);
 	}
 
 }

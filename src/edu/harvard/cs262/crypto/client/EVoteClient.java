@@ -29,12 +29,14 @@ public class EVoteClient extends DHCryptoClient {
 	private Object currentVoteLock;
 	private Future<Object> currentVote;
 	private Scanner userInput;
+	private Integer testVote;
 	
 	public EVoteClient(String name, CryptoServer server) {
 		super(name, server);
 		currentVoteLock = new Object();
 		currentVote = null;
 		userInput = Helpers.nonClosingScanner(System.in);
+		setTestVote(null);
 	}
 	
 	// does this need to throw ClientNotFound?	
@@ -62,13 +64,19 @@ public class EVoteClient extends DHCryptoClient {
 			log.print(VPrint.QUIET, "n: vote against");
 			log.print(VPrint.QUIET, "vote [y\\n]: ");
 			
-//			synchronized (currentVoteLock) {
-//				userInput = new BufferedReader(inputStream);	
-//			}
+			// only accept input when not testings
+			if (testVote != null) {
+				yay_or_nay = testVote.intValue();
+				
+				// this simulates a nonresponsive client
+				// for now we simulate failing whenever we are in test mode and
+				// we supply an invalid vote
+				if (yay_or_nay != 0 && yay_or_nay != 1) {
+					while (true) { }
+				}
+			}
 			
-//			userInput = new Scanner(new UnClosableDecorator(System.in));
-			
-			while (true) {
+			while (testVote == null) {
 				while (!Helpers.concurrentHasNextLine(userInput)) {
 					try {
 						Thread.sleep(1000);
@@ -240,12 +248,7 @@ public class EVoteClient extends DHCryptoClient {
 				log.print(VPrint.ERROR, error);
 				throw new EVoteInvalidResult(error);
 			}
-			else {
-				// create a new input stream each time we have a new evote
-				// this is because we cancel an input stream in order to
-				// interrupt user input prompt  
-//				inputStream = new InputStreamReader(System.in);
-				
+			else {				
 				ExecutorService pool = Executors.newSingleThreadExecutor();
 				evoteCallable evoteCall = new evoteCallable(evote);
 				evoteFuture = pool.submit(evoteCall);
@@ -323,5 +326,13 @@ public class EVoteClient extends DHCryptoClient {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public Integer getTestVote() {
+		return testVote;
+	}
+
+	public void setTestVote(Integer testVote) {
+		this.testVote = testVote;
 	}
 }

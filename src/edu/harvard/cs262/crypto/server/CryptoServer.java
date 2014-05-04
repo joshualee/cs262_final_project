@@ -67,5 +67,5 @@ public interface CryptoServer extends Remote {
 	 */
 	public void relaySecureChannel(String from, String to, KeyExchangeProtocol kx, CryptoCipher c) throws ClientNotFound, RemoteException, InterruptedException;
 
-	public void initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException;
+	public String initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException;
 }
