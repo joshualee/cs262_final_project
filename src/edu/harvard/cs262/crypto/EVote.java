@@ -9,27 +9,28 @@ import java.util.UUID;
 import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 
 /**
- * 
- * @author joshualee
- * Votes can only have a binary result (pass or no pass)
+ * An EVote is an object that represents an e-voting scenario.
+ * It includes the voters and ballots involved.
+ * Votes can only have a binary result (pass or no pass).
  */
 
 public class EVote implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public final int BITS = 32;
 	
-	// the list of voters
+	/** The list of voters */
 	public Set<String> voters;
 	
-	// a string description of what the vote is on
+	/** A string description of what the vote is over */
 	public String ballot;
 	public UUID id;
 	
-	// public parameters
+	/** Public encryption parameters */
 	// TODO: abstract these out?
 	public BigInteger p;
 	public BigInteger g;
 	
+	/** Constructor */
 	public EVote(String ballot, Set<String> voters) {
 		this.ballot = ballot;
 		this.voters = voters;
@@ -40,10 +41,16 @@ public class EVote implements Serializable {
 	}
 	
 	/**
-	 * Returns the number of voters who voted in favor,
-	 * given the result of the voting protocol
-	 * (we need a few more math tricks to get the actual number)
-	 * @return
+	 * Uses some math tricks to return the number of voters who voted in favor,
+	 * given the result of the voting protocol.
+	 * @param result
+	 * 		This is the result returned by the voting protocol (g^x mod p),
+	 * 		where g and p are public encryption parameters and x is the number of people 
+	 * 		who voted yes.
+	 * @param numVoters
+	 * 		This is the number of people who voted.
+	 * @return The number of people who voted yes.
+	 * @throws EVoteInvalidResult
 	 */
 	public int countYays(BigInteger result, int numVoters) throws EVoteInvalidResult {
 		if (result.equals(BigInteger.valueOf(1))) {

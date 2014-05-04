@@ -9,6 +9,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
+/**
+ * VPrint class allows for printing data at varying levels of verbosity depending 
+ * on the intended purpose.
+ */
 public class VPrint {
 	private final String logDirectory = "logs/";
 	
