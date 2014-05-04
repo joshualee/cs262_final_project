@@ -76,7 +76,7 @@ Testing
 
 #### Logs
 
-Log files are written to the log directory. Each log is titled by the name of the client or server who the log belongs to followed by the timestamp of which the log was created. Log entries are written by the VPrint (VerbosePrint) module. Using VPrint, application writers are able to specify the verbosity levels that are displayed to the user and printed to the log:
+Log files are written to the `log/` directory. Each log is titled by the name of the client or server who the log belongs to followed by the timestamp of which the log was created. Log entries are written by the VPrint (`VerbosePrint`) module. Using VPrint, application writers are able to specify the verbosity levels that are displayed to the user and printed to the log:
 
 * Quiet: normal output
 * Loud: verbose output
