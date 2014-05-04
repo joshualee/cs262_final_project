@@ -49,12 +49,12 @@ Run the following commands for the appropriate system from the top level, substi
 
 (1) Encrypted Message System
 
-    java -Djava.security.policy=policies/all.policy -classpath bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/all.policy -classpath bin edu.harvard.cs262.crypto.server.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.client.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
    
 (2) Encrypted Voting System
 
-    java -Djava.security.policy=policies/all.policy -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/all.policy -classpath bin edu.harvard.cs262.crypto.server.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.client.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
