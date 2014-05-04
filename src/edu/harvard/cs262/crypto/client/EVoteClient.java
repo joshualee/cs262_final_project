@@ -317,7 +317,8 @@ public class EVoteClient extends DHCryptoClient {
 				System.out.println(String.format("Hello, %s. You have successfully registered with server: %s", clientName, serverName));
 				System.out.println(String.format("Please wait. Server will initiate evotes soon..."));
 			} else {
-				System.out.println(String.format("Registration with server %s failed. Please try to reconnect.", serverName));
+				System.out.println(String.format("Registration with server %s failed probably because of a duplicate client name. Please try to reconnect later.", serverName));
+				System.exit(1);
 			}
 		}
 		catch (ConnectException e) {
