@@ -11,4 +11,11 @@ public interface KeyExchangeProtocol {
 	int getBits();
 	CryptoKey initiate(CryptoClient me, String recipientName) throws RemoteException, ClientNotFound, InterruptedException;
 	CryptoKey reciprocate(CryptoClient me, String initiatorName) throws InterruptedException, RemoteException, ClientNotFound;
+	
+	/**
+	 * Return a copy of the key exchange protocol. This is needed when we want to perform a key excahnge
+	 * protocol on 
+	 * @return
+	 */
+	KeyExchangeProtocol copy();
 }

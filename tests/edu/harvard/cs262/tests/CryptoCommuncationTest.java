@@ -54,6 +54,7 @@ public class CryptoCommuncationTest {
 		return myClient;
 	}
 	
+	@SuppressWarnings("unused")
 	private static void sendRandomMessages(CryptoClient c1, CryptoClient c2, int numMessages) throws RemoteException, ClientNotFound, InterruptedException {
 		for (int i = 0; i < numMessages; i++) {
 			String uuid1 = UUID.randomUUID().toString();
@@ -63,6 +64,7 @@ public class CryptoCommuncationTest {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private static void sendRandomEncMessages(CryptoClient c1, CryptoClient c2, int numMessages) throws RemoteException, ClientNotFound, InterruptedException {
 		for (int i = 0; i < numMessages; i++) {
 			String uuid1 = UUID.randomUUID().toString();
@@ -72,6 +74,7 @@ public class CryptoCommuncationTest {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private static void testElGamal() {
 		BigInteger test = new BigInteger("2134");
 		BigInteger P = BigInteger.valueOf(31123L);
@@ -102,6 +105,7 @@ public class CryptoCommuncationTest {
 		
 	}
 
+	@SuppressWarnings("unused")
 	public static void main(String args[]) {		
 		try {
 			rmiHost = InetAddress.getLocalHost().getHostAddress();

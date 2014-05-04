@@ -41,13 +41,13 @@ public interface CryptoServer extends Remote {
 	 * @throws ClientNotFound
 	 * @throws InterruptedException 
 	 */
-	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
+	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
 	
 	/*
 	 * Send message "m" from client "from" to client "to".
 	 * Blocks until message has successfully been delivered.
 	 */
-	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
+	public String sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
 	
 		/* 
 	 * Allow client "listener" to listen to all incoming

@@ -27,7 +27,7 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
-public class DHCryptoClient extends SimpleCryptoClient {
+public class DHCryptoClient extends SimpleCryptoClient {	
 	protected Map<String, CryptoCipher> ciphers;
 	protected Map<String, CryptoMessage> sessions;
 	
@@ -38,7 +38,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	}
 	
 	@Override
-	public void recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
+	public String recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
 		String plaintext;
 		
 		log.print(VPrint.DEBUG2, "(%s) recvMessage(%s, %s, m)", name, from, to);
@@ -69,7 +69,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 				sessions.notifyAll();
 			}
 			log.print(VPrint.DEBUG2, "(%s) done recvMessage", name);
-			return;
+			return "";
 		}
 
 		/*
@@ -98,12 +98,14 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		} else {
 			log.print(VPrint.QUIET, "%s-%s: %s", from, to, plaintext);	
 		}
+		
+		return plaintext;
 	}
 
-	public void sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
+	public String sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
 		if (name.equals(to)) {
 			log.print(VPrint.ERROR, "cannot send encrypted messages to yourself");
-			return;
+			return "";
 		}
 		
 		try {
@@ -112,17 +114,19 @@ public class DHCryptoClient extends SimpleCryptoClient {
 				DiffieHellman dh = new DiffieHellman();
 				ElGamalCipher eg = new ElGamalCipher();
 				if (initSecureChannel(to, dh, eg)) {
-					sendEncryptedMessage(to, text, sid);	
+					return sendEncryptedMessage(to, text, sid);	
 				}
-				return;
+				return "";
 			}
 
 			CryptoMessage m = c.encrypt(text);
 			m.setSessionID(sid);
-			server.sendMessage(name, to, m);
+			return server.sendMessage(name, to, m);
 		} catch (ClientNotFound e) {
 			log.print(VPrint.ERROR, e.getMessage());
 		}
+		
+		return "";
 	}
 		
 	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
@@ -203,9 +207,12 @@ public class DHCryptoClient extends SimpleCryptoClient {
 			log.print(VPrint.WARN, "encryption key for %s already exists", counterParty);
 		}
 		
+		KeyExchangeProtocol kx2 = kx.copy();
+		CryptoCipher cipher2 = cipher.copy();
+		
 		ExecutorService pool = Executors.newFixedThreadPool(2);
 		myFuture = pool.submit(new initSecureChannelCallable(counterParty, kx, this));
-		cpFuture = pool.submit(new recvSecureChannelCallable(counterParty, kx, cipher));
+		cpFuture = pool.submit(new recvSecureChannelCallable(counterParty, kx2, cipher2));
 		
 		while (!cpFuture.isDone()) {
 			// myFuture doesn't finish until cpFuture finishes 
@@ -219,9 +226,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 			cpFuture.get();
 		}
 		catch (ExecutionException e) {
-			// TODO: we should cancel the other thread here, but
-			// this closes the log file and causes IO exceptions...
-			// myFuture.cancel(true);
+			myFuture.cancel(true);
 			log.print(VPrint.ERROR, e.getCause().getMessage());
 			return false;
 		}
@@ -249,5 +254,13 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	public void evote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult {
 		log.print(VPrint.ERROR, "diffie hellman client does not support evoting");
 		return;
+	}
+	
+	public void dropKeys() {
+		ciphers.clear();
+	}
+	
+	public void setKey(String name, CryptoCipher c) {
+		ciphers.put(name, c);
 	}
 }

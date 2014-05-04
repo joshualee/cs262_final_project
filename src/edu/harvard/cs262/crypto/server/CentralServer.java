@@ -28,7 +28,7 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.security.DumbSecurityManager;
 
 public class CentralServer implements CryptoServer {
-	protected final static int VERBOSITY = VPrint.ERROR; 
+	protected final static int VERBOSITY = VPrint.WARN; 
 	
 	protected String name;
 	protected VPrint log;
@@ -110,11 +110,15 @@ public class CentralServer implements CryptoServer {
 			return false;
 		}
 		
-		clients.put(clientName, c);
-		// TODO: possible race condition if we context switch here
-		// and client is in client list but not in notification map
-		List<String> newList = new LinkedList<String>();
-		notifications.put(clientName, newList);
+		// before adding client to client list, we lock notifications
+		// because if we context switch after adding client to clients but
+		// before we add an entry in the notification map, then someone
+		// may try to eavesdrop and we have a race condition for the notification reference
+		synchronized (notifications) {
+			clients.put(clientName, c);
+			List<String> newList = new LinkedList<String>();
+			notifications.put(clientName, newList);
+		}
 		
 		log.print(VPrint.QUIET, "registered new client: %s", clientName);
 		log.print(VPrint.QUIET, "clients: %s", getClientList(true));
@@ -153,12 +157,13 @@ public class CentralServer implements CryptoServer {
 	}
 	
 	@Override
-	public void recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		log.print(VPrint.ERROR, "central server does not implement receive messages");
+		return "";
 	}
 	
 	@Override
-	public void sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
+	public String sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		assertClientRegistered(from);
 		assertClientRegistered(to);
 		
@@ -166,8 +171,16 @@ public class CentralServer implements CryptoServer {
 		relayMessage(to, from, to, m);
 		relayMessage(from, from, to, m);
 
+		String msg;
 		// finally send message to intended recipient
-		getClient(to).recvMessage(from, to, m);			
+		try {
+			msg = getClient(to).recvMessage(from, to, m);
+		} catch (RemoteException e) {
+			// client failed before we detected failure using ping
+			throw new ClientNotFound(String.format("server unable to reach client %s", to));
+		}
+		
+		return msg;			
 	}	
 
 	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
@@ -185,9 +198,14 @@ public class CentralServer implements CryptoServer {
 		assertClientRegistered(listener);
 		assertClientRegistered(victim);
 		
-		// TODO: assumes if victim is a client, then vicList won't be null
 		List<String> vicList = notifications.get(victim);
-			
+		
+		if (vicList == null) {
+			// this should never happen because of our synchronization
+			log.print(VPrint.ERROR, "Notifications for %s have not yet been allocated. " +
+					"Potential race condition", victim);
+		}
+		
 		if (!vicList.contains(listener)) {
 			vicList.add(listener);
 		}

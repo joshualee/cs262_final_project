@@ -2,6 +2,7 @@ package edu.harvard.cs262.crypto;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.channels.ClosedChannelException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
@@ -15,6 +16,7 @@ import java.nio.file.StandardOpenOption;
  */
 public class VPrint {
 	private final String logDirectory = "logs/";
+	private final Path logPath;
 	
 	/*
 	 * The verbosity hierarchy is cascading, so if you specify
@@ -32,19 +34,27 @@ public class VPrint {
 	public int verbosity;
 	public BufferedWriter log;
 	
-	public VPrint(int verbosity, String logFileName) {
-		this.verbosity = verbosity;
+	private BufferedWriter openFile(Path logPath) {
+		BufferedWriter bw;
 		
-		Path writeFile = Paths.get(logDirectory, logFileName);
 		try {
-			log = Files.newBufferedWriter(writeFile, 
+			bw = Files.newBufferedWriter(logPath, 
 				Charset.forName("UTF-8"), 
 				new OpenOption[] {StandardOpenOption.CREATE, StandardOpenOption.APPEND, StandardOpenOption.WRITE}
 			);
 		} catch (IOException e) {
-			System.out.println("[VPrint] Failed to open log file...");
-			log = null;
+			System.out.println(String.format("[VPrint] Failed to open log file %s...", logPath));
+			bw = null;
 		}
+		
+		return bw;
+	}
+	
+	public VPrint(int verbosity, String logFileName) {
+		this.verbosity = verbosity;  
+		logPath = Paths.get(logDirectory, logFileName);
+		
+		log = openFile(logPath);
 	}
 	
 	private String getLevel(int v) {
@@ -89,9 +99,12 @@ public class VPrint {
 				log.write(String.format("[%s] %s\n", Helpers.currentTime(), s));
 				log.flush();
 			}
+		} catch(ClosedChannelException e) {
+//			System.out.println("[VPrint] reopening log after channel closed exception");
+			log = openFile(logPath);
 		} catch (IOException e) {
 			System.out.println("[VPrint] Log write failed...");
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		
 		if (v <= verbosity) {

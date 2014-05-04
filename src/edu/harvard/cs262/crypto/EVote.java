@@ -2,7 +2,6 @@ package edu.harvard.cs262.crypto;
 
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -25,8 +24,9 @@ public class EVote implements Serializable {
 	public String ballot;
 	public UUID id;
 	
-	/** Public encryption parameters */
-	// TODO: abstract these out?
+
+
+	/** Public encryption parameters (for now we assume we use an e-voting scheme that uses ElGamal)*/
 	public BigInteger p;
 	public BigInteger g;
 	
