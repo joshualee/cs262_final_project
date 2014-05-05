@@ -104,10 +104,9 @@ To run any of these tests individually, execute one of the following commands fr
 	
 * **ConsoleTest:** tests the sending and receiving of encrypted and non encrypted messages among clients; also tests eavesdropping
 
-To run this test individually, execute one of the following commands from the top level. If using Lunix/Unix, run the first command; if using Windows, run the second.
+To run this test individually, execute the following command from the top level.
 
-	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ConsoleTest
-	java -cp "bin/;lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ConsoleTest
+	java -cp bin edu.harvard.cs262.tests.ConsoleTest
 
 #### Failure Tests
 
