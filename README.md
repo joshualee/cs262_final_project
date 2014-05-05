@@ -73,9 +73,16 @@ Run the following commands for the appropriate system from the top level, substi
 
 Testing
 --------------------
-To run any of the test files described in this section, execute the following command from the top level where $FILE_NAME is replaced with the appropriate file name.
+Run the following commands to run our test files:
 
-	java -classpath bin edu.harvard.cs262.tests.$FILE_NAME
+	./tests.sh
+
+Alternatively you may run them one by one. Note that these are all JUnit tests besides ConsoleTests which prints to the console:
+
+	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ClientServerTests
+	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.CryptoCipherTests
+	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.EVoteTests
+	java -classpath bin edu.harvard.cs262.tests.ConsoleTest
 
 #### Logs
 
