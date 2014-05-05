@@ -23,8 +23,6 @@ public class EVoteTests {
 	
 	@BeforeClass 
 	public static void setup() {
-		EVoteServer.setTimeout(1);
-		
 		// dummy server
 		server = new EVoteServer("server"); 
 		
@@ -93,6 +91,8 @@ public class EVoteTests {
 	
 	@Test
 	public void failedEvote() throws RemoteException, ClientNotFound, InterruptedException {
+		EVoteServer.setTimeout(1);
+		
 		// supply c2 an invalid vote, causing him to block and the vote to take too long
 		c2.setTestVote(2);
 		c3.setTestVote(1);
