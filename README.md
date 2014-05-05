@@ -51,7 +51,7 @@ Facilitates encrypted voting. Designed to accept connections from `EVoteClient`.
 
 Compilation
 -----------------
-To compile all files run the following command from the top level. All class and stub files will be placed in the `bin/` directory.
+To compile all files run the following command from the top level. All class and stub files will be placed in the `bin/` directory. **Note that we require Java version 1.7.X **
 
 	./compile.sh
 	
