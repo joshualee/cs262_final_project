@@ -92,8 +92,11 @@ Log files are written to the `log/` directory. Each log is titled by the name of
 #### JUnit Tests
 To run any of these tests individually, execute one of the following commands from the top level, replacing $FILE_NAME with the appropriate file name.
 Linux/Unix:
+
 	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
+	
 Windows:
+
 	java -cp "bin/;lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
 
 * **ClientServerTests:** unit tests basic interaction between the client and server and among clients
@@ -103,8 +106,11 @@ Windows:
 #### Console Tests
 To run this test individually, execute one of the following commands from the top level.
 Linux/Unix:
+
 	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ConsoleTest
+	
 Windows:
+
 	java -cp "bin/;lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ConsoleTest
 	
 * **ConsoleTest:** tests the sending and receiving of encrypted and non encrypted messages among clients; also tests eavesdropping
