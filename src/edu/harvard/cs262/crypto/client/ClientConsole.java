@@ -13,7 +13,7 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 /** 
  * Console for client to perform basic encrypted message sending and eavesdropping
  *
- * @author Holly Anderson and Joshua Lee
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class ClientConsole {
 	

@@ -7,7 +7,7 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 /**
  * Interface for implementing different types of key exchange protocols
  *
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public interface KeyExchangeProtocol {
 	void seed(long seed);

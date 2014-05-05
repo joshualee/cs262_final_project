@@ -19,7 +19,7 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 /**
  * A basic client that deals with sending/receiving non-encrypted messages only
  * 
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class SimpleCryptoClient implements CryptoClient {
 	protected final static int VERBOSITY = VPrint.WARN;

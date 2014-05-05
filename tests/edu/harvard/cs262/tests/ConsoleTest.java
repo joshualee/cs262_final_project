@@ -18,7 +18,7 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
  *Basic tests of interactions between DHCryptoClient and CentralServer classes;
  *  i.e. tests functionality of ClientConsole.java.
  *
- * @author Holly Anderson and Joshua Lee
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class ConsoleTest {
 	

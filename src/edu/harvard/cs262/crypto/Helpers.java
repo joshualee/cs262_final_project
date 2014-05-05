@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 /** Class to put all helper functions we needed
  *
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class Helpers {
 	

@@ -14,7 +14,7 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 /**
  * This is the Diffie Helman Key Exchange Protocol.
  * 
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 
 public class DiffieHellman implements KeyExchangeProtocol, Serializable {

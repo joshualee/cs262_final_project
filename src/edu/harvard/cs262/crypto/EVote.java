@@ -12,7 +12,7 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
  * It includes the voters and ballots involved.
  * Votes can only have a binary result (pass or fail).
  *
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 
 public class EVote implements Serializable {
