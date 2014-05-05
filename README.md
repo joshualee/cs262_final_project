@@ -90,32 +90,24 @@ Log files are written to the `log/` directory. Each log is titled by the name of
 * **Debug:** debugging information
 
 #### JUnit Tests
-To run any of these tests individually, execute one of the following commands from the top level, replacing $FILE_NAME with the appropriate file name.
-
-Linux/Unix:
-
-	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
-	
-Windows:
-
-	java -cp "bin/;lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
 
 * **ClientServerTests:** unit tests basic interaction between the client and server and among clients
 * **CryptoCipherTests:** unit tests DiffieHellman key exchange and ElGamal cipher; also tests more complex client interaction (key exchange)
 * **EVoteTests:** unit tests that evoting returns the expected result of the vote; also tests abort vote succeeds when a client fails to vote within a certain time window
 
+To run any of these tests individually, execute one of the following commands from the top level, replacing $FILE_NAME with the appropriate file name. If using Lunix/Unix, run the first command; if using Windows, run the second.
+
+	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
+	java -cp "bin/;lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
+
 #### Console Tests
-To run this test individually, execute one of the following commands from the top level.
-
-Linux/Unix:
-
-	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ConsoleTest
-	
-Windows:
-
-	java -cp "bin/;lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ConsoleTest
 	
 * **ConsoleTest:** tests the sending and receiving of encrypted and non encrypted messages among clients; also tests eavesdropping
+
+To run this test individually, execute one of the following commands from the top level. If using Lunix/Unix, run the first command; if using Windows, run the second.
+
+	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ConsoleTest
+	java -cp "bin/;lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ConsoleTest
 
 #### Failure Tests
 
