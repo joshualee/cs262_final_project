@@ -7,7 +7,7 @@ package edu.harvard.cs262.crypto.client;
  * http://stackoverflow.com/questions/156275/what-is-the-equivalent-of-the-c-pairl-r-in-java
  * (2) equals(Object c) adapted from http://www.javaranch.com/journal/2002/10/newsletteroct2002.jsp#equalandhash
  *
- * @author Holly Anderson and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class ClientPair {
 

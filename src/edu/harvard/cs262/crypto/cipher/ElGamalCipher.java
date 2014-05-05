@@ -8,7 +8,7 @@ import edu.harvard.cs262.crypto.CryptoMessage;
 /** 
  * We used the El Gamal Cipher, which is implemented below.
  *
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class ElGamalCipher implements CryptoCipher, Serializable {
 	private static final long serialVersionUID = 1L;

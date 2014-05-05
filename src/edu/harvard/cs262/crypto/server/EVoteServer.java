@@ -30,7 +30,7 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 /**
  * A server that handles e-voting by using the send/receive message protocols of CentralServer
  *
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class EVoteServer extends CentralServer {
 	private static int EVOTETIMEOUT = 120; // in seconds 

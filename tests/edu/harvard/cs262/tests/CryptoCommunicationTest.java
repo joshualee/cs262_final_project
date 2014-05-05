@@ -23,7 +23,7 @@ import edu.harvard.cs262.crypto.server.EVoteServer;
 /**
  * Sandbox for testing client server interaction
  * 
- * @author Joshua Lee
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  *
  */
 public class CryptoCommunicationTest {

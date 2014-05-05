@@ -9,7 +9,7 @@ import java.io.Serializable;
  * If message is encrypted, the encrypted message is stored in {@code cipherText} and 
  * the plaintext is also stored for testing purposes.
  *
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class CryptoMessage implements Serializable {
 	private static final long serialVersionUID = 1L;

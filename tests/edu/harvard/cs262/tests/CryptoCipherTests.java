@@ -27,7 +27,7 @@ import org.junit.Test;
  * (2) Encryption/Decryption (ElGamal)
  * (3) Integration (proper client/server interaction)
  *
- * @author Joshua Lee
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class CryptoCipherTests {
 	

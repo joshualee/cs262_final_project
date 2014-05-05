@@ -16,7 +16,7 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 /**
  * JUnit tests for client server and client client interaction.
  *
- * @author Joshua Lee
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class ClientServerTests {
 

@@ -14,7 +14,7 @@ import edu.harvard.cs262.crypto.server.EVoteServer;
  * JUnit tests for evoting.
  * Here we test that the result of the vote actually matches what we expect.
  *
- * @author Joshua Lee
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class EVoteTests {
 	

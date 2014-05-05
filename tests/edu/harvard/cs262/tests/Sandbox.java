@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 /**
  * "Sandbox" to quickly test various pieces of code.
  *
- * @author Joshua Lee
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class Sandbox {
 	public static void main(String args[]) {

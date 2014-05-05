@@ -4,7 +4,7 @@ import java.math.BigInteger;
 /**
  * This holds the information necessary for Diffie Hellman key exchange.
  *
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class DHTuple {
 	public BigInteger p;

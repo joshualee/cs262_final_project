@@ -2,7 +2,7 @@ package edu.harvard.cs262.crypto.cipher;
 /**
  * This is the Key object. It contains both the private and public keys of a user.
  *
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class CryptoKey {
 	/** 

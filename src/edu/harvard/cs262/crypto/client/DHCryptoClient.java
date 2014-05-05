@@ -26,7 +26,7 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
  * A CryptoClient that uses DiffieHellman key exchange and ElGamal encryption.
  * This client does not support e-voting.  
  *
- * @author Joshua Lee and Tracy Lu
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 
 public class DHCryptoClient extends SimpleCryptoClient {	
