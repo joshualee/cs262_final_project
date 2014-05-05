@@ -110,7 +110,7 @@ public class EVoteClient extends DHCryptoClient {
 					break;
 				}
 				else if (clientVote.equals("n")) {
-					log.print(VPrint.QUIET, "you voted in against ballot %s", sid);
+					log.print(VPrint.QUIET, "you voted against ballot %s", sid);
 					yay_or_nay = 0;
 					break;
 				}
