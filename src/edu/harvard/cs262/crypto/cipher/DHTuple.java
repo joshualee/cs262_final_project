@@ -2,8 +2,9 @@ package edu.harvard.cs262.crypto.cipher;
 
 import java.math.BigInteger;
 /**
- * This holds the things necessary for Diffie Hellman key exchange
+ * This holds the information necessary for Diffie Hellman key exchange.
  *
+ * @author Joshua Lee and Tracy Lu
  */
 public class DHTuple {
 	public BigInteger p;

@@ -6,6 +6,7 @@ import edu.harvard.cs262.crypto.CryptoMessage;
 /**
  * Interface for implementing different types of ciphers
  *
+ * @author Joshua Lee
  */
 public interface CryptoCipher {
 	void seed(long s);

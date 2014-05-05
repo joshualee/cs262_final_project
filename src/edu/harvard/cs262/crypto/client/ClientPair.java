@@ -2,8 +2,12 @@ package edu.harvard.cs262.crypto.client;
 
 /**
  * Represents pair of clients in a given communication
- * hashCode() adapted from http://stackoverflow.com/questions/156275/what-is-the-equivalent-of-the-c-pairl-r-in-java
- * equals(Obj c) adapted from http://www.javaranch.com/journal/2002/10/newsletteroct2002.jsp#equalandhash
+ * References
+ * (1) hashCode() adapted from post by user 'arturh' at 
+ * http://stackoverflow.com/questions/156275/what-is-the-equivalent-of-the-c-pairl-r-in-java
+ * (2) equals(Object c) adapted from http://www.javaranch.com/journal/2002/10/newsletteroct2002.jsp#equalandhash
+ *
+ * @author Holly Anderson and Tracy Lu
  */
 public class ClientPair {
 
@@ -20,7 +24,7 @@ public class ClientPair {
 	}
 	
 	/**
-	 * Returns hashcode that is a combination of the two clients's hash code
+	 * Returns hashcode for the ClientPair
 	 * @return An int hashcode
 	 */
 	public int hashCode() {
@@ -30,7 +34,7 @@ public class ClientPair {
 	}
 	
 	/**
-	 * Checks to see if the client pair is equal to another client pair c
+	 * Checks to see if the ClientPair is equal to another Object c
 	 * @return true if equal, otherwise false
 	 */
 	public boolean equals(Object c) {
@@ -51,5 +55,4 @@ public class ClientPair {
 	public String getTo() {
 		return to;
 	}
-
 }

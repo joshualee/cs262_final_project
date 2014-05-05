@@ -8,7 +8,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
 
-/** Class to put all helper functions we needed.*/
+/** Class to put all helper functions we needed
+ *
+ * @author Joshua Lee and Tracy Lu
+ */
 public class Helpers {
 	
 	/** Gives the current time in string format */
@@ -45,6 +48,5 @@ public class Helpers {
 		}
 		
 		return res;
-		
 	}
 }

@@ -7,6 +7,8 @@ import java.util.Random;
 import edu.harvard.cs262.crypto.CryptoMessage;
 /** 
  * We used the El Gamal Cipher, which is implemented below.
+ *
+ * @author Joshua Lee and Tracy Lu
  */
 public class ElGamalCipher implements CryptoCipher, Serializable {
 	private static final long serialVersionUID = 1L;
@@ -41,9 +43,10 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		BigInteger y = new BigInteger(key.getBits(), rand).mod(dht.p);
 		BigInteger yhat = dht.g.modPow(y, dht.p);
 		
-		/** for now we encrypt character by character
+		/** 
+		 * For now we encrypt character by character;
 		 * future work is to use more standard practice
-		 * such as Base64 encoding
+		 * such as Base64 encoding.
 		 */
 		char[] cs = plaintext.toCharArray();
 		char[] new_cs = new char[cs.length];
@@ -109,9 +112,11 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		BigInteger x = (BigInteger) key.getPrivate();
 		BigInteger yhat = (BigInteger) cm.getEncryptionState();
 		
-		// for now we decrypy character by character
-		// future work is to use more standard practice
-		// such as Base64 encoding
+		/** 
+		 * For now we encrypt character by character;
+		 * future work is to use more standard practice
+		 * such as Base64 encoding.
+		 */
 		char[] cs = cm.getCipherText().toCharArray();
 		char[] new_cs = new char[cs.length];
 		
@@ -130,7 +135,7 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 	/**
 	 * Makes a copy of the current cipher
 	 * This is needed when we want to perform a key exchange
-	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object)
+	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object).
 	 * @return a copy of the current CryptoCipher
 	 */
 	public CryptoCipher copy() {

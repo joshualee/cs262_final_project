@@ -1,7 +1,3 @@
-/**
- * JUnit tests for client server and client client interaction.
- */
-
 package edu.harvard.cs262.tests;
 
 import static org.junit.Assert.*;
@@ -17,6 +13,11 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.server.CentralServer;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
+/**
+ * JUnit tests for client server and client client interaction.
+ *
+ * @author Joshua Lee
+ */
 public class ClientServerTests {
 
 	static CryptoServer server;
@@ -55,8 +56,7 @@ public class ClientServerTests {
 		CryptoClient c1Server = server.getClient("c3");
 		assertEquals(c3, c1Server);
 		
-		// look for a non existent client
-		
+		// look for a non existent client	
 		try {
 			server.getClient("fake client name");
 			fail("client should not exist");
@@ -65,8 +65,7 @@ public class ClientServerTests {
 			assertTrue(true);
 		}
 		
-		// unregister client and make sure he no longer exists
-		
+		// unregister client and make sure he no longer exists		
 		server.unregisterClient(c3.getName());
 		
 		try {
@@ -77,7 +76,7 @@ public class ClientServerTests {
 			assertTrue(true);
 		}		
 		
-		// other server functionality tested in other JUnit files and BasicTest
+		// other server functionality tested in other JUnit files and ConsoleTest.java
 	}
 	
 	@Test
@@ -85,7 +84,7 @@ public class ClientServerTests {
 		String clientName = c1.getName();
 		assertEquals("c1", clientName);
 		
-		// other client functionality tested in BasicTest, CryptoCipherTest, EVoteTest, and below
+		// other client functionality tested in ConsoleTest.java, CryptoCipherTest.java, EVoteTest.java, and below
 	}
 	
 	@Test
@@ -106,5 +105,4 @@ public class ClientServerTests {
 		
 		assertEquals(msg2, m2.getPlainText());
 	}
-
 }

@@ -15,9 +15,11 @@ import edu.harvard.cs262.crypto.cipher.KeyExchangeProtocol;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 import edu.harvard.cs262.crypto.server.CryptoServer;
+
 /**
  * A basic client that deals with sending/receiving non-encrypted messages only
  * 
+ * @author Joshua Lee and Tracy Lu
  */
 public class SimpleCryptoClient implements CryptoClient {
 	protected final static int VERBOSITY = VPrint.WARN;
@@ -37,8 +39,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	
 		this.messages = new ConcurrentHashMap<ClientPair, List<CryptoMessage>>();
 	}
-
-
+	
 	public String getName() {
 		return name;
 	}
@@ -46,7 +47,6 @@ public class SimpleCryptoClient implements CryptoClient {
 	public Map<ClientPair, List<CryptoMessage>> getMessages() {
 		return this.messages;
 	}
-	
 	
 	/**
 	 * Expose log so other modules can log actions 

@@ -9,8 +9,11 @@ import java.util.Scanner;
 
 import edu.harvard.cs262.crypto.CryptoMessage;
 import edu.harvard.cs262.crypto.server.CryptoServer;
+
 /** 
- * Console for client to basic encrypted message sending and eavesdropping
+ * Console for client to perform basic encrypted message sending and eavesdropping
+ *
+ * @author Holly Anderson and Joshua Lee
  */
 public class ClientConsole {
 	
@@ -36,7 +39,7 @@ public class ClientConsole {
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
 
-			// Create new Scanner
+			// create new Scanner
 			scan = new Scanner(System.in);
 
 			// boolean to keep track of whether the Client is registered

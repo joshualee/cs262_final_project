@@ -19,9 +19,9 @@ A console line application that provides a simple interface to send messages to 
 
 Authors
 -------
+* Holly Anderson (hollyanderson@fas.harvard.edu)
 * Joshua Lee (joshualee@college.harvard.edu)
 * Tracy Lu (tlu@college.harvard.edu)
-* Holly Anderson (hollyanderson@fas.harvard.edu)
 
 CryptoClient
 -------------

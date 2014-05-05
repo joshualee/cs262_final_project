@@ -7,6 +7,7 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 /**
  * Interface for implementing different types of key exchange protocols
  *
+ * @author Joshua Lee and Tracy Lu
  */
 public interface KeyExchangeProtocol {
 	void seed(long seed);
@@ -17,7 +18,7 @@ public interface KeyExchangeProtocol {
 	
 	/**
 	 * Returns a copy of the key exchange protocol. This is needed when we want to perform a key exchange
-	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object)
+	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object).
 	 */
 	KeyExchangeProtocol copy();
 }

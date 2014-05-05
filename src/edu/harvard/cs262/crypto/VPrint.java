@@ -13,6 +13,8 @@ import java.nio.file.StandardOpenOption;
 /**
  * VPrint class allows for printing data at varying levels of verbosity depending 
  * on the intended purpose.
+ *
+ * @author Joshua Lee and Tracy Lu
  */
 public class VPrint {
 	private final String logDirectory = "logs/";
@@ -118,11 +120,9 @@ public class VPrint {
 				log.flush();
 			}
 		} catch(ClosedChannelException e) {
-//			System.out.println("[VPrint] reopening log after channel closed exception");
 			log = openFile(logPath);
 		} catch (IOException e) {
 			System.out.println("[VPrint] Log write failed...");
-//			e.printStackTrace();
 		}
 		
 		if (v <= verbosity) {

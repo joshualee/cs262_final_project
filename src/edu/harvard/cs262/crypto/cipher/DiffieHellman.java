@@ -12,8 +12,9 @@ import edu.harvard.cs262.crypto.client.CryptoClient;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
 
 /**
- * This is the Diffie Helman Key Exchange Protocol
+ * This is the Diffie Helman Key Exchange Protocol.
  * 
+ * @author Joshua Lee and Tracy Lu
  */
 
 public class DiffieHellman implements KeyExchangeProtocol, Serializable {
@@ -31,7 +32,6 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		P = BigInteger.valueOf(31123L);
 		G = BigInteger.valueOf(2341L);
 		
-//		seed = 262;
 		seed = (int) (Math.random() * 1000);
 		rand = new Random(seed);
 		id = UUID.randomUUID();
@@ -43,7 +43,6 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		rand = new Random(seed);
 	}
 	
-
 	public String getProtocolId() {
 		return id.toString();
 	}
@@ -117,7 +116,7 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	/**
 	 * Makes a copy of the current Diffie Hellman protocol
 	 * This is needed when we want to perform a key exchange
-	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object)
+	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object).
 	 * @return a Key Exchange Protocol
 	 */
 	public KeyExchangeProtocol copy() {

@@ -1,8 +1,3 @@
-/**
- * JUnit tests for evoting.
- * Here we test that the result of the vote actually matches what we expect.
- */
-
 package edu.harvard.cs262.tests;
 
 import static org.junit.Assert.*;
@@ -15,6 +10,12 @@ import edu.harvard.cs262.crypto.client.EVoteClient;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.server.EVoteServer;
 
+/**
+ * JUnit tests for evoting.
+ * Here we test that the result of the vote actually matches what we expect.
+ *
+ * @author Joshua Lee
+ */
 public class EVoteTests {
 	
 	static EVoteServer server;

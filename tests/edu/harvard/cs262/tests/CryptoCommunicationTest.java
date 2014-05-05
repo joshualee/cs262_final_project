@@ -1,7 +1,3 @@
-/**
- * Sandbox for testing client server interaction.
- */
-
 package edu.harvard.cs262.tests;
 
 import java.math.BigInteger;
@@ -25,11 +21,11 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 import edu.harvard.cs262.crypto.server.EVoteServer;
 
 /**
+ * Sandbox for testing client server interaction
  * 
- * @author joshualee
+ * @author Joshua Lee
  *
  */
-
 public class CryptoCommunicationTest {
 	
 	private static String rmiHost;
@@ -146,5 +142,4 @@ public class CryptoCommunicationTest {
 			e.printStackTrace();
 		}
 	}
-
 }

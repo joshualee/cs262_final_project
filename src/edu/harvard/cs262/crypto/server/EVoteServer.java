@@ -29,6 +29,8 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 
 /**
  * A server that handles e-voting by using the send/receive message protocols of CentralServer
+ *
+ * @author Joshua Lee and Tracy Lu
  */
 public class EVoteServer extends CentralServer {
 	private static int EVOTETIMEOUT = 120; // in seconds 
@@ -48,9 +50,9 @@ public class EVoteServer extends CentralServer {
 			if (currentVotingClients.contains(clientName)) {
 				String msg = String.format("aborting vote because %s unregistered midvote", clientName);
 				/**
-				 * since we don't have a reference to the server thread doing the vote here
-				 * we don't cancel it. in the future, we can make the server thread into
-				 * an instance variable so we have a reference
+				 * Because we don't have a reference to the server thread doing the vote here
+				 * we don't cancel it. In the future, we can make the server thread into
+				 * an instance variable so we have a reference.
 				 */
 				abortEVote(msg, null, currentVotingClients);
 			}
@@ -59,7 +61,6 @@ public class EVoteServer extends CentralServer {
 		return super.unregisterClient(clientName);
 	}
 		
-
 	/**
 	 * Blocks until all registered clients have sent a message with sid 
 	 * @param sid the session id to wait on
@@ -122,11 +123,9 @@ public class EVoteServer extends CentralServer {
 	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		Map<String, CryptoMessage> sessionMap;
 		
-		
 		/** Relay message to all other voting clients */	
 		CryptoMessage relayMessage = new CryptoMessage(m.getPlainText(), m.getCipherText(), "");
 		relayMessage.setTag(m.getTag());
-		
 		
 		synchronized (currentVotingClients) {
 			for (String clientName : currentVotingClients) {
@@ -149,7 +148,6 @@ public class EVoteServer extends CentralServer {
 				
 				sessions.notifyAll();
 			}
-			
 			
 			synchronized (sessionMap) {
 				while (sessionMap.containsKey(from)) {
@@ -208,7 +206,6 @@ public class EVoteServer extends CentralServer {
 		 * EVote phase 3:
 		 * server receives g^(sk_i) from each client and calculates shared public key
 		 */
-		
 		Map<String, CryptoMessage> pkMsgs = waitForAll(votingClients, sid);
 		BigInteger publicKey = BigInteger.valueOf(1L);
 		for (CryptoMessage pkMsg : pkMsgs.values()) {
@@ -247,7 +244,6 @@ public class EVoteServer extends CentralServer {
 		 * EVote phase 7:
 		 * compute the decryption key and share with all clients
 		 */
-		
 		Map<String, CryptoMessage> decryptMsgs = waitForAll(votingClients, sid);
 		BigInteger decrypt = BigInteger.valueOf(1L);
 		for (CryptoMessage decryptMsg : decryptMsgs.values()) {
@@ -264,7 +260,6 @@ public class EVoteServer extends CentralServer {
 		 * EVote phase 8:
 		 * decrypt vote
 		 */
-
 		int positiveVotes, negativeVotes;
 		BigInteger voteResult = c2.multiply(decrypt.modInverse(evote.p)).mod(evote.p);
 		int numVoters = votingClients.size();		
@@ -290,7 +285,6 @@ public class EVoteServer extends CentralServer {
 		}
 		
 		return String.format("(%s,%s)", positiveVotes, negativeVotes);
-		
 	}
 	
 	/** Creates callable object for server performing e-vote on all the clients (used for threading) */
@@ -316,7 +310,7 @@ public class EVoteServer extends CentralServer {
 		}
 	}
 	
-	/** BEgins an evote by telling all clients what the ballot is */
+	/** Begins an evote by telling all clients what the ballot is */
 	public String initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
 		Future<Object> clientFuture = null;
 		Future<String> serverFuture = null;
@@ -332,7 +326,7 @@ public class EVoteServer extends CentralServer {
 			currentVotingClients.addAll(votingClients);
 		}
 		
-		// hack b/c concurrentset is not serializable
+		// hack because concurrentSet is not serializable
 		Set<String> votingClientsSer = new HashSet<String>(votingClients);
 		EVote evote = new EVote(ballot, votingClientsSer);
 		
@@ -352,7 +346,6 @@ public class EVoteServer extends CentralServer {
 		/** Do abortion handling... */
 		long elapsedTime = 0;
 		long startTime = System.currentTimeMillis();
-		
 		
 		while (!serverFuture.isDone()) {
 			elapsedTime = System.currentTimeMillis() - startTime;
@@ -490,5 +483,4 @@ public class EVoteServer extends CentralServer {
 	public static void setTimeout(int to) {
 		EVOTETIMEOUT = to;
 	}
-
 }

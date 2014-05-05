@@ -27,7 +27,9 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 
 /**
  * A CryptoClient that uses DiffieHellman key exchange and ElGamal encryption.
- * This client also supports e-voting.  
+ * This client also supports e-voting. 
+ *
+ * @author Joshua Lee and Tracy Lu 
  */
 
 public class EVoteClient extends DHCryptoClient {	
@@ -170,6 +172,7 @@ public class EVoteClient extends DHCryptoClient {
 			CryptoMessage decryptKeyPart = new CryptoMessage(encryptedC1.toString(), sid);
 			decryptKeyPart.setTag("decryption key partition");
 			server.recvMessage(name, serverName, decryptKeyPart);
+			
 			/**
 			 * EVote phase 8:
 			 * clients use decodingKey to decode message 

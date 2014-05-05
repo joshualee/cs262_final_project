@@ -16,6 +16,8 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
  * Interface for implementing a client that sends/receives encrypted messages.
  * All methods need to throw RemoteException in order for interface to be remote.
  * Interface needs to be remote so a stub can be generated.
+ *
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 
 public interface CryptoClient extends Remote {
@@ -25,7 +27,7 @@ public interface CryptoClient extends Remote {
 	public boolean ping() throws RemoteException;
 	
 	/**
-	 * Handlers for client to send/receive messages.
+	 * Handlers for client to send/receive messages
 	 */
 	String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, InterruptedException;
 	String sendMessage(String to, String msg, String sid) throws RemoteException, ClientNotFound, InterruptedException;

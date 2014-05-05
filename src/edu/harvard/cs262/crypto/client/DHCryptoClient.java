@@ -25,6 +25,8 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 /**
  * A CryptoClient that uses DiffieHellman key exchange and ElGamal encryption.
  * This client does not support e-voting.  
+ *
+ * @author Joshua Lee and Tracy Lu
  */
 
 public class DHCryptoClient extends SimpleCryptoClient {	
@@ -113,7 +115,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	}
 	
 	/**
-	 * As the client send an encrypted message to client "to" by telling the server to do it
+	 * As the client, send an encrypted message to client "to" by telling the server to do it.
 	 * @param to
 	 * 		Who the message is for
 	 * @param text
@@ -131,8 +133,8 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		
 		try {
 			/** 
-			 * Get the cipher to be used and send the encrypted message if the clients have a secret key set up
-			 * Otherwise, first set up a key between the two communicating clients
+			 * Get the cipher to be used and send the encrypted message if the clients have a secret key set up.
+			 * Otherwise, first set up a key between the two communicating clients.
 			 */
 			CryptoCipher c = ciphers.get(to);
 			if (c == null) {

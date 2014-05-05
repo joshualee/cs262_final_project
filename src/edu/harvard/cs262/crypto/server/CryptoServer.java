@@ -14,12 +14,11 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
  * and eavesdropping.
  * All methods need to throw RemoteException in order for interface to be remote.
  * Interface needs to be remote so a stub can be generated.
+ *
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
-
 public interface CryptoServer extends Remote {
-	
 	String getName() throws RemoteException;
-	
 	String getClientList(boolean arrayFormat) throws RemoteException;
 	
 	/**

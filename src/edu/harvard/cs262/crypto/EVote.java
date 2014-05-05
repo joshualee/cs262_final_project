@@ -10,7 +10,9 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 /**
  * An EVote is an object that represents an e-voting scenario.
  * It includes the voters and ballots involved.
- * Votes can only have a binary result (pass or no pass).
+ * Votes can only have a binary result (pass or fail).
+ *
+ * @author Joshua Lee and Tracy Lu
  */
 
 public class EVote implements Serializable {
@@ -23,8 +25,6 @@ public class EVote implements Serializable {
 	/** A string description of what the vote is over */
 	public String ballot;
 	public UUID id;
-	
-
 
 	/** Public encryption parameters (for now we assume we use an e-voting scheme that uses ElGamal)*/
 	public BigInteger p;
@@ -65,7 +65,6 @@ public class EVote implements Serializable {
 			}
 		}
 		String errorMsg = String.format("%s is not a valid power of %s mod %s", result, g, p);
-		throw new EVoteInvalidResult(errorMsg);
-		
+		throw new EVoteInvalidResult(errorMsg);	
 	}
 }

@@ -29,8 +29,9 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 
 /**
  * A server that relays messages between clients and sends messages to eavesdropping clients
+ *
+ * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
-
 public class CentralServer implements CryptoServer {
 	protected final static int VERBOSITY = VPrint.WARN; 
 	
@@ -271,7 +272,6 @@ public class CentralServer implements CryptoServer {
 		log.print(VPrint.ERROR, "central server does not implement evoting");
 		return "";
 	}
-	
 	
 	/** Create a Callable object used to ping clients */
 	private class ClientPingCallable implements Callable<Boolean> {

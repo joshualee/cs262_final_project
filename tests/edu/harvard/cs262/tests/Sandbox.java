@@ -1,11 +1,12 @@
-/**
- * "Sandbox" to quickly test various pieces of code.
- */
-
 package edu.harvard.cs262.tests;
 
 import java.sql.Timestamp;
 
+/**
+ * "Sandbox" to quickly test various pieces of code.
+ *
+ * @author Joshua Lee
+ */
 public class Sandbox {
 	public static void main(String args[]) {
 //		BigInteger g = BigInteger.valueOf(2341L);

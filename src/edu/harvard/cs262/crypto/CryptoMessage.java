@@ -7,8 +7,9 @@ import java.io.Serializable;
  * It can be encrypted or not encrypted.
  * If message is not encrypted, the message is stored in the variable {@code plainText} 
  * If message is encrypted, the encrypted message is stored in {@code cipherText} and 
- * the plaintext is also stored for testing purposes
+ * the plaintext is also stored for testing purposes.
  *
+ * @author Joshua Lee and Tracy Lu
  */
 public class CryptoMessage implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -23,7 +24,7 @@ public class CryptoMessage implements Serializable {
 	private String plainText;
 	private String cipherText;
 	
-	/** This object stores extra information that is required by some encryption schemes */
+	/** This object stores extra information that is required by some encryption schemes. */
 	private Object encryptionState;
 
 	/** Constructor for non-encrypted message */
