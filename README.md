@@ -51,9 +51,10 @@ Facilitates encrypted voting. Designed to accept connections from `EVoteClient`.
 
 Compilation
 -----------------
-To compile all files run the following command from the top level. All class and stub files will be placed in the `bin/` directory. **Note that we require Java version 1.7.X **
+To compile all files run one of the following commands from the top level. If using Linux/Unix, run the first command; if using Windows, run the second. All class and stub files will be placed in the `bin/` directory. **Note that we require Java version 1.7.X **
 
-	./compile.sh
+	./compileNix.sh
+	./compileWin.sh
 	
 Usage
 -----------------
@@ -61,28 +62,22 @@ Run the following commands for the appropriate system from the top level, substi
 
 ####Encrypted Message System ("TestBed")
 
-    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -cp bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.client.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -cp bin edu.harvard.cs262.crypto.client.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
    
 ####Electronic Voting System
 
-    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -cp bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.client.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -cp bin edu.harvard.cs262.crypto.client.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
 
 Testing
 --------------------
-Run the following commands to run our test files:
+Run the one of the following commands from the top level to run all of our test files. If using Lunix/Unix, run the first command; if using Windows, run the second. Instructions on running one test at a time can be found below.
 
-	./tests.sh
-
-Alternatively you may run them one by one. Note that these are all JUnit tests besides ConsoleTests which prints to the console:
-
-	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ClientServerTests
-	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.CryptoCipherTests
-	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.EVoteTests
-	java -classpath bin edu.harvard.cs262.tests.ConsoleTest
+	./testsNix.sh
+	./testsWin.sh
 
 #### Logs
 
@@ -100,9 +95,18 @@ Log files are written to the `log/` directory. Each log is titled by the name of
 * **CryptoCipherTests:** unit tests DiffieHellman key exchange and ElGamal cipher; also tests more complex client interaction (key exchange)
 * **EVoteTests:** unit tests that evoting returns the expected result of the vote; also tests abort vote succeeds when a client fails to vote within a certain time window
 
-#### Console Tests
+To run any of these tests individually, execute one of the following commands from the top level, replacing `$FILE_NAME` with the appropriate file name. If using Lunix/Unix, run the first command; if using Windows, run the second.
 
+	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
+	java -cp "bin/;lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
+
+#### Console Tests
+	
 * **ConsoleTest:** tests the sending and receiving of encrypted and non encrypted messages among clients; also tests eavesdropping
+
+To run this test individually, execute the following command from the top level.
+
+	java -cp bin edu.harvard.cs262.tests.ConsoleTest
 
 #### Failure Tests
 
