@@ -61,15 +61,15 @@ Run the following commands for the appropriate system from the top level, substi
 
 ####Encrypted Message System ("TestBed")
 
-    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -cp bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.client.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -cp bin edu.harvard.cs262.crypto.client.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
    
 ####Electronic Voting System
 
-    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -cp bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.client.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -cp bin edu.harvard.cs262.crypto.client.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
 
 Testing
 --------------------
@@ -82,7 +82,7 @@ Alternatively you may run them one by one. Note that these are all JUnit tests b
 	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ClientServerTests
 	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.CryptoCipherTests
 	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.EVoteTests
-	java -classpath bin edu.harvard.cs262.tests.ConsoleTest
+	java -cp bin edu.harvard.cs262.tests.ConsoleTest
 
 #### Logs
 
