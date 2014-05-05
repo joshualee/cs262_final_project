@@ -7,15 +7,15 @@ This project provides a framework that can be used to test the security of crypt
 
 Ontop of this framework, we have built two simple applications:
 
+#### Console Communicator
+
+A console line application that provides a simple interface to send messages to other clients. Clients can also eavesdrop on other clients, simulating an attacker who is listening to the wire.
+
 #### E-voting
 
 Distributed electronic voting allows n parties to all vote on a ballot in such a manner that no party learns anything from seeing all the encrypted ballots, except the result of the vote (in particular each party cannot learn any other party’s vote). This property has obvious privacy advantages which can be especially important for sensitive votes.
 
-Our application allows the server to start a vote by specifying a ballot. Clients are then able to vote in favor or against the ballot and the result is securely computed. Each client is also given each other client's public communication, giving other clients a chance to break the evoting protocol.
-
-#### Console Communicator
-
-A console line application that provides a simple interface to send messages to other clients. Clients can also eavesdrop on other clients, simulating an attacker who is listening to the wire.
+Our application allows the server to start a vote by specifying a ballot. Clients are then able to vote for or against the ballot and the result is securely computed. Each client is also given each other client's public communication, giving other clients a chance to break the evoting protocol.
 
 Authors
 -------
@@ -65,7 +65,7 @@ Run the following commands for the appropriate system from the top level, substi
 
     java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.client.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
    
-(2) Encrypted Voting System
+(2) Electronic Voting System
 
     java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
 
@@ -73,7 +73,7 @@ Run the following commands for the appropriate system from the top level, substi
 
 Testing
 --------------------
-To run any of the test files described in this section, execute the following command from the top level where $FILE_NAME is replaced by the appropriate file name.
+To run any of the test files described in this section, execute the following command from the top level where $FILE_NAME is replaced with the appropriate file name.
 
 	java -classpath bin edu.harvard.cs262.tests.$FILE_NAME
 
