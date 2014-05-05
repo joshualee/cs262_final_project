@@ -14,6 +14,9 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 /**
  * Interface for implementing a client that sends/receives encrypted messages.
+ * Clients may also eavesdrop on other clients, simulating an attacker listening
+ * to the wire. Client messages are relayed through a central server in order for
+ * features such as notifications (eavesdropping) and evoting to work properly.  
  * All methods need to throw RemoteException in order for interface to be remote.
  * Interface needs to be remote so a stub can be generated.
  *
@@ -21,7 +24,19 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
  */
 
 public interface CryptoClient extends Remote {
+	/**
+	 *  Getter for client name
+	 * @return 
+	 * 		The name of the client
+	 * @throws RemoteException
+	 */
 	public String getName() throws RemoteException;
+	
+	/**
+	 * 
+	 * @return
+	 * @throws RemoteException
+	 */
 	public Map<ClientPair, List<CryptoMessage>> getMessages() throws RemoteException;
 	public VPrint getLog() throws RemoteException;
 	public boolean ping() throws RemoteException;

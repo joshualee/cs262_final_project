@@ -55,13 +55,13 @@ public class EVoteTests {
 		
 		// ensure we allow consecutive evotes successfully
 		
-		c1.setTestVote(0);
+		c1.setTestVote(1);
 		c2.setTestVote(1);
-		c3.setTestVote(0);
+		c3.setTestVote(1);
 		c4.setTestVote(1);
 		
 		String result2 = server.initiateEVote("second test ballot");		
-		assertEquals("(2,2)", result2);
+		assertEquals("(4,0)", result2);
 	}
 	
 	@Test

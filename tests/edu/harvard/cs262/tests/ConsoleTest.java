@@ -78,6 +78,7 @@ public class ConsoleTest {
 			CryptoClient c1 = createClient("c1", server);
 			CryptoClient c2 = createClient("c2", server);
 			// Error
+			@SuppressWarnings("unused")
 			CryptoClient c3 = createClient("c1", server);
 			CryptoClient e1 = createClient("e1", server);
 			CryptoClient e2 = createClient("e2", server);

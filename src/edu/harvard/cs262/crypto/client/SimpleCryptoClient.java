@@ -44,6 +44,12 @@ public class SimpleCryptoClient implements CryptoClient {
 		return name;
 	}
 
+	/**
+	 * The message history that the client can use to view messages received in the past.
+	 * @return
+	 * 		The message history as a map: (to, from) => list of messages
+	 * @throws RemoteException
+	 */
 	public Map<ClientPair, List<CryptoMessage>> getMessages() {
 		return this.messages;
 	}
@@ -64,7 +70,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 	
 	/**
-	 * Adds a message being sent to the message list (which is the message history)
+	 * Adds a message to the message history
 	 * @param from
 	 * 		Who is sending the message
 	 * @param to
