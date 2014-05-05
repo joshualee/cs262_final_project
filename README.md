@@ -74,7 +74,7 @@ Run the following commands for the appropriate system from the top level, substi
 
 Testing
 --------------------
-Run the one of the following commands from the top level to run all of our test files. If using Lunix/Unix, run the first command; if using Windows, run the second. Instructions on running one test at a time are found below.
+Run the one of the following commands from the top level to run all of our test files. If using Lunix/Unix, run the first command; if using Windows, run the second. Instructions on running one test at a time can be found below.
 
 	./testsNix.sh
 	./testsWin.sh
@@ -95,7 +95,7 @@ Log files are written to the `log/` directory. Each log is titled by the name of
 * **CryptoCipherTests:** unit tests DiffieHellman key exchange and ElGamal cipher; also tests more complex client interaction (key exchange)
 * **EVoteTests:** unit tests that evoting returns the expected result of the vote; also tests abort vote succeeds when a client fails to vote within a certain time window
 
-To run any of these tests individually, execute one of the following commands from the top level, replacing $FILE_NAME with the appropriate file name. If using Lunix/Unix, run the first command; if using Windows, run the second.
+To run any of these tests individually, execute one of the following commands from the top level, replacing `$FILE_NAME` with the appropriate file name. If using Lunix/Unix, run the first command; if using Windows, run the second.
 
 	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
 	java -cp "bin/;lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
