@@ -51,28 +51,31 @@ Facilitates encrypted voting. Designed to accept connections from `EVoteClient`.
 
 Compilation
 -----------------
-To compile all files run the following command from the top level. All class and stub files will be located in the bin directory.
+To compile all files run the following command from the top level. All class and stub files will be placed in the `bin/` directory.
 
 	./compile.sh
 	
 Usage
 -----------------
-Run the following commands for the appropriate system from the top level, substituting the placeholders $REGISTRY_PORT, $REGISTRY_IP, and $SERVER_NAME with appropriate values. The first two placeholders correspond to the port and public IP address of the rmiregistry, respectively. Note that the IP of the rmiregistry will be the same as the IP of the machine on which the server is running. The last placeholder is the name of the server.
+Run the following commands for the appropriate system from the top level, substituting the placeholders $POLICY_FILE, $REGISTRY_PORT, $REGISTRY_IP, and $SERVER_NAME with appropriate values. $POLICY_FILE can be replaced with one of two file names: all.policy or general.policy. The former is a blanket grant of permissions while the latter is more restricted (and recommended). $REGISTRY_PORT and $REGISTRY_IP correspond to the port and public IP address of the rmiregistry, respectively. Note that the IP of the rmiregistry will be the same as the IP of the machine on which the server is running. $SERVER_NAME is the name of the server.
 
 (1) Encrypted Message System
 
-    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.server.CentralServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.client.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.client.ClientConsole $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
    
 (2) Encrypted Voting System
 
-    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.server.EVoteServer $REGISTRY_PORT $SERVER_NAME
 
-    java -Djava.security.policy=policies/general.policy -classpath bin edu.harvard.cs262.crypto.client.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
+    java -Djava.security.policy=policies/$POLICY_FILE -classpath bin edu.harvard.cs262.crypto.client.EVoteClient $REGISTRY_IP $REGISTRY_PORT $SERVER_NAME
 
 Testing
 --------------------
+To run any of the test files described in this section, execute the following command from the top level where $FILE_NAME is replaced by the appropriate file name.
+
+	java -classpath bin edu.harvard.cs262.tests.$FILE_NAME
 
 #### Logs
 
@@ -89,7 +92,6 @@ Log files are written to the `log/` directory. Each log is titled by the name of
 * ClientServerTests: unit tests basic interaction between the client and server and among clients
 * CryptoCipherTests: unit tests DiffieHellman key exchange and ElGamal cipher; also tests more complex client interaction (key exchange)
 * EVoteTests: unit tests that evoting returns the expected result of the vote; also tests abort vote succeeds when a client fails to vote within a certain time window
-
 
 #### Console Tests
 
