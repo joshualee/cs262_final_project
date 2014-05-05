@@ -1,6 +1,13 @@
 package edu.harvard.cs262.crypto.cipher;
-
+/**
+ * This is the Key object. It contains both the private and public keys of a user
+ *
+ */
 public class CryptoKey {
+	/** Bits specifies how many bits we use when generating a random number
+	 *  It is a security parameter that allows use to determine how secure we want
+	 *  our random numbers to be.
+	 */
 	private int bits;
 	private Object priv;
 	private Object pub;

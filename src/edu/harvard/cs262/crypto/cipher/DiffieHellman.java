@@ -11,6 +11,11 @@ import edu.harvard.cs262.crypto.VPrint;
 import edu.harvard.cs262.crypto.client.CryptoClient;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
 
+/**
+ * This is the Diffie Helman Key Exchange Protocol
+ * 
+ */
+
 public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	private static final long serialVersionUID = 1L;
 	
@@ -32,13 +37,13 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		id = UUID.randomUUID();
 	}
 	
-	@Override
+
 	public void seed(long seed) {
 		this.seed = seed;
 		rand = new Random(seed);
 	}
 	
-	@Override
+
 	public String getProtocolId() {
 		return id.toString();
 	}
@@ -57,7 +62,15 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		return BITS;
 	}
 	
-	@Override
+	/**
+	 * Initiates Diffie Helman Key Exchange process
+	 * @param me
+	 * 		The client initiating the Key Exchange process
+	 * @param recipientName
+	 * 		The client that "me" is trying to exchange with
+	 * @return a Cryptokey containing both the public key and the shared private key that results from the key exchange process
+	 * @throws RemoteException, ClientNotFound, InterruptedException
+	 */
 	public CryptoKey initiate(CryptoClient me, String recipientName) throws RemoteException, ClientNotFound, InterruptedException {
 		me.getLog().print(VPrint.DEBUG, "%s initiating DiffieHellman with %s", me.getName(), recipientName);
 
@@ -75,8 +88,16 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		
 		return ck;
 	}
-
-	@Override
+	
+	/**
+	 * Responds back when someone tries to start a Diffie Helman Key Exchange process with the client
+	 * @param me
+	 * 		The client initiating the Key Exchange process
+	 * @param recipientName
+	 * 		The client that "me" is trying to exchange with
+	 * @return a Cryptokey containing both the public key and the shared private key that results from the key exchange process
+	 * @throws RemoteException, ClientNotFound, InterruptedException
+	 */
 	public CryptoKey reciprocate(CryptoClient me, String initiatorName) throws InterruptedException, RemoteException, ClientNotFound {
 		me.getLog().print(VPrint.DEBUG, "%s reciprocating DiffieHellman with %s", me.getName(), initiatorName);
 		
@@ -93,8 +114,12 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		me.getLog().print(VPrint.DEBUG, "(%s) DiffieHellman exchange successful", me.getName());
 		return ck;
 	}
-
-	@Override
+	/**
+	 * Makes a copy of the current Diffie Hellman protocol
+	 * This is needed when we want to perform a key exchange
+	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object)
+	 * @return a Key Exchange Protocol
+	 */
 	public KeyExchangeProtocol copy() {
 		DiffieHellman dh = new DiffieHellman();
 		dh.setProtocolId(id);

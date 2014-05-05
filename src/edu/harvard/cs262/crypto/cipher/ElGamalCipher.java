@@ -5,7 +5,9 @@ import java.math.BigInteger;
 import java.util.Random;
 
 import edu.harvard.cs262.crypto.CryptoMessage;
-
+/** 
+ * We used the El Gamal Cipher, which is implemented below.
+ */
 public class ElGamalCipher implements CryptoCipher, Serializable {
 	private static final long serialVersionUID = 1L;
 	private CryptoKey key;
@@ -18,27 +20,31 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		rand = new Random(seed);
 	}
 	
-	@Override
 	public void seed(long s) {
 		seed = s;
 		rand = new Random(seed);
 	}
 
-	@Override
 	public void setKey(CryptoKey k) {
 		key = k;
 	}
 
-	@Override
+	/**
+	 * Encrypts a message
+	 * @param plaintext
+	 * 		The message to be encrypted
+	 * @return The encrypted message
+	 */
 	public CryptoMessage encrypt(String plaintext) {
 		DHTuple dht = (DHTuple) key.getPublic();
 		
 		BigInteger y = new BigInteger(key.getBits(), rand).mod(dht.p);
 		BigInteger yhat = dht.g.modPow(y, dht.p);
 		
-		// for now we encrypt character by character
-		// future work is to use more standard practice
-		// such as Base64 encoding
+		/** for now we encrypt character by character
+		 * future work is to use more standard practice
+		 * such as Base64 encoding
+		 */
 		char[] cs = plaintext.toCharArray();
 		char[] new_cs = new char[cs.length];
 		
@@ -54,6 +60,12 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		return m;
 	}
 	
+	/**
+	 * Encrypts an integer
+	 * @param plaintext
+	 * 		The integer to be encrypted
+	 * @return The encrypted integer
+	 */
 	public CryptoMessage encryptInteger(BigInteger plaintext) {
 		DHTuple dht = (DHTuple) key.getPublic();
 		
@@ -68,6 +80,12 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		return m;
 	}
 	
+	/**
+	 * Decrypts a integer
+	 * @param plaintext
+	 * 		The integer to be decrypted
+	 * @return The decrypted integer
+	 */
 	public String decryptInteger(CryptoMessage cm) {
 		DHTuple dht = (DHTuple) key.getPublic();
 		BigInteger x = (BigInteger) key.getPrivate();
@@ -80,7 +98,12 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		return decrypted.toString();
 	}
 
-	@Override
+	/**
+	 * Decrypts a message
+	 * @param plaintext
+	 * 		The message to be decrypted
+	 * @return The decrypted message
+	 */
 	public String decrypt(CryptoMessage cm) {
 		DHTuple dht = (DHTuple) key.getPublic();
 		BigInteger x = (BigInteger) key.getPrivate();
@@ -104,7 +127,12 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 		return plaintext;
 	}
 
-	@Override
+	/**
+	 * Makes a copy of the current cipher
+	 * This is needed when we want to perform a key exchange
+	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object)
+	 * @return a copy of the current CryptoCipher
+	 */
 	public CryptoCipher copy() {
 		ElGamalCipher eg = new ElGamalCipher();
 		return eg;

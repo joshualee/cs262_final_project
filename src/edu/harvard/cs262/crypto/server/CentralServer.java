@@ -1,6 +1,7 @@
 package edu.harvard.cs262.crypto.server;
 
 import java.net.InetAddress;
+
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.registry.Registry;
@@ -26,6 +27,10 @@ import edu.harvard.cs262.crypto.cipher.KeyExchangeProtocol;
 import edu.harvard.cs262.crypto.client.CryptoClient;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
 
+/**
+ * A server that relays messages between clients and sends messages to eavesdropping clients
+ */
+
 public class CentralServer implements CryptoServer {
 	protected final static int VERBOSITY = VPrint.WARN; 
 	
@@ -41,9 +46,13 @@ public class CentralServer implements CryptoServer {
 		String logName = String.format("%s %s.log", name, Helpers.currentTimeForFile());
 		log = new VPrint(VERBOSITY, logName);
 		
+		/** List of all clients */
 		clients = new ConcurrentHashMap<String, CryptoClient>();
+		
+		/** Hashmap with clients as keys and lists of who is eavedropping on them as values*/
 		notifications = new ConcurrentHashMap<String, List<String>>();
 		
+		/** Checks to see if any clients have failed by pinging them */
 		Executors.newSingleThreadExecutor().submit(new Runnable() { public void run() {
 			try {
 				heartbeatClients(2, 2, 1);
@@ -53,12 +62,16 @@ public class CentralServer implements CryptoServer {
 		}});
 	}
 	
-	@Override
 	public String getName() throws RemoteException {
 		return name;
 	}
-	
-	@Override
+
+	/**
+	 * Gets the list of clients
+	 * @param arrayFormat: if true, separate clients by commas, otherwise separate them by new lines
+	 * @return String containing all the clients
+	 * @throws RemoteException
+	 */
 	public String getClientList(boolean arrayFormat) throws RemoteException {
 		String delim;
 
@@ -88,31 +101,35 @@ public class CentralServer implements CryptoServer {
 		return clientString;
 	}
 	
-	@Override
+	/** Makes sure a certain client is registered and then returns it */
 	public CryptoClient getClient(String clientName) throws RemoteException, ClientNotFound {
 		assertClientRegistered(clientName);
 		return clients.get(clientName);
 	}
 
-	@Override
+	/** Ensures that the client is still responsive (i.e. has not failed) */
 	public boolean ping() throws RemoteException{
 		return true;
 	}	
 	
-	@Override
+	/** Add a client to client list */
 	public boolean registerClient(CryptoClient c) throws RemoteException {
 		String clientName = c.getName();
 		
-		// client with that name already exists
+		/**
+		 * Fails if client with that name already exists
+		 */
 		if (clients.containsKey(clientName)) {
 			log.print(VPrint.ERROR, "client with name %s already exists", clientName);
 			return false;
 		}
 		
-		// before adding client to client list, we lock notifications
-		// because if we context switch after adding client to clients but
-		// before we add an entry in the notification map, then someone
-		// may try to eavesdrop and we have a race condition for the notification reference
+		/**
+		 *  Before adding client to client list, we lock notifications
+		 *  because if we context switch after adding client to clients but
+		 *  before we add an entry in the notification map, then someone
+		 *  may try to eavesdrop and we have a race condition for the notification reference
+		 */
 		synchronized (notifications) {
 			clients.put(clientName, c);
 			List<String> newList = new LinkedList<String>();
@@ -124,7 +141,7 @@ public class CentralServer implements CryptoServer {
 		return true;
 	}
 	
-	@Override
+	/** Remove a client to client list */
 	public boolean unregisterClient(String clientName) throws RemoteException {
 		// client not registered (note: this could also return true)
 		if (!clients.containsKey(clientName)) {
@@ -141,13 +158,15 @@ public class CentralServer implements CryptoServer {
 		log.print(VPrint.QUIET, "clients: %s", getClientList(true));
 		return true;
 	}
-
+	
+	/** Make sure a client is registered */
 	private void assertClientRegistered(String clientName) throws ClientNotFound {
 		if (!clients.containsKey(clientName)) {
 			throw new ClientNotFound(clientName + " is not registered.");
 		}
 	}
 	
+	/** Relays messages to eavesdroppers */
 	private void relayMessage(String relayTarget, String from, String to, CryptoMessage m) throws RemoteException, InterruptedException, ClientNotFound {
 		List<String> listeners = notifications.get(relayTarget);
 		for (String cname : listeners) {
@@ -155,23 +174,34 @@ public class CentralServer implements CryptoServer {
 		}
 	}
 	
-	@Override
+	/** 
+	 * CentralServer doesn't implement receive messages
+	 */
 	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		log.print(VPrint.ERROR, "central server does not implement receive messages");
 		return "";
 	}
 	
-	@Override
+	/**
+	 * Send a message that client "from" wants to give to client "to"
+	 * @param from: name of client sending the message
+	 * @param to: name of client receiving the message
+	 * @param m: the message being sent
+	 * @return The message being sent
+	 * @throws RemoteException
+	 * @throws ClientNotFound
+	 * @throws InterruptedException
+	 */
 	public String sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		assertClientRegistered(from);
 		assertClientRegistered(to);
 		
-		// first send message to all clients in notification lists (to and from)
+		/** First send message to all clients in notification lists (to and from) */
 		relayMessage(to, from, to, m);
 		relayMessage(from, from, to, m);
 
 		String msg;
-		// finally send message to intended recipient
+		/** Finally send message to intended recipient */
 		try {
 			msg = getClient(to).recvMessage(from, to, m);
 		} catch (RemoteException e) {
@@ -182,17 +212,21 @@ public class CentralServer implements CryptoServer {
 		return msg;			
 	}	
 
+	/** Waiting for messages is only relevant to e-voting */
 	public Map<String, CryptoMessage> waitForAll(String sid) throws InterruptedException {
 		log.print(VPrint.ERROR, "central server does not implement waiting for messages");
 		return null;
 	}
 	
+	/** Waiting for messages is only relevant to e-voting */
 	public CryptoMessage waitForMessage(String from, String sid) throws InterruptedException {
 		log.print(VPrint.ERROR, "central server does not implement waiting for messages");
 		return null;
 	}
 
-	@Override
+	/** 
+	 * Record who is eavesdropping on whom
+	 */
 	public void eavesdrop(String listener, String victim) throws RemoteException, ClientNotFound {
 		assertClientRegistered(listener);
 		assertClientRegistered(victim);
@@ -213,7 +247,9 @@ public class CentralServer implements CryptoServer {
 		}
 	}
 	
-	@Override
+	/** 
+	 * Record who is eavesdropping on whom
+	 */
 	public void stopEavesdrop(String listener, String victim) throws RemoteException, ClientNotFound {
 		assertClientRegistered(listener);
 		assertClientRegistered(victim);
@@ -222,7 +258,7 @@ public class CentralServer implements CryptoServer {
 		vicList.remove(listener);
 	}
 
-	@Override
+	/** Start key exchange protocol between client "from" and client "to" */
 	public void relaySecureChannel(String from, String to, KeyExchangeProtocol kx, CryptoCipher cipher) throws ClientNotFound, RemoteException, InterruptedException {
 		assertClientRegistered(from);
 		assertClientRegistered(to);
@@ -230,11 +266,14 @@ public class CentralServer implements CryptoServer {
 		getClient(to).recvSecureChannel(from, kx, cipher);
 	}	
 
+	/** The CentralServer does not handle e-voting */
 	public String initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
 		log.print(VPrint.ERROR, "central server does not implement evoting");
 		return "";
 	}
 	
+	
+	/** Create a Callable object used to ping clients */
 	private class ClientPingCallable implements Callable<Boolean> {
 		private CryptoClient client;
 		public ClientPingCallable(CryptoClient client) {
@@ -249,6 +288,9 @@ public class CentralServer implements CryptoServer {
 	
 	/**
 	 * Ping clients and remove from client list if unresponsive
+	 * @param frequency: how often to ping
+	 * @param maxFails: the max number of failures to respond before a client is removed
+	 * @param pingTimeout: how long to wait for a response to a ping
 	 * @throws RemoteException 
 	 * @throws InterruptedException 
 	 */
@@ -269,7 +311,7 @@ public class CentralServer implements CryptoServer {
 			
 			futureMap.clear();
 			
-			/*
+			/**
 			 * Ping all clients
 			 */
 			for (final Entry<String, CryptoClient> entry : clients.entrySet()) {
@@ -281,7 +323,7 @@ public class CentralServer implements CryptoServer {
 				futureMap.put(clientName, pingFuture);
 			}
 			
-			/*
+			/**
 			 * Ensure ping went through
 			 */
 			for (Entry<String, Future<?>> entry : futureMap.entrySet()) {
@@ -297,7 +339,7 @@ public class CentralServer implements CryptoServer {
 					failedAttempts.put(clientName, 0);
 				}
 				catch (Exception e) {
-					/*
+					/**
 					 * The client either (1) didn't respond to ping in time
 					 * or (2) threw an error such as RMI Remote exception  
 					 */

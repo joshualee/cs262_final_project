@@ -25,6 +25,11 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
+/**
+ * A CryptoClient that uses DiffieHellman key exchange and ElGamal encryption.
+ * This client also supports e-voting.  
+ */
+
 public class EVoteClient extends DHCryptoClient {	
 	private Object currentVoteLock;
 	private Future<Object> currentVote;
@@ -39,7 +44,13 @@ public class EVoteClient extends DHCryptoClient {
 		setTestVote(null);
 	}
 	
-	// does this need to throw ClientNotFound?	
+	/**
+	 * Perform the evote
+	 * @param evote
+	 * 		The evote to be done
+	 * @throws RemoteException
+	 * @throws ClientNotFound
+	 */
 	private void doEvote(EVote evote) throws RemoteException, ClientNotFound {
 		
 		try {
@@ -48,7 +59,7 @@ public class EVoteClient extends DHCryptoClient {
 			String sid = evote.id.toString();
 			String serverName = server.getName();
 			
-			/*
+			/**
 			 * EVote phase one: 
 			 * client receives a ballot from the server
 			 */
@@ -64,7 +75,7 @@ public class EVoteClient extends DHCryptoClient {
 			log.print(VPrint.QUIET, "n: vote against");
 			log.print(VPrint.QUIET, "vote [y\\n]: ");
 			
-			// only accept input when not testings
+			// only accept input when not testing
 			if (testVote != null) {
 				yay_or_nay = testVote.intValue();
 				
@@ -108,7 +119,7 @@ public class EVoteClient extends DHCryptoClient {
 			
 			log.print(VPrint.QUIET, "tallying vote...");
 			
-			/*
+			/**
 			 * EVote phase two: 
 			 * each client generates own secret key and sends to server
 			 */
@@ -123,7 +134,7 @@ public class EVoteClient extends DHCryptoClient {
 			server.recvMessage(getName(), serverName, phaseTwo);
 			CryptoMessage pkMsg = waitForMessage(sid);
 			
-			/*
+			/**
 			 * EVote phase four:
 			 * client decides vote and encrypts using ElGamal 
 			 */
@@ -144,7 +155,7 @@ public class EVoteClient extends DHCryptoClient {
 			encryptedVote.setTag("encrypted vote");
 			server.recvMessage(name, serverName, encryptedVote);
 			
-			/*
+			/**
 			 * EVote phase 6:
 			 * receive combined cipher text from server
 			 * let (c1, c2) = cipher text
@@ -159,7 +170,7 @@ public class EVoteClient extends DHCryptoClient {
 			CryptoMessage decryptKeyPart = new CryptoMessage(encryptedC1.toString(), sid);
 			decryptKeyPart.setTag("decryption key partition");
 			server.recvMessage(name, serverName, decryptKeyPart);
-			/*
+			/**
 			 * EVote phase 8:
 			 * clients use decodingKey to decode message 
 			 */

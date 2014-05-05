@@ -1,8 +1,3 @@
-/**
- * A CryptoClient that uses DiffieHellman key exchange and ElGamal encryption.
- * This client also supports evoting.  
- */
-
 package edu.harvard.cs262.crypto.client;
 
 import java.rmi.RemoteException;
@@ -27,6 +22,11 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
+/**
+ * A CryptoClient that uses DiffieHellman key exchange and ElGamal encryption.
+ * This client does not support e-voting.  
+ */
+
 public class DHCryptoClient extends SimpleCryptoClient {	
 	protected Map<String, CryptoCipher> ciphers;
 	protected Map<String, CryptoMessage> sessions;
@@ -37,25 +37,35 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		this.sessions = new ConcurrentHashMap<String, CryptoMessage>();
 	}
 	
-	@Override
+	/**
+	 * As the client "to", receive a message sent from client "from"
+	 * @param from
+	 * 		Who is sending the message
+	 * @param to
+	 * 		Who the message is for
+	 * @param m
+	 * 		The message
+	 * @return The message that is received
+	 * @throws InterruptedException
+	 */
 	public String recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
 		String plaintext;
 		
 		log.print(VPrint.DEBUG2, "(%s) recvMessage(%s, %s, m)", name, from, to);
 		
-		/*
+		/**
 		 * Add message to message history
 		 */
 		recordMessage(from, to, m);
 		
-		/*
+		/**
 		 * Add message to session queue if it has a session id in order to
 		 * pass the message to the appropriate waiting thread.
 		 */
 		if (m.hasSessionID() && to.equals(name)) {
 			String sid = m.getSessionID();
 			log.print(VPrint.DEBUG, "(%s) got message with sid %s", name, sid);
-			/*
+			/**
 			 * If there is already a waiting message, wait for message to be
 			 * processed before adding to queue.
 			 */
@@ -72,8 +82,8 @@ public class DHCryptoClient extends SimpleCryptoClient {
 			return "";
 		}
 
-		/*
-		 * Process message
+		/**
+		 * Process message, decrypt if it is encrypted
 		 */
 		if (!m.isEncrypted()) {
 			plaintext = m.getPlainText();
@@ -101,7 +111,18 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		
 		return plaintext;
 	}
-
+	
+	/**
+	 * As the client send an encrypted message to client "to" by telling the server to do it
+	 * @param to
+	 * 		Who the message is for
+	 * @param text
+	 * 		The message
+	 * @param sid
+	 * 		The session id of this communication
+	 * @return An empty string
+	 * @throws RemoteException, ClientNotFound, InterruptedException
+	 */
 	public String sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
 		if (name.equals(to)) {
 			log.print(VPrint.ERROR, "cannot send encrypted messages to yourself");
@@ -109,6 +130,10 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		}
 		
 		try {
+			/** 
+			 * Get the cipher to be used and send the encrypted message if the clients have a secret key set up
+			 * Otherwise, first set up a key between the two communicating clients
+			 */
 			CryptoCipher c = ciphers.get(to);
 			if (c == null) {
 				DiffieHellman dh = new DiffieHellman();
@@ -128,7 +153,14 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		
 		return "";
 	}
-		
+	
+	/**
+	 * Waits for a message from a certain session ID
+	 * @param sid
+	 * 		The session id of the awaited communication
+	 * @return The message that you waited for
+	 * @throws RemoteException, InterruptedException
+	 */
 	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
 		CryptoMessage m;
 		synchronized(sessions) {
@@ -158,44 +190,86 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		}
 	}
 	
+	/**
+	 * Class for creating callable object for initiating a secure channel for the key exchange protocol
+	 */
 	private class initSecureChannelCallable implements Callable<CryptoKey> {
 		private String counterParty;
 		private KeyExchangeProtocol kx;
 		private CryptoClient client;
 		
+		/**
+		 * Makes a callable object for initiating a secure channel for the key exchange protocol
+		 * @param cp
+		 * 		The person you want to set the key up with
+		 * @param kx
+		 * 		The key exchange protocol being used
+		 * @param client
+		 * 		The client trying to initialize the key exchange protocol
+		 */
 		public initSecureChannelCallable(String cp, KeyExchangeProtocol kx, CryptoClient client) {
 			this.counterParty = cp;
 			this.kx = kx;
 			this.client = client;
 		}
 		
-		@Override
+		/**
+		 * Initiates the key exchange between two clients
+		 * @return the shared secret key
+		 */
 		public CryptoKey call() throws Exception {
 			CryptoKey key = kx.initiate(client, counterParty);
 			return key;
 		}
 	}
 	
+	/**
+	 * Class for creating callable object for receiving a secure channel for the key exchange protocol
+	 */
 	private class recvSecureChannelCallable implements Callable<Object> {
 		private String counterParty;
 		private KeyExchangeProtocol kx;
 		private CryptoCipher cipher;
 		
+		/**
+		 * Makes callable object for receiving the request for setting up a shared secret key through a secure channel
+		 * @param cp
+		 * 		The person trying to set up the key with you
+		 * @param kx
+		 * 		The key exchange protocol being used
+		 * @param cipher
+		 * 		The cipher being used
+		 */
 		public recvSecureChannelCallable(String cp, KeyExchangeProtocol kx, CryptoCipher cipher) {
 			this.counterParty = cp;
 			this.kx = kx;
 			this.cipher = cipher;
 		}
 		
-		@Override
+		/**
+		 * Receives key exchange initiated by a client
+		 */
 		public Object call() throws Exception {
 			server.relaySecureChannel(name, counterParty, kx, cipher);
-			// the result of this call is stored in the counterParty
-			// thus we don't care about the return result, only the exceptions that may be thrown
+			
+			/** The result of this call is stored in the counterParty.
+			 *  Thus we don't care about the return result, only the exceptions that may be thrown.
+			 */
 			return null;
 		}
 	}
 	
+	/**
+	 * Start a secure channel for setting up a shared secret key using different threads to make sure both clients succeed
+	 * @param counterParty
+	 * 		The person you want to set the key up with
+	 * @param kx
+	 * 		The key exchange protocol being used
+	 * @param cipher
+	 * 		The cipher being used
+	 * @return true if initialization is successful, otherwise false
+	 * @throws RemoteException, ClientNotFound, InterruptedException
+	 */
 	public boolean initSecureChannel(String counterParty, KeyExchangeProtocol kx, CryptoCipher cipher) throws RemoteException, ClientNotFound, InterruptedException {
 		CryptoKey key = null;
 		Future<CryptoKey> myFuture = null;
@@ -210,16 +284,19 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		KeyExchangeProtocol kx2 = kx.copy();
 		CryptoCipher cipher2 = cipher.copy();
 		
+		/**
+		 * In one thread, tell the initiating client to initiate.
+		 * In the other thread, tell the receiving client to receive.
+		 */
 		ExecutorService pool = Executors.newFixedThreadPool(2);
 		myFuture = pool.submit(new initSecureChannelCallable(counterParty, kx, this));
 		cpFuture = pool.submit(new recvSecureChannelCallable(counterParty, kx2, cipher2));
 		
-		while (!cpFuture.isDone()) {
-			// myFuture doesn't finish until cpFuture finishes 
-		}
+		/** myFuture doesn't finish until cpFuture finishes */
+		while (!cpFuture.isDone()) {}
 		
-		/*
-		 * Check if counter party succeeded or threw an error
+		/**
+		 * Check if counterparty succeeded or threw an error
 		 * (e.g. ClientNotFound)
 		 */
 		try {
@@ -231,7 +308,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 			return false;
 		}
 		
-		/*
+		/**
 		 * Make sure we succeeded
 		 */
 		try {
@@ -250,7 +327,13 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		return true;
 	}
 
-	@Override
+	/**
+	 * Participates in an evote
+	 * Note: This Diffie Helman client actually cannot handle evoting, so it will just say so in the log
+	 * @param evote
+	 * 		The evote to participate in
+	 * @throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult
+	 */
 	public void evote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult {
 		log.print(VPrint.ERROR, "diffie hellman client does not support evoting");
 		return;

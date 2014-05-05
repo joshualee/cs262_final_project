@@ -9,7 +9,9 @@ import java.util.Scanner;
 
 import edu.harvard.cs262.crypto.CryptoMessage;
 import edu.harvard.cs262.crypto.server.CryptoServer;
-
+/** 
+ * Console for client to basic encrypted message sending and eavesdropping
+ */
 public class ClientConsole {
 	
 	public static void main(String args[]) {
