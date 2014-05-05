@@ -30,7 +30,7 @@ import edu.harvard.cs262.crypto.server.EVoteServer;
  *
  */
 
-public class CryptoCommuncationTest {
+public class CryptoCommunicationTest {
 	
 	private static String rmiHost;
 	private final static int rmiPort = 8082;
