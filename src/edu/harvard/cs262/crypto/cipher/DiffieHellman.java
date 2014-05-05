@@ -12,7 +12,9 @@ import edu.harvard.cs262.crypto.client.CryptoClient;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
 
 /**
- * This is the Diffie Helman Key Exchange Protocol.
+ * Diffie Helman Key Exchange Protocol
+ * 
+ * http://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange
  * 
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
@@ -37,7 +39,14 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		id = UUID.randomUUID();
 	}
 	
-
+	/**
+	 * Seeds the KeyExchange protocol, which it uses to generate random numbers.
+	 * This is helpful because it allows clients to ensure they are using their own
+	 * unique seed.
+	 * 
+	 * @param seed 
+	 * 		the seed	
+	 */
 	public void seed(long seed) {
 		this.seed = seed;
 		rand = new Random(seed);
@@ -62,7 +71,8 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	}
 	
 	/**
-	 * Initiates Diffie Helman Key Exchange process
+	 * Initiates DiffieHelman Key Exchange process. Blocks until another another client calls
+	 * reciprocate using the same Key Exchange protocol (identified using the protocol ID).
 	 * @param me
 	 * 		The client initiating the Key Exchange process
 	 * @param recipientName
@@ -89,7 +99,9 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	}
 	
 	/**
-	 * Responds back when someone tries to start a Diffie Helman Key Exchange process with the client
+	 * Responds back when someone tries to start a DiffieHelman Key Exchange process with the client.
+	 * Blocks until another another client call initiate using the same Key Exchange protocol
+	 * (identified using the protocol ID).
 	 * @param me
 	 * 		The client initiating the Key Exchange process
 	 * @param recipientName
@@ -113,11 +125,13 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 		me.getLog().print(VPrint.DEBUG, "(%s) DiffieHellman exchange successful", me.getName());
 		return ck;
 	}
+	
 	/**
-	 * Makes a copy of the current Diffie Hellman protocol
-	 * This is needed when we want to perform a key exchange
-	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object).
-	 * @return a Key Exchange Protocol
+	 * Makes a copy of the current DiffieHellman protocol with the same public parameters and ID.
+	 * This is needed when we want to perform a key exchange protocol on two clients that share the
+	 * same JVM (because otherwise they would be modifying the same object).
+	 * @return 
+	 * 		the copy of the KeyExchangeProtocol
 	 */
 	public KeyExchangeProtocol copy() {
 		DiffieHellman dh = new DiffieHellman();
