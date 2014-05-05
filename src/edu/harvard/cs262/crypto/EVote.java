@@ -30,7 +30,13 @@ public class EVote implements Serializable {
 	public BigInteger p;
 	public BigInteger g;
 	
-	/** Constructor */
+	/**
+	 * Constructor
+	 * @param ballot 
+	 * 		the item which is being voted on
+	 * @param voters 
+	 * 		the list of clients voting
+	 */
 	public EVote(String ballot, Set<String> voters) {
 		this.ballot = ballot;
 		this.voters = voters;

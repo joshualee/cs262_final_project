@@ -12,8 +12,10 @@ import java.nio.file.StandardOpenOption;
 
 /**
  * VPrint class allows for printing data at varying levels of verbosity depending 
- * on the intended purpose.
- *
+ * on the intended purpose. This class also serves as our logging mechanism 
+ * and automatically writes all messages (regardless of verbosity) to the log
+ * along with the time stamp.
+ * 
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class VPrint {

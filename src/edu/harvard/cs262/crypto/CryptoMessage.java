@@ -50,9 +50,18 @@ public class CryptoMessage implements Serializable {
 		return String.format("session: %s\nplaintext: %s\nciphertext: %s", sessionID, plainText, cipherText);
 	}
 	
+	/**
+	 * Returns if this message contains a session ID so clients know if the message is part
+	 * of a continuous conversation
+	 * @return true if has session id and false otherwise
+	 */
 	public boolean hasSessionID() {
 		return sessionID.length() > 0;
 	}
+	
+	/*
+	 * Getters and Setters
+	 */
 	
 	public String getSessionID() {
 		return sessionID;

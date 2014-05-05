@@ -26,7 +26,7 @@ import edu.harvard.cs262.crypto.server.EVoteServer;
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  *
  */
-public class CryptoCommunicationTest {
+public class CryptoSandbox {
 	
 	private static String rmiHost;
 	private final static int rmiPort = 8082;

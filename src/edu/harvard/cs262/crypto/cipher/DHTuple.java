@@ -7,9 +7,9 @@ import java.math.BigInteger;
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class DHTuple {
-	public BigInteger p;
-	public BigInteger g;
-	public BigInteger xhat;
+	public BigInteger p; // public parameter
+	public BigInteger g; // public parameter
+	public BigInteger xhat; // generated during key exchange
 	
 	public DHTuple(BigInteger p, BigInteger g, BigInteger xhat) {
 		this.p = p;

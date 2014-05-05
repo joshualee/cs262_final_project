@@ -1,6 +1,8 @@
 package edu.harvard.cs262.crypto.cipher;
 /**
  * This is the Key object. It contains both the private and public keys of a user.
+ * If no public key is specified, then it is a pure private key. If a public key is specified,
+ * then it is a private key public key pair that can be used for public key encryption schemes.
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
@@ -11,8 +13,9 @@ public class CryptoKey {
 	 *  our random numbers to be.
 	 */
 	private int bits;
-	private Object priv;
-	private Object pub;
+	
+	private Object priv; // the private key
+	private Object pub; // the public key
 	
 	public CryptoKey() {
 		setBits(31);
