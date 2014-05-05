@@ -1,3 +1,8 @@
+/**
+ * Basic tests of interactions between DHCryptoClient and CentralServer classes;
+ *  i.e. tests functionality of ClientConsole.java.
+ */
+ 
 package edu.harvard.cs262.tests;
 
 import java.net.InetAddress;
@@ -14,8 +19,6 @@ import edu.harvard.cs262.crypto.server.CentralServer;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
 /**
- * Basic tests of interactions between DHCryptoClient and CentralServer classes;
- *  i.e. tests functionality of ClientConsole.java.
  *
  * @author joshualee and Holly Anderson
  *
@@ -78,6 +81,8 @@ public class ConsoleTest {
 			System.out.println("===================");
 			CryptoClient c1 = createClient("c1", server);
 			CryptoClient c2 = createClient("c2", server);
+			// Error
+			CryptoClient c3 = createClient("c1", server);
 			CryptoClient e1 = createClient("e1", server);
 			CryptoClient e2 = createClient("e2", server);
 			System.out.println("===================\n");
