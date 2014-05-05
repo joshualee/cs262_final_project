@@ -91,6 +91,7 @@ Log files are written to the `log/` directory. Each log is titled by the name of
 
 #### JUnit Tests
 To run any of these tests individually, execute one of the following commands from the top level, replacing $FILE_NAME with the appropriate file name.
+
 Linux/Unix:
 
 	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.$FILE_NAME
@@ -105,6 +106,7 @@ Windows:
 
 #### Console Tests
 To run this test individually, execute one of the following commands from the top level.
+
 Linux/Unix:
 
 	java -cp "bin/:lib/*" org.junit.runner.JUnitCore edu.harvard.cs262.tests.ConsoleTest
