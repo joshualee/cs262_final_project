@@ -88,21 +88,21 @@ Alternatively you may run them one by one. Note that these are all JUnit tests b
 
 Log files are written to the `log/` directory. Each log is titled by the name of the client or server who the log belongs to followed by the timestamp of which the log was created. Log entries are written by the VPrint (`VerbosePrint`) module. Using VPrint, application writers are able to specify the verbosity levels that are displayed to the user and printed to the log:
 
-* *Quiet:* normal output
-* Loud: verbose output
-* Error: error messages
-* Warn: warnings
-* Debug: debugging information
+* **Quiet:** normal output
+* **Loud:** verbose output
+* **Error:** error messages
+* **Warn:** warnings
+* **Debug:** debugging information
 
 #### JUnit Tests
 
-* ClientServerTests: unit tests basic interaction between the client and server and among clients
-* CryptoCipherTests: unit tests DiffieHellman key exchange and ElGamal cipher; also tests more complex client interaction (key exchange)
-* EVoteTests: unit tests that evoting returns the expected result of the vote; also tests abort vote succeeds when a client fails to vote within a certain time window
+* **ClientServerTests:** unit tests basic interaction between the client and server and among clients
+* **CryptoCipherTests:** unit tests DiffieHellman key exchange and ElGamal cipher; also tests more complex client interaction (key exchange)
+* **EVoteTests:** unit tests that evoting returns the expected result of the vote; also tests abort vote succeeds when a client fails to vote within a certain time window
 
 #### Console Tests
 
-* ConsoleTest: tests the sending and receiving of encrypted and non encrypted messages among clients; also tests eavesdropping
+* **ConsoleTest:** tests the sending and receiving of encrypted and non encrypted messages among clients; also tests eavesdropping
 
 #### Failure Tests
 
