@@ -38,10 +38,7 @@ public interface CryptoServer extends Remote {
 	String getClientList(boolean arrayFormat) throws RemoteException;
 	
 	/**
-	 * Returns a reference to the client with the specified name. This is needed when a client 
-	 * wants to communicate with another client directly and not have to go through the server.
-	 * This function should be used with care, as it bypasses the server layer, which in general should
-	 * not be done.
+	 * Returns a reference to the client with the specified name. 
 	 * 
 	 * @param clientName
 	 * 		the name of the client
