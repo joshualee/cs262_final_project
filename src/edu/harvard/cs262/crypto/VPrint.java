@@ -98,8 +98,7 @@ public class VPrint {
 	}
 	
 	/**
-	 * Print the message as long as the printer is set to the
-	 * appropriate verbosity.
+	 * Print the message as long as the printer is set to the appropriate verbosity.
 	 * @param v
 	 * 		verbosity level
 	 * @param format
@@ -118,10 +117,17 @@ public class VPrint {
 		
 		try {
 			if (log != null) {
+				/*
+				 * Write to log and flush right away
+				 */
 				log.write(String.format("[%s] %s\n", Helpers.currentTime(), s));
 				log.flush();
 			}
 		} catch(ClosedChannelException e) {
+			/*
+			 * When a thread is interrupted, it will automatically close the log file
+			 * for safety reasons. In that case, simply reopen the log file.
+			 */
 			log = openFile(logPath);
 		} catch (IOException e) {
 			System.out.println("[VPrint] Log write failed...");

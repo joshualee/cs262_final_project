@@ -546,6 +546,8 @@ public class EVoteServer extends CentralServer {
 		
 	}
 
+	// for testing purposes only so testing scripts may change the timeout to something more
+	// reasonable for a tester to wait for
 	public static void setTimeout(int to) {
 		EVOTETIMEOUT = to;
 	}
