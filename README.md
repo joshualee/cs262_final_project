@@ -5,7 +5,7 @@ Final project for CS262: Introduction to Distributed Systems (Harvard Spring 201
 
 This project provides a framework that can be used to test the security of cryptographic protocols through simulations. The architecture consists of multiple clients that talk to each other through a server. Clients can speak to each other using plaintext or encrypted messages. Different key exchange and encryption protocols can easily be swapped in and out. Clients can also eavesdrop on other clients, simulating attackers trying to listen in on and break a secure session.
 
-Ontop of this framework, we have built two simple applications:
+On top of this framework, we have built two simple applications:
 
 #### Console Communicator
 
@@ -32,7 +32,7 @@ Implements basic sending/receiving/eavesdropping of messages.
 
 ####DiffieHellman Client
 
-Extends simple client but also has the ability to perform encrypted communcation. Designed to connect to `CentralServer`.
+Extends Simple Client but also has the ability to perform encrypted communcation. Designed to connect to `CentralServer`.
 
 ####EVote Client
 
@@ -51,7 +51,7 @@ Facilitates encrypted voting. Designed to accept connections from `EVoteClient`.
 
 Compilation
 -----------------
-To compile all files run one of the following commands from the top level. If using Linux/Unix, run the first command; if using Windows, run the second. All class and stub files will be placed in the `bin/` directory. **Note that we require Java version 1.7.X **
+To compile all files, run one of the following commands from the top level. If using Linux/Unix, run the first command; if using Windows, run the second. All class and stub files will be placed in the `bin/` directory. **Note that we require Java version 1.7.X **
 
 	./compileNix.sh
 	./compileWin.sh
@@ -74,14 +74,14 @@ Run the following commands for the appropriate system from the top level, substi
 
 Testing
 --------------------
-Run the one of the following commands from the top level to run all of our test files. If using Lunix/Unix, run the first command; if using Windows, run the second. Instructions on running one test at a time can be found below.
+To run all of our test files, execute one of the following commands from the top level. If using Lunix/Unix, run the first command; if using Windows, run the second. Instructions on running one test at a time can be found below.
 
 	./testsNix.sh
 	./testsWin.sh
 
 #### Logs
 
-Log files are written to the `log/` directory. Each log is titled by the name of the client or server who the log belongs to followed by the timestamp of which the log was created. Log entries are written by the VPrint (`VerbosePrint`) module. Using VPrint, application writers are able to specify the verbosity levels that are displayed to the user and printed to the log:
+Log files are written to the `log/` directory. Each log is titled by the name of the client or server who the log belongs to followed by the timestamp of which the log was created. Log entries are written by the VPrint (`VerbosePrint`) module. Using VPrint, application writers are able to specify the verbosity levels that are displayed to the user and printed to the log.
 
 * **Quiet:** normal output
 * **Loud:** verbose output
