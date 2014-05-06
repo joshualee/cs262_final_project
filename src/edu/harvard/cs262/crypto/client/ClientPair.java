@@ -2,6 +2,7 @@ package edu.harvard.cs262.crypto.client;
 
 /**
  * Represents pair of clients in a given communication
+ * 
  * References
  * (1) hashCode() adapted from post by user 'arturh' at 
  * http://stackoverflow.com/questions/156275/what-is-the-equivalent-of-the-c-pairl-r-in-java

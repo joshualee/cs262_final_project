@@ -19,7 +19,7 @@ public interface CryptoCipher {
 	void seed(long s);
 	
 	/**
-	 * Sets the key used by the CryptoCipher.
+	 * Sets the key used by the CryptoCipher
 	 * 
 	 * @param 
 	 * 		k the key to be used by the cipher
@@ -32,8 +32,7 @@ public interface CryptoCipher {
 	 * 
 	 * @param plaintext
 	 * 		The message to be encrypted
-	 * @return 
-	 * 		The encrypted message
+	 * @return the encrypted message
 	 */
 	CryptoMessage encrypt(String plaintext);
 	
@@ -44,8 +43,7 @@ public interface CryptoCipher {
 	 * 
 	 * @param plaintext
 	 * 		The integer to be encrypted
-	 * @return 
-	 * 		The encrypted integer
+	 * @return the encrypted integer
 	 */
 	CryptoMessage encryptInteger(BigInteger plaintext);
 	
@@ -53,9 +51,8 @@ public interface CryptoCipher {
 	 * Decrypts an encrypted message that was originally encrypted using this cipher's
 	 * encrypt function 
 	 * @param cm
-	 * 		the encrypted message to be decrypted 
-	 * @return
-	 * 		the decoded plaintext
+	 * 		The encrypted message to be decrypted 
+	 * @return the decoded plaintext
 	 */
 	String decrypt(CryptoMessage cm);
 	
@@ -65,17 +62,15 @@ public interface CryptoCipher {
 	 * 
 	 * @param plaintext
 	 * 		The encrypted integer to be decrypted
-	 * @return 
-	 * 		The decrypted integer
+	 * @return the decrypted integer
 	 */
 	String decryptInteger(CryptoMessage cm);
 	
 	/**
 	 * Makes a copy of the current cipher (does NOT copy the key)
-	 * This is needed when we want to perform a key exchange
-	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object).
-	 * @return 
-	 * 		a copy of the current CryptoCipher with no key
+	 * This is needed when we want to perform a key exchange protocol on two clients
+	 * that share the same JVM (because otherwise they would be modifying the same object).
+	 * @return a copy of the current CryptoCipher with no key
 	 */
 	CryptoCipher copy();
 }

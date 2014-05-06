@@ -14,6 +14,7 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 /**
  * Diffie Helman Key Exchange Protocol
  * 
+ * Reference
  * http://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange
  * 
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
@@ -45,7 +46,7 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	 * unique seed.
 	 * 
 	 * @param seed 
-	 * 		the seed	
+	 * 		The seed	
 	 */
 	public void seed(long seed) {
 		this.seed = seed;
@@ -130,8 +131,7 @@ public class DiffieHellman implements KeyExchangeProtocol, Serializable {
 	 * Makes a copy of the current DiffieHellman protocol with the same public parameters and ID.
 	 * This is needed when we want to perform a key exchange protocol on two clients that share the
 	 * same JVM (because otherwise they would be modifying the same object).
-	 * @return 
-	 * 		the copy of the KeyExchangeProtocol
+	 * @return the copy of the KeyExchangeProtocol
 	 */
 	public KeyExchangeProtocol copy() {
 		DiffieHellman dh = new DiffieHellman();

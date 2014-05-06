@@ -14,7 +14,6 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
-
 public class EVote implements Serializable {
 	private static final long serialVersionUID = 1L;
 	public final int BITS = 32;
@@ -22,20 +21,20 @@ public class EVote implements Serializable {
 	/** The list of voters */
 	public Set<String> voters;
 	
-	/** A string description of what the vote is over */
+	/** A string description of what the vote is regarding */
 	public String ballot;
 	public UUID id;
 
-	/** Public encryption parameters (for now we assume we use an e-voting scheme that uses ElGamal)*/
+	/** Public encryption parameters (for now we assume we use an e-voting scheme that uses ElGamal) */
 	public BigInteger p;
 	public BigInteger g;
 	
 	/**
 	 * Constructor
 	 * @param ballot 
-	 * 		the item which is being voted on
+	 * 		The item which is being voted on
 	 * @param voters 
-	 * 		the list of clients voting
+	 * 		The list of clients voting
 	 */
 	public EVote(String ballot, Set<String> voters) {
 		this.ballot = ballot;
@@ -48,14 +47,14 @@ public class EVote implements Serializable {
 	
 	/**
 	 * Uses some math tricks to return the number of voters who voted in favor,
-	 * given the result of the voting protocol.
+	 * given the result of the voting protocol
 	 * @param result
 	 * 		This is the result returned by the voting protocol (g^x mod p),
 	 * 		where g and p are public encryption parameters and x is the number of people 
 	 * 		who voted yes.
 	 * @param numVoters
 	 * 		This is the number of people who voted.
-	 * @return The number of people who voted yes.
+	 * @return the number of people who voted yes
 	 * @throws EVoteInvalidResult
 	 */
 	public int countYays(BigInteger result, int numVoters) throws EVoteInvalidResult {

@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * A CryptoMessage represents messages that are sent between clients.
  * It can be encrypted or not encrypted.
- * If message is not encrypted, the message is stored in the variable {@code plainText} 
+ * If message is not encrypted, the message is stored in the variable {@code plainText}.
  * If message is encrypted, the encrypted message is stored in {@code cipherText} and 
  * the plaintext is also stored for testing purposes.
  *
@@ -43,17 +43,20 @@ public class CryptoMessage implements Serializable {
 		tag = "";
 	}
 	
-	/** Converts the object into a readable string
-	 * @return A string that contains session ID, and plain and cipher texts of the message
+	/** 
+	 * Converts the object into a readable string
+	 * @return 
+	 *    A string that contains session ID, and plain and cipher texts of the message
 	 */
 	public String toString() {
 		return String.format("session: %s\nplaintext: %s\nciphertext: %s", sessionID, plainText, cipherText);
 	}
 	
 	/**
-	 * Returns if this message contains a session ID so clients know if the message is part
-	 * of a continuous conversation
-	 * @return true if has session id and false otherwise
+	 * Returns boolean indicating whether this message contains a session ID so clients know 
+	 * if the message is part of a continuous conversation
+	 * @return 
+	 *    true if has session id and false otherwise
 	 */
 	public boolean hasSessionID() {
 		return sessionID.length() > 0;

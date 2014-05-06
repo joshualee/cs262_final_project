@@ -42,8 +42,7 @@ public class VPrint {
 	 * Opens a log file
 	 * @param logPath
 	 * 		The path of the log file
-	 * @return
-	 * 		A BufferedWriter for writing to the log file
+	 * @return a BufferedWriter for writing to the log file
 	 * Catches IOException if log file can't open
 	 */
 	private BufferedWriter openFile(Path logPath) {
@@ -65,9 +64,9 @@ public class VPrint {
 	/**
 	 * Sets verbosity and opens log file
 	 * @param verbosity
-	 * 		integer indicating verbosity level
+	 * 		Integer indicating verbosity level
 	 * @param logFileName
-	 * 		name of log file to open
+	 * 		Name of log file to open
 	 */
 	public VPrint(int verbosity, String logFileName) {
 		this.verbosity = verbosity;  
@@ -101,11 +100,11 @@ public class VPrint {
 	 * Print the message as long as the printer is set to the
 	 * appropriate verbosity.
 	 * @param v
-	 * 		verbosity level
+	 * 		Verbosity level
 	 * @param format
-	 * 		the desired print format
+	 * 		The desired print format
 	 * @param args
-	 * 		the stuff to format
+	 * 		The stuff to format
 	 */
 	public void print(int v, String format, Object... args) {
 		if (format == null || format.length() == 0) {
