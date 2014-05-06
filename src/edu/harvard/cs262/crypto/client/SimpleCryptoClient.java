@@ -17,7 +17,9 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
 /**
- * A basic client that deals with sending/receiving non-encrypted messages only
+ * A basic client that deals with sending/receiving/eavesdropping non-encrypted messages only.
+ * Extended by DHCryptoClient to support Key Exchange and encrypted messages.
+ * Extended by EVoteClient to support EVoting.
  * 
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
@@ -50,21 +52,29 @@ public class SimpleCryptoClient implements CryptoClient {
 	 * 		The message history as a map: (to, from) => list of messages
 	 * @throws RemoteException
 	 */
-	public Map<ClientPair, List<CryptoMessage>> getMessages() {
+	public Map<ClientPair, List<CryptoMessage>> getMessages() throws RemoteException {
 		return this.messages;
 	}
 	
 	/**
-	 * Expose log so other modules can log actions 
+	 * Expose log so other modules can log actions
+	 * 
+	 * @return
+	 * 		the logging object 
+	 * @throws RemoteException
 	 */
-	public VPrint getLog() {
+	public VPrint getLog() throws RemoteException{
 		return log;
 	}
 
 	/**
 	 * To detect whether the client has failed
+	 * 
+	 * @return
+	 * 		true (client responded) 
+	 * @throws RemoteException
 	 */
-	public boolean ping() {
+	public boolean ping() throws RemoteException {
 		log.print(VPrint.DEBUG2, "pinged");
 		return true;
 	}
@@ -91,23 +101,27 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 
 	/**
-	 * As the client "to", receive a message sent from client "from"
+	 * Receive a message sent from client "from" to client "to".
+	 * Note that "to" may not be the current client if the current client
+	 * is eavesdropping on another client's communication.
+	 * 
 	 * @param from
 	 * 		Who is sending the message
 	 * @param to
 	 * 		Who the message is for
 	 * @param m
-	 * 		The message (can only be non-encrypted for this simple client)
+	 * 		The message (can only be non-encrypted for this simple client, may be encrypted for others)
+	 * 		
 	 * @return The message that is received
-	 * @throws InterruptedException
+	 * @throws RemoteException, InterruptedException
 	 */
-	public String recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
+	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, InterruptedException {
 		log.print(VPrint.DEBUG2, "(%s) recvMessage(%s, %s, m)", name, from, to);
 		
-		/** Add message to message history */
+		/* Add message to message history */
 		recordMessage(from, to, m);
 		
-		/** Process message (we can't deal with encrypted messages) */
+		/* Process message (we can't deal with encrypted messages) */
 		String plaintext = !m.isEncrypted() ? m.getPlainText() : m.getCipherText();
 		log.print(VPrint.QUIET, "%s-%s: %s", from, to, plaintext);
 		
@@ -115,14 +129,15 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 	
 	/**
-	 * As the client "from", send an unencrypted message to client "to" by telling the server to do it
-	 * @param from
-	 * 		Who is sending the message
+	 * Send a message to client "to" by telling the server to do it.
+	 * This function returns the plaintext of a message received as a string in order for:
+	 * (1) do unit testing (2) ensure the correct message was sent.
+	 *  
 	 * @param to
 	 * 		Who the message is for
 	 * @param sid
 	 * 		The session id of this communication
-	 * @return An empty string
+	 * @return The plaintext (or cipher text if not decryptable) of the sent message
 	 * @throws RemoteException, InterruptedException
 	 */
 	public String sendMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
@@ -145,15 +160,14 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 	
 	/**
-	 * As the client "from", send an encrypted message to client "to" by telling the server to do it
-	 * Note: This simple client actually cannot handle encrypted messages, so it will just say so in the log
-	 * @param from
-	 * 		Who is sending the message
+	 * This simple client cannot handle sending encrypted messages,
+	 * so it will just say so in the log
+	 *    
 	 * @param to
 	 * 		Who the message is for
 	 * @param sid
 	 * 		The session id of this communication
-	 * @return An empty string
+	 * @return The plaintext (or cipher text if not decryptable) of the sent message
 	 * @throws RemoteException, ClientNotFound, InterruptedException
 	 */
 	public String sendEncryptedMessage(String to, String text, String sid) throws RemoteException,
@@ -163,8 +177,8 @@ public class SimpleCryptoClient implements CryptoClient {
 	}	
 	
 	/**
-	 * Waits for a message from a certain session ID
-	 * Note: This simple client actually cannot handle waiting, so it will just say so in the log
+	 * This simple client cannot handle waiting, so it will just say so in the log
+	 * 
 	 * @param sid
 	 * 		The session id of the awaited communication
 	 * @return The message that you waited for
@@ -176,9 +190,11 @@ public class SimpleCryptoClient implements CryptoClient {
 	}	
 	
 	/**
-	 * Eavesdrop on another client
+	 * "Eavesdrop" on another client. Register with the server to receive another client's
+	 * communication. This simulates an attacker listening on the wire.
+	 * 
 	 * @param victim
-	 * 		The person that you want to eavesdrop on
+	 * 		The client that you want to eavesdrop on
 	 * @throws RemoteException
 	 */
 	public void eavesdrop(String victim) throws RemoteException {
@@ -194,9 +210,10 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 
 	/**
-	 * Stop eavesdropping on a client
+	 * Stop eavesdropping on a client. Unregister with the server to stop receiving another client's
+	 * communication.
 	 * @param victim
-	 * 		The person that you want to stop eavesdropping on
+	 * 		The client that you want to stop eavesdropping on
 	 * @throws RemoteException
 	 */
 	public void stopEavesdrop(String victim) throws RemoteException {
@@ -206,12 +223,12 @@ public class SimpleCryptoClient implements CryptoClient {
 			log.print(VPrint.ERROR, e.getMessage());
 		}
 	}
-
+	
 	/**
-	 * Start a secure channel for setting up a shared secret key
-	 * Note: This simple client actually cannot handle setting up keys, so it will just say so in the log
+	 * This simple client actually cannot handle setting up keys, so it will just say so in the log
+	 *  
 	 * @param recip
-	 * 		The person you want to set the key up with
+	 * 		The client you want to setup the secure channel up with
 	 * @param kx
 	 * 		The key exchange protocol being used
 	 * @param cipher
@@ -226,10 +243,10 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 
 	/**
-	 * Receive the request for setting up a shared secret key through a secure channel
-	 * Note: This simple client actually cannot handle setting up keys, so it will just say so in the log
+	 * This simple client actually cannot handle setting up keys, so it will just say so in the log
+	 * 
 	 * @param counterparty
-	 * 		The person trying to set up the key with you
+	 * 		The client trying to set up the secure channel with you
 	 * @param kx
 	 * 		The key exchange protocol being used
 	 * @param cipher
@@ -241,21 +258,22 @@ public class SimpleCryptoClient implements CryptoClient {
 		log.print(VPrint.ERROR, "simple client does not support secure channels");
 		return;
 	}
-
-	/**
-	 * Aborts an evote
-	 * Note: This simple client actually cannot handle evoting, so it will just say so in the log
+	
+	/** 
+	 * This simple client actually cannot handle evoting, so it will just say so in the log
+	 * 
 	 * @param reason
 	 * 		The reason that the evote needs to be aborted
 	 * @throws RemoteException
 	 */
+
 	public void evoteAbort(String reason) throws RemoteException {
 		log.print(VPrint.ERROR, "client does not support evoting");
 	}
-
+	
 	/**
-	 * Participates in an evote
-	 * Note: This simple client actually cannot handle evoting, so it will just say so in the log
+	 * This simple client actually cannot handle evoting, so it will just say so in the log
+	 *  
 	 * @param evote
 	 * 		The evote to participate in
 	 * @throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult

@@ -26,16 +26,19 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
 /**
- * A CryptoClient that uses DiffieHellman key exchange and ElGamal encryption.
- * This client also supports e-voting. 
+ * A CryptoClient that uses DiffieHellman key exchange and ElGamal encryption that supports e-voting. 
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 
-public class EVoteClient extends DHCryptoClient {	
-	private Object currentVoteLock;
+public class EVoteClient extends DHCryptoClient {		
+	 // thread that executes the evote -- stored in instance variable so it may be canceled
 	private Future<Object> currentVote;
+	
+	private Object currentVoteLock;
 	private Scanner userInput;
+	
+	// for testing
 	private Integer testVote;
 	
 	public EVoteClient(String name, CryptoServer server) {
@@ -47,11 +50,12 @@ public class EVoteClient extends DHCryptoClient {
 	}
 	
 	/**
-	 * Perform the evote
+	 * Helper method that does the actual evoting in another thread. See comments below
+	 * for step by step walk through of evoting protocol.
+	 *  
 	 * @param evote
-	 * 		The evote to be done
-	 * @throws RemoteException
-	 * @throws ClientNotFound
+	 * 		The evote to participate in
+	 * @throws RemoteException, ClientNotFound
 	 */
 	private void doEvote(EVote evote) throws RemoteException, ClientNotFound {
 		
@@ -61,7 +65,7 @@ public class EVoteClient extends DHCryptoClient {
 			String sid = evote.id.toString();
 			String serverName = server.getName();
 			
-			/**
+			/*
 			 * EVote phase one: 
 			 * client receives a ballot from the server
 			 */
@@ -121,7 +125,7 @@ public class EVoteClient extends DHCryptoClient {
 			
 			log.print(VPrint.QUIET, "tallying vote...");
 			
-			/**
+			/*
 			 * EVote phase two: 
 			 * each client generates own secret key and sends to server
 			 */
@@ -136,7 +140,7 @@ public class EVoteClient extends DHCryptoClient {
 			server.recvMessage(getName(), serverName, phaseTwo);
 			CryptoMessage pkMsg = waitForMessage(sid);
 			
-			/**
+			/*
 			 * EVote phase four:
 			 * client decides vote and encrypts using ElGamal 
 			 */
@@ -157,7 +161,7 @@ public class EVoteClient extends DHCryptoClient {
 			encryptedVote.setTag("encrypted vote");
 			server.recvMessage(name, serverName, encryptedVote);
 			
-			/**
+			/*
 			 * EVote phase 6:
 			 * receive combined cipher text from server
 			 * let (c1, c2) = cipher text
@@ -173,7 +177,7 @@ public class EVoteClient extends DHCryptoClient {
 			decryptKeyPart.setTag("decryption key partition");
 			server.recvMessage(name, serverName, decryptKeyPart);
 			
-			/**
+			/*
 			 * EVote phase 8:
 			 * clients use decodingKey to decode message 
 			 */
@@ -210,6 +214,10 @@ public class EVoteClient extends DHCryptoClient {
 		}
 	}
 	
+	/**
+	 * Helper class used to invoke evoting in a separate thread, 
+	 * so it may be cancelled in event of an abort.
+	 */
 	private class evoteCallable implements Callable<Object> {
 		private EVote evote;
 		
@@ -230,6 +238,14 @@ public class EVoteClient extends DHCryptoClient {
 		
 	}
 	
+	/**
+	 * Aborts an evote, if client is currently engaged in one. An evote will be aborted by the server
+	 * if any of the clients crash or take too long to respond. 
+	 * 
+	 * @param reason
+	 * 		The reason that the evote needs to be aborted
+	 * @throws RemoteException
+	 */
 	@Override
 	public void evoteAbort(String abortMessage) throws RemoteException {
 		log.print(VPrint.DEBUG, "evoteAbort(%s)", abortMessage);
@@ -253,6 +269,18 @@ public class EVoteClient extends DHCryptoClient {
 		}
 	}
 	
+	/**
+	 * Participate in an evote started by the server. Client is expected to vote yes or no, and then
+	 * will go through the steps of the evoting protocol in order to securely submit his vote as well
+	 * as decrypt the result of the vote.
+	 * 
+	 * In reality, spawns a thread that does the evoting (using the function doEvote) so that
+	 * the vote may be cancelled if necessary.
+	 *  
+	 * @param evote
+	 * 		The evote to participate in
+	 * @throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult
+	 */
 	public void evote(EVote evote) throws RemoteException, ClientNotFound, InterruptedException, EVoteInvalidResult {
 		Future<Object> evoteFuture;
 		
@@ -294,6 +322,9 @@ public class EVoteClient extends DHCryptoClient {
 				
 	}
 
+	/**
+	 * Console line application to allow users to perform the evoting via console.
+	 */
 	public static void main(String args[]) {
 		Scanner scan;
 		
@@ -345,11 +376,18 @@ public class EVoteClient extends DHCryptoClient {
 			e.printStackTrace();
 		}
 	}
-
+	
+	/**
+	 * THIS FUNCTION IS FOR TESTING ONLY.
+	 */
 	public Integer getTestVote() {
 		return testVote;
 	}
 
+	/**
+	 * Set the vote the client will use, so client doesn't have to input from command line.
+	 * THIS FUNCTION IS FOR TESTING ONLY.
+	 */
 	public void setTestVote(Integer testVote) {
 		this.testVote = testVote;
 	}
