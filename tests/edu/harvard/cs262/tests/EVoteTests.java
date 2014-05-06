@@ -12,7 +12,11 @@ import edu.harvard.cs262.crypto.server.EVoteServer;
 
 /**
  * JUnit tests for evoting.
- * Here we test that the result of the vote actually matches what we expect.
+ * Here we test that the result of the vote actually matches what we expect. Specifically:
+ * (1) Multiple consecutive evotes
+ * (2) EVote with new registrations
+ * (3) Evote with new unregistrations 
+ * (4) Handles vote abortion (when clients don't respond)
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */

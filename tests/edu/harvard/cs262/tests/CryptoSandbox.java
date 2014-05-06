@@ -21,7 +21,7 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 import edu.harvard.cs262.crypto.server.EVoteServer;
 
 /**
- * Sandbox for testing client server interaction
+ * Sandbox for testing client server interaction.
  * 
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  *

@@ -15,6 +15,12 @@ import edu.harvard.cs262.crypto.server.CryptoServer;
 
 /**
  * JUnit tests for client server and client client interaction.
+ * Here we test:
+ * (1) Basic server functions
+ * (2) Basic client functions
+ * (3) Synchronization with waitMessage()
+ * 
+ * More advanced client and server functions are tested in ConsoleTest.java
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */

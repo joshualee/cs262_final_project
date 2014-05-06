@@ -11,7 +11,8 @@ import edu.harvard.cs262.crypto.CryptoMessage;
 import edu.harvard.cs262.crypto.server.CryptoServer;
 
 /** 
- * Console for client to perform basic encrypted message sending and eavesdropping
+ * Console application for client to perform basic encrypted message sending and eavesdropping.
+ * Designed to connect with CentralServer.
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
