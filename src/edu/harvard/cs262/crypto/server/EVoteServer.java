@@ -28,13 +28,19 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
 
 /**
- * A server that handles e-voting by using the send/receive message protocols of CentralServer
+ * A server that handles e-voting by using the send/receive message protocols of CentralServer.
+ * Designed to work with EVoteClient.
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 public class EVoteServer extends CentralServer {
-	private static int EVOTETIMEOUT = 120; // in seconds 
+	// the number of seconds the server waits for a client to respond before aborting evote
+	private static int EVOTETIMEOUT = 120;
+	
+	// list of clients engaged in current vote
 	private Set<String> currentVotingClients;
+	
+	// map to store "waiting" messages
 	protected Map<String, Map<String, CryptoMessage>> sessions;
 	
 	public EVoteServer(String name) {
@@ -43,7 +49,14 @@ public class EVoteServer extends CentralServer {
 		currentVotingClients = new HashSet<String>();
 	}
 	
-	/** Handles when a client fails or unregisters */
+	/**
+	 * Unregister a remote client so server can no longer forward it messages.
+	 * 
+	 * If the unregistering client is participating in an evote, abort the vote.
+	 * 
+	 * @param c the unregistering client 
+	 * @return true if the client successfully unregistered
+	 */
 	public boolean unregisterClient(String clientName) throws RemoteException {
 		
 		synchronized (currentVotingClients) {
@@ -62,8 +75,17 @@ public class EVoteServer extends CentralServer {
 	}
 		
 	/**
-	 * Blocks until all registered clients have sent a message with sid 
-	 * @param sid the session id to wait on
+	 * Blocks until all clients in "clientList" have sent a message with sid.
+	 * Returns a map containing all the messages. 
+	 * 
+	 * This is important for evoting, where each client must send a specific piece of information,
+	 * and the protocol cannot continue until all clients have done so.
+	 * 
+	 * @param clientList
+	 * 		the list of clients to wait on
+	 * @param sid 
+	 * 		the session id to wait on
+	 * @return the messages being waited on
 	 * @throws InterruptedException 
 	 */
 	public Map<String, CryptoMessage> waitForAll(Set<String> clientList, String sid) throws InterruptedException {
@@ -92,9 +114,14 @@ public class EVoteServer extends CentralServer {
 	}
 	
 	/**
-	 * Waits for message from a particular session ID
-	 * @param from: the client sending the message
-	 * @param sid: the session id to wait on
+	 * Waits for message from a particular client and session ID. This is important for
+	 * synchronization, where a server needs to block until it receives a specific message
+	 * from the client.
+	 * 
+	 * @param from
+	 * 		the client sending the message to wait on
+	 * @param sid
+	 * 		the session id to wait on
 	 * @throws InterruptedException 
 	 */
 	public CryptoMessage waitForMessage(String from, String sid) throws InterruptedException {
@@ -119,11 +146,25 @@ public class EVoteServer extends CentralServer {
 		return m;
 	}
 	
-	/** Handles messages sent from clients to the server */
+	/**
+	 * Handle messages sent by clients directed towards server.
+	 * CryptoMessage "m" may have session id used for synchronization. 
+	 * Sessions are distinguished by the tuple (session id, client name)
+	 * (so a server may have a separate session with each client)
+	 * 
+	 * In addition, facilitates waiting for messages. When a message with
+	 * a session id comes in, the server adds it to the proper wait list so
+	 * another thread can claim the message.
+	 * 
+	 * @param from: the name of the client sending the message
+	 * @param m: the message from the client
+	 * @return The message received
+	 * @throws RemoteException, ClientNotFound, InterruptedException 
+	 */
 	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
 		Map<String, CryptoMessage> sessionMap;
 		
-		/** Relay message to all other voting clients */	
+		/* Relay message to all other voting clients */	
 		CryptoMessage relayMessage = new CryptoMessage(m.getPlainText(), m.getCipherText(), "");
 		relayMessage.setTag(m.getTag());
 		
@@ -158,7 +199,7 @@ public class EVoteServer extends CentralServer {
 				sessionMap.notifyAll();
 			}
 			
-			/** Don't print message, because another thread will handle it */
+			/* Don't print message, because another thread will handle it */
 			return "";
 		}
 		
@@ -182,7 +223,16 @@ public class EVoteServer extends CentralServer {
 		}
 	}
 	
-	/** Sends message to all clients */
+	/**
+	 * Helper method to send a message to all clients in the list.
+	 * 
+	 * @param clientList
+	 * 		the clients to send the message to
+	 * @param m
+	 * 		the message
+	 * 
+	 * @throws RemoteException, InterruptedException, ClientNotFound
+	 */
 	private void broadcastMessage(Set<String> clientList, CryptoMessage m) throws RemoteException, InterruptedException, ClientNotFound {
 		for (String client : clientList) {
 			getClient(client).recvMessage(name, client, m);
@@ -190,19 +240,21 @@ public class EVoteServer extends CentralServer {
 	}
 
 	/** 
-	 * Perform the evote
+	 * Actually perform the evote. Ths function handles the actual work of the evote protocol
+	 * (see detailed comments within the function). 
+	 * 
+	 * Called be initiateEvote and done in a separate thread in order to support vote abortion.
+	 * 
 	 * @param evote: the evote to be done
 	 * @param votingClients: all clients who are participating in the vote
 	 * @return String containing the number of positive and negative votes
-	 * @throws InterruptedException
-	 * @throws RemoteException
-	 * @throws ClientNotFound
+	 * @throws InterruptedException, RemoteException, ClientNotFound
 	 */
 	private String doEvote(EVote evote, Set<String> votingClients) throws InterruptedException, RemoteException, ClientNotFound {
 		String sid = evote.id.toString();
 		log.print(VPrint.QUIET, "initiating ballot %s with %d voters", sid, votingClients.size());
 		
-		/**
+		/*
 		 * EVote phase 3:
 		 * server receives g^(sk_i) from each client and calculates shared public key
 		 */
@@ -218,7 +270,7 @@ public class EVoteServer extends CentralServer {
 		
 		broadcastMessage(votingClients, publicKeyMessage);
 		
-		/**
+		/*
 		 * EVote phase 4:
 		 * server combines c_i from clients to form combined cipher text
 		 */
@@ -240,7 +292,7 @@ public class EVoteServer extends CentralServer {
 		
 		broadcastMessage(votingClients, combinedCipherMsg);
 		
-		/**
+		/*
 		 * EVote phase 7:
 		 * compute the decryption key and share with all clients
 		 */
@@ -256,7 +308,7 @@ public class EVoteServer extends CentralServer {
 		CryptoMessage decryptKeyMsg = new CryptoMessage(decrypt.toString(), sid);
 		broadcastMessage(votingClients, decryptKeyMsg);
 		
-		/**
+		/*
 		 * EVote phase 8:
 		 * decrypt vote
 		 */
@@ -310,7 +362,18 @@ public class EVoteServer extends CentralServer {
 		}
 	}
 	
-	/** Begins an evote by telling all clients what the ballot is */
+	/**
+	 * Initiate an evote with all currently registered clients. Handles the coordination of the
+	 * evote protocol.
+	 * 
+	 * In reality, perform the evote protocol in a separate thread and use this thread to
+	 * periodically ping the voting clients. If any of the clients fail, abort the evote.
+	 * 
+	 * @param ballot
+	 * 		the item to voted on
+	 * @return the result of the vote in the form (# yes, # no)
+	 * @throws RemoteException, ClientNotFound, InterruptedException
+	 */
 	public String initiateEVote(String ballot) throws RemoteException, ClientNotFound, InterruptedException {
 		Future<Object> clientFuture = null;
 		Future<String> serverFuture = null;
@@ -332,7 +395,7 @@ public class EVoteServer extends CentralServer {
 		
 		Map<String, Future<Object>> clientFutures = new HashMap<String, Future<Object>>();
 		
-		/**
+		/*
 		 * EVote phase one:
 		 * initiates vote by sending evote to each client
 		 */
@@ -343,7 +406,7 @@ public class EVoteServer extends CentralServer {
 		
 		serverFuture = pool.submit(new serverEVote(evote, votingClients));
 		
-		/** Do abortion handling... */
+		/* Do abortion handling... */
 		long elapsedTime = 0;
 		long startTime = System.currentTimeMillis();
 		
@@ -362,9 +425,9 @@ public class EVoteServer extends CentralServer {
 					try {
 						clientFuture.get();
 					} catch (ExecutionException e) {
+						/* a voting client failed! */
 						log.print(VPrint.DEBUG, "ExecutionException: %s", e.getMessage());
 						log.print(VPrint.DEBUG, "ExecutionException reason: %s", e.getCause().getMessage());
-						// client failed
 						String reason = String.format("abort vote for ballot %s because %s failed", evote.id, clientName);
 						unregisterClient(clientName);
 						abortEVote(reason, serverFuture, votingClients);
@@ -390,7 +453,7 @@ public class EVoteServer extends CentralServer {
 			result = "";
 		}
 		
-		/** Evote successful! */
+		/* Evote successful! */
 		synchronized (currentVotingClients) {
 			currentVotingClients.clear();
 		}
@@ -398,11 +461,11 @@ public class EVoteServer extends CentralServer {
 		return result;
 	}
 	
-	/** Abort the vote when necessary */
+	/* Abort the vote when necessary */
 	private void abortEVote(String abortMessage, Future<String> serverFuture,
 			Set<String> votingClients) {
 		
-		/** make sure a vote is actually going on */
+		/* make sure a vote is actually going on */
 		if (votingClients.size() == 0) {
 			return;
 		}
@@ -411,7 +474,7 @@ public class EVoteServer extends CentralServer {
 		
 		log.print(VPrint.ERROR, "%s", abortMessage);
 		
-		/** Abort client threads */
+		/* Abort client threads */
 		for (String clientName: votingClients) {
 			try {
 				log.print(VPrint.DEBUG, "calling %s.evoteAbort", clientName);
@@ -423,7 +486,7 @@ public class EVoteServer extends CentralServer {
 			}
 		}
 		
-		/** Abort server thread */
+		/* Abort server thread */
 		if (serverFuture != null) {
 			serverFuture.cancel(true);
 		}
@@ -432,7 +495,10 @@ public class EVoteServer extends CentralServer {
 			currentVotingClients.clear();
 		}
 	}
-
+	
+	/*
+	 * Console application to enable a user to initiate evotes with all registered clients.
+	 */
 	public static void main(String args[]) {
 		Scanner scan;
 		
@@ -463,7 +529,7 @@ public class EVoteServer extends CentralServer {
 					serverName, rmiHost, rmiPort));
 			System.out.println("Waiting for client connections...");
 			
-			/**
+			/*
 			 * Prompt user for ballot
 			 */
 			scan = new Scanner(System.in);
@@ -480,6 +546,8 @@ public class EVoteServer extends CentralServer {
 		
 	}
 
+	// for testing purposes only so testing scripts may change the timeout to something more
+	// reasonable for a tester to wait for
 	public static void setTimeout(int to) {
 		EVOTETIMEOUT = to;
 	}

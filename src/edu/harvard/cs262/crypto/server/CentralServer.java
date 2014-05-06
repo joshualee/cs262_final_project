@@ -28,7 +28,8 @@ import edu.harvard.cs262.crypto.client.CryptoClient;
 import edu.harvard.cs262.crypto.exception.ClientNotFound;
 
 /**
- * A server that relays messages between clients and sends messages to eavesdropping clients
+ * A server that relays messages between clients and sends messages to eavesdropping clients.
+ * Designed to work with DHCryptoClient
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
