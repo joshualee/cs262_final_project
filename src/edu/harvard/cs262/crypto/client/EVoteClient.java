@@ -235,7 +235,6 @@ public class EVoteClient extends DHCryptoClient {
 			
 			return null;
 		}
-		
 	}
 	
 	/**
@@ -332,7 +331,8 @@ public class EVoteClient extends DHCryptoClient {
 			System.err.println("usage: java EVoteClient rmiHost rmiPort serverName");
 			System.exit(1);
 		}		
-		
+
+		// input parameters		
 		String rmiHost = args[0];
 		int rmiPort = Integer.parseInt(args[1]);
 		String serverName = args[2];
@@ -344,6 +344,8 @@ public class EVoteClient extends DHCryptoClient {
 		try {
 			String clientName = "";
 			scan = new Scanner(System.in);
+			
+			// find registry and lookup server
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
 			CryptoServer server = (CryptoServer) registry.lookup(serverName);
 		 
@@ -358,6 +360,7 @@ public class EVoteClient extends DHCryptoClient {
 				CryptoClient myClient = new EVoteClient(clientName, server);
 				CryptoClient myClientSer = ((CryptoClient)UnicastRemoteObject.exportObject(myClient, 0));
 				
+				// attempt registration				
 				if (server.registerClient(myClientSer)) {
 					System.out.println(String.format("Hello, %s. You have successfully registered with server: %s", clientName, serverName));
 					System.out.println(String.format("Please wait. Server will initiate evotes soon..."));

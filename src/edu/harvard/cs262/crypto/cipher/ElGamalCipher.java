@@ -11,6 +11,7 @@ import edu.harvard.cs262.crypto.CryptoMessage;
  * character by character. In the future, we will want to do something smarter like using
  * Base64 encoding.
  * 
+ * Reference
  * http://en.wikipedia.org/wiki/ElGamal_encryption
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
@@ -31,7 +32,7 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 	 * The seed used by the cipher's random number generator. Useful for clients
 	 * who want to use their own unique seed.
 	 * @param s
-	 * 		the seed 
+	 * 		The seed 
 	 */
 	public void seed(long s) {
 		seed = s;
@@ -42,7 +43,7 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 	 * Sets the key used by the CryptoCipher.
 	 * 
 	 * @param 
-	 * 		k the key to be used by the cipher
+	 * 		k, the key to be used by the cipher
 	 */
 	public void setKey(CryptoKey k) {
 		key = k;
@@ -131,9 +132,9 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 	 * Decrypts an encrypted message that was originally encrypted using this cipher's
 	 * encrypt function 
 	 * @param cm
-	 * 		the encrypted message to be decrypted 
+	 * 		The encrypted message to be decrypted 
 	 * @return
-	 * 		the decoded plaintext
+	 * 		The decoded plaintext
 	 */
 	public String decrypt(CryptoMessage cm) {
 		DHTuple dht = (DHTuple) key.getPublic();
@@ -164,8 +165,7 @@ public class ElGamalCipher implements CryptoCipher, Serializable {
 	 * Makes a copy of the current cipher (does NOT copy the key)
 	 * This is needed when we want to perform a key exchange
 	 * protocol on two clients that share the same JVM (because otherwise they would be modifying the same object).
-	 * @return 
-	 * 		a copy of the current CryptoCipher with no key
+	 * @return a copy of the current CryptoCipher with no key
 	 */
 	public CryptoCipher copy() {
 		ElGamalCipher eg = new ElGamalCipher();

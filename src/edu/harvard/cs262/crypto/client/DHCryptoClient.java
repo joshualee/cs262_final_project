@@ -60,7 +60,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	 * @param m
 	 * 		The message (can only be non-encrypted for this simple client, may be encrypted for others)
 	 * 		
-	 * @return The message that is received
+	 * @return the message that is received
 	 * @throws RemoteException, InterruptedException
 	 */
 	public String recvMessage(String from, String to, CryptoMessage m) throws InterruptedException {
@@ -75,7 +75,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 		
 		/*
 		 * Add message to session queue if it has a session id in order to
-		 * pass the message to the appropriate waiting thread.
+		 * pass the message to the appropriate waiting thread
 		 */
 		if (m.hasSessionID() && to.equals(name)) {
 			String sid = m.getSessionID();
@@ -136,7 +136,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	 * 		Who the message is for
 	 * @param sid
 	 * 		The session id of this communication
-	 * @return The plaintext (or cipher text if not decryptable) of the sent message
+	 * @return the plaintext (or cipher text if not decryptable) of the sent message
 	 * @throws RemoteException, ClientNotFound, InterruptedException
 	 */
 	public String sendEncryptedMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
@@ -177,7 +177,7 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	 * 
 	 * @param sid
 	 * 		The session id of the awaited communication
-	 * @return The message that you waited for
+	 * @return the message that you waited for
 	 * @throws RemoteException, InterruptedException
 	 */
 	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
@@ -259,9 +259,9 @@ public class DHCryptoClient extends SimpleCryptoClient {
 	}
 	
 	/**
-	 * Class for creating callable object for receiving a secure channel for the key exchange protocol
+	 * Class for creating callable object for receiving a secure channel for the key exchange protocol.
 	 * Needed in order to do the key exchange in a separate thread (one thread is needed to initiate
-	 * the key exchange in this client while another is needed to initiate key exchange in the other)
+	 * the key exchange in this client while another is needed to initiate key exchange in the other).
 	 */
 	private class recvSecureChannelCallable implements Callable<Object> {
 		private String counterParty;

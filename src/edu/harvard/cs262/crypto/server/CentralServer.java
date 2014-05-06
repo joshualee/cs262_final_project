@@ -29,7 +29,7 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
 
 /**
  * A server that relays messages between clients and sends messages to eavesdropping clients.
- * Designed to work with DHCryptoClient
+ * Designed to work with DHCryptoClient.
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
@@ -106,10 +106,7 @@ public class CentralServer implements CryptoServer {
 	}
 	
 	/**
-	 * Returns a reference to the client with the specified name. This is needed when a client 
-	 * wants to communicate with another client directly and not have to go through the server.
-	 * This function should be used with care, as it bypasses the server layer, which in general should
-	 * not be done.
+	 * Returns a reference to the client with the specified name.
 	 * 
 	 * @param clientName
 	 * 		the name of the client
@@ -125,8 +122,7 @@ public class CentralServer implements CryptoServer {
 	 * Used to ensure the server is responsive. Only returns true, but may never return if the
 	 * server has crashed or just doesn't respond.
 	 * 
-	 * @return
-	 * 		true, meaning the server is alive
+	 * @return true, meaning the server is alive
 	 * @throws RemoteException
 	 */
 	public boolean ping() throws RemoteException{
@@ -236,12 +232,12 @@ public class CentralServer implements CryptoServer {
 	 * Send message "m" from client "from" to client "to".
 	 * Blocks until message has successfully been delivered.
 	 * Returns the message being sent, so the caller may check
-	 * the integrity of the call
+	 * the integrity of the call.
 	 * 
 	 * @param from: the name of the client sending the message
 	 * @param to: the name of the client receiving the message
 	 * @param m: the message being sent
-	 * @return The message sent
+	 * @return the message sent
 	 * @throws RemoteException, ClientNotFound, InterruptedException 
 	 */
 	public String sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException {
@@ -283,7 +279,7 @@ public class CentralServer implements CryptoServer {
 	/**
 	 * Allow client "listener" to listen to all incoming and outgoing communication of client 
 	 * "victim". Once a client has registered to eavesdrop, the server will automatically forward
-	 * all communications to/from "victim" to "listener"
+	 * all communications to/from "victim" to "listener".
 	 * 
 	 * Adds client to the proper eavesdropping list.
 	 * 
@@ -314,8 +310,7 @@ public class CentralServer implements CryptoServer {
 	}
 	
 	/**
-	 * Allow client "listener" to stop listening to communications of client "victim"
-	 * 
+	 * Allow client "listener" to stop listening to communications of client "victim".
 	 * Removes client from the proper eavesdropping list.
 	 * 
 	 * @param listener

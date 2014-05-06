@@ -26,6 +26,7 @@ public class ClientConsole {
 			System.exit(1);
 		}
 
+		// input parameters
 		String rmiHost = args[0];
 		int rmiPort = Integer.parseInt(args[1]);
 		String serverName = args[2];
@@ -37,8 +38,10 @@ public class ClientConsole {
 		try {
 			String clientName = "";
 			CryptoClient myClient = null;
+			
+			// find registry and lookup server
 			Registry registry = LocateRegistry.getRegistry(rmiHost, rmiPort);
-			CryptoServer server = (CryptoServer) registry.lookup(serverName);
+			CryptoServer server = (CryptoServer)registry.lookup(serverName);
 
 			// create new Scanner
 			scan = new Scanner(System.in);
@@ -46,7 +49,7 @@ public class ClientConsole {
 			// boolean to keep track of whether the Client is registered
 			boolean reg = false;
 
-			// Menu
+			// menu
 			String menu = 
 				"\n====== Help Menu ======\n" +
 			    "u: unregister\n" +
@@ -72,7 +75,9 @@ public class ClientConsole {
 					
 					myClient = new DHCryptoClient(clientName, server);
 					CryptoClient myClientSer = ((CryptoClient) UnicastRemoteObject.exportObject(myClient, 0));
-
+					
+					
+					// attempt registration
 					if (server.registerClient(myClientSer)) {
 						System.out.println(menu);
 						System.out.println("\nWelcome, " + clientName + ". Please choose an action.");
@@ -82,7 +87,8 @@ public class ClientConsole {
 					System.out.println("Client with name " + clientName + " already exists.");
 					clientName="";
 				}
-
+				
+				// once client has successfully registered, present menu options and wait for input
 				while (reg) {
 					System.out.print("\n>> ");
 					s = scan.nextLine();
@@ -107,7 +113,7 @@ public class ClientConsole {
 						System.out.println("\n" + server.getClientList(false));
 					}
 
-					// send message to client
+					// send message to another client
 					else if (s.equals("m")) {
 						String encr = "";
 
@@ -150,8 +156,7 @@ public class ClientConsole {
 
 						if (!messageMap.isEmpty()) {
 
-							for (Map.Entry<ClientPair, List<CryptoMessage>> entry : messageMap
-									.entrySet()) {
+							for (Map.Entry<ClientPair, List<CryptoMessage>> entry : messageMap.entrySet()) {
 								// print "From: ..., To: ..."
 								ClientPair myPair = entry.getKey();
 								System.out.println("\n" + myPair + "\n=================");
@@ -159,7 +164,8 @@ public class ClientConsole {
 
 								for (CryptoMessage m : messageList) {
 									// output decrypted version only if myClient
-									// was intended target or message wasn't encrypted
+									// was intended target or message wasn't encrypted;
+									// otherwise print "N/A"
 									String dec = "\nDecrypted: ";
 									if (myPair.getTo().equals(myClient.getName()) || !m.isEncrypted()) {
 										dec += m.getPlainText();
@@ -170,7 +176,7 @@ public class ClientConsole {
 									}
 									System.out.println(dec);
 									
-									// output encrypted version if message was encrypted
+									// output encrypted version only if message was encrypted
 									if (m.isEncrypted()){ 
 										System.out.println("Encrypted: " + m.getCipherText());
 									}

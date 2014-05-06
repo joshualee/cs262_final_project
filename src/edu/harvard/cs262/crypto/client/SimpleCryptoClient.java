@@ -47,9 +47,8 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 
 	/**
-	 * The message history that the client can use to view messages received in the past.
-	 * @return
-	 * 		The message history as a map: (to, from) => list of messages
+	 * The message history that the client can use to view messages received in the past
+	 * @return the message history as a map: (to, from) => list of messages
 	 * @throws RemoteException
 	 */
 	public Map<ClientPair, List<CryptoMessage>> getMessages() throws RemoteException {
@@ -59,8 +58,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	/**
 	 * Expose log so other modules can log actions
 	 * 
-	 * @return
-	 * 		the logging object 
+	 * @return the logging object 
 	 * @throws RemoteException
 	 */
 	public VPrint getLog() throws RemoteException{
@@ -70,8 +68,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	/**
 	 * To detect whether the client has failed
 	 * 
-	 * @return
-	 * 		true (client responded) 
+	 * @return true (client responded) 
 	 * @throws RemoteException
 	 */
 	public boolean ping() throws RemoteException {
@@ -112,7 +109,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	 * @param m
 	 * 		The message (can only be non-encrypted for this simple client, may be encrypted for others)
 	 * 		
-	 * @return The message that is received
+	 * @return the message that is received
 	 * @throws RemoteException, InterruptedException
 	 */
 	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, InterruptedException {
@@ -130,14 +127,14 @@ public class SimpleCryptoClient implements CryptoClient {
 	
 	/**
 	 * Send a message to client "to" by telling the server to do it.
-	 * This function returns the plaintext of a message received as a string in order for:
+	 * This function returns the plaintext of a message received as a string in order to:
 	 * (1) do unit testing (2) ensure the correct message was sent.
 	 *  
 	 * @param to
 	 * 		Who the message is for
 	 * @param sid
 	 * 		The session id of this communication
-	 * @return The plaintext (or cipher text if not decryptable) of the sent message
+	 * @return the plaintext (or cipher text if not decryptable) of the sent message
 	 * @throws RemoteException, InterruptedException
 	 */
 	public String sendMessage(String to, String text, String sid) throws RemoteException, InterruptedException {
@@ -167,7 +164,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	 * 		Who the message is for
 	 * @param sid
 	 * 		The session id of this communication
-	 * @return The plaintext (or cipher text if not decryptable) of the sent message
+	 * @return the plaintext (or cipher text if not decryptable) of the sent message
 	 * @throws RemoteException, ClientNotFound, InterruptedException
 	 */
 	public String sendEncryptedMessage(String to, String text, String sid) throws RemoteException,
@@ -181,7 +178,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	 * 
 	 * @param sid
 	 * 		The session id of the awaited communication
-	 * @return The message that you waited for
+	 * @return the message that you waited for
 	 * @throws RemoteException, InterruptedException
 	 */
 	public CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException {
@@ -225,7 +222,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 	
 	/**
-	 * This simple client actually cannot handle setting up keys, so it will just say so in the log
+	 * This simple client actually cannot handle setting up keys, so it will just say so in the log.
 	 *  
 	 * @param recip
 	 * 		The client you want to setup the secure channel up with
@@ -243,7 +240,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 
 	/**
-	 * This simple client actually cannot handle setting up keys, so it will just say so in the log
+	 * This simple client actually cannot handle setting up keys, so it will just say so in the log.
 	 * 
 	 * @param counterparty
 	 * 		The client trying to set up the secure channel with you
@@ -260,7 +257,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 	
 	/** 
-	 * This simple client actually cannot handle evoting, so it will just say so in the log
+	 * This simple client actually cannot handle evoting, so it will just say so in the log.
 	 * 
 	 * @param reason
 	 * 		The reason that the evote needs to be aborted
@@ -272,7 +269,7 @@ public class SimpleCryptoClient implements CryptoClient {
 	}
 	
 	/**
-	 * This simple client actually cannot handle evoting, so it will just say so in the log
+	 * This simple client actually cannot handle evoting, so it will just say so in the log.
 	 *  
 	 * @param evote
 	 * 		The evote to participate in

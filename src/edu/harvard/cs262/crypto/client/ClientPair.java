@@ -26,7 +26,7 @@ public class ClientPair {
 	
 	/**
 	 * Returns hashcode for the ClientPair
-	 * @return An int hashcode
+	 * @return an int hashcode
 	 */
 	public int hashCode() {
 		int hashFrom = from != null ? from.hashCode() : 0;

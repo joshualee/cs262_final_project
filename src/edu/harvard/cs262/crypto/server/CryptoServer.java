@@ -14,9 +14,6 @@ import edu.harvard.cs262.crypto.exception.ClientNotFound;
  * such as sending/receiving/eavesdropping encrypted/unencrypted messages. Also more advanced
  * servers also enables applications such as evoting. Servers are responsible for handling
  * faulty clients, such as unresponsive or crashing clients. 
- * 
- * All methods need to throw RemoteException in order for interface to be remote.
- * Interface needs to be remote so a stub can be generated.
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
@@ -34,7 +31,7 @@ public interface CryptoServer extends Remote {
 	 * Returns the list of currently registered clients.
 	 * 
 	 * @param arrayFormat
-	 * 		the desired string output format
+	 * 		indicator of the desired string output format
 	 * @return the list of registered clients as a string
 	 * @throws RemoteException
 	 */
@@ -57,8 +54,7 @@ public interface CryptoServer extends Remote {
 	 * Used to ensure the server is responsive. Only returns true, but may never return if the
 	 * server has crashed or just doesn't respond.
 	 * 
-	 * @return
-	 * 		true, meaning the server is alive
+	 * @return true, meaning the server is alive
 	 * @throws RemoteException
 	 */
 	public boolean ping() throws RemoteException;
@@ -89,7 +85,7 @@ public interface CryptoServer extends Remote {
 	 * 
 	 * @param from: the name of the client sending the message
 	 * @param m: the message from the client
-	 * @return The message received
+	 * @return the message received
 	 * @throws RemoteException, ClientNotFound, InterruptedException 
 	 */
 	public String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;
@@ -103,7 +99,7 @@ public interface CryptoServer extends Remote {
 	 * @param from: the name of the client sending the message
 	 * @param to: the name of the client receiving the message
 	 * @param m: the message being sent
-	 * @return The message sent
+	 * @return the message sent
 	 * @throws RemoteException, ClientNotFound, InterruptedException 
 	 */
 	public String sendMessage(String from, String to, CryptoMessage m) throws RemoteException, ClientNotFound, InterruptedException;

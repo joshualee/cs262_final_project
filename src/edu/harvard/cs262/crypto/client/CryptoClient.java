@@ -17,25 +17,21 @@ import edu.harvard.cs262.crypto.exception.EVoteInvalidResult;
  * Clients may also eavesdrop on other clients, simulating an attacker listening
  * to the wire. Client messages are relayed through a central server in order for
  * features such as notifications (eavesdropping) and evoting to work properly.  
- * All methods need to throw RemoteException in order for interface to be remote.
- * Interface needs to be remote so a stub can be generated.
  *
  * @author Holly Anderson, Joshua Lee, and Tracy Lu
  */
 
 public interface CryptoClient extends Remote {
 	/**
-	 *  Getter for client name
-	 * @return 
-	 * 		The name of the client
+	 * Getter for client name
+	 * @return the name of the client
 	 * @throws RemoteException
 	 */
 	public String getName() throws RemoteException;
 	
 	/**
 	 * The message history that the client can use to view messages received in the past.
-	 * @return
-	 * 		The message history as a map: (to, from) => list of messages
+	 * @return the message history as a map: (to, from) => list of messages
 	 * @throws RemoteException
 	 */
 	public Map<ClientPair, List<CryptoMessage>> getMessages() throws RemoteException;
@@ -43,8 +39,7 @@ public interface CryptoClient extends Remote {
 	/**
 	 * Expose log so other modules can log actions
 	 * 
-	 * @return
-	 * 		the logging object 
+	 * @return the logging object 
 	 * @throws RemoteException
 	 */
 	public VPrint getLog() throws RemoteException;
@@ -52,8 +47,7 @@ public interface CryptoClient extends Remote {
 	/**
 	 * To detect whether the client has failed
 	 * 
-	 * @return
-	 * 		true (client responded) 
+	 * @return true (client responded) 
 	 * @throws RemoteException
 	 */
 	public boolean ping() throws RemoteException;
@@ -63,7 +57,7 @@ public interface CryptoClient extends Remote {
 	 */
 	
 	/**
-	 * Receive a message sent from client "from" to client "to" and prints it to the console.
+	 * Receive a message sent from client "from" to client "to" and print it to the console.
 	 * Note that "to" may not be the current client if the current client
 	 * is eavesdropping on another client's communication.
 	 * 
@@ -72,23 +66,22 @@ public interface CryptoClient extends Remote {
 	 * @param to
 	 * 		Who the message is for
 	 * @param m
-	 * 		The message (can only be non-encrypted for this simple client, may be encrypted for others)
-	 * 		
-	 * @return The message that is received
+	 * 		The message (can only be non-encrypted for this simple client, may be encrypted for others)	
+	 * @return the message that is received
 	 * @throws RemoteException, InterruptedException
 	 */
 	String recvMessage(String from, String to, CryptoMessage m) throws RemoteException, InterruptedException;
 	
 	/**
 	 * Send a message to client "to" by telling the server to do it.
-	 * This function returns the plaintext of a message received as a string in order for:
+	 * This function returns the plaintext of a message received as a string in order to:
 	 * (1) do unit testing (2) ensure the correct message was sent.
 	 *  
 	 * @param to
 	 * 		Who the message is for
 	 * @param sid
 	 * 		The session id of this communication
-	 * @return The plaintext (or cipher text if not decryptable) of the sent message
+	 * @return the plaintext (or cipher text if not decryptable) of the sent message
 	 * @throws RemoteException, InterruptedException
 	 */
 	String sendMessage(String to, String msg, String sid) throws RemoteException, ClientNotFound, InterruptedException;
@@ -102,7 +95,7 @@ public interface CryptoClient extends Remote {
 	 * 		Who the message is for
 	 * @param sid
 	 * 		The session id of this communication
-	 * @return The plaintext (or cipher text if not decryptable) of the sent message
+	 * @return the plaintext (or cipher text if not decryptable) of the sent message
 	 * @throws RemoteException, ClientNotFound, InterruptedException
 	 */
 	String sendEncryptedMessage(String to, String text, String sid) throws RemoteException, ClientNotFound, InterruptedException;
@@ -114,7 +107,7 @@ public interface CryptoClient extends Remote {
 	 * 
 	 * @param sid
 	 * 		The session id of the awaited communication
-	 * @return The message that you waited for
+	 * @return the message that you waited for
 	 * @throws RemoteException, InterruptedException
 	 */
 	CryptoMessage waitForMessage(String sid) throws RemoteException, InterruptedException;

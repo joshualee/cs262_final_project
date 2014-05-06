@@ -21,7 +21,7 @@ public interface KeyExchangeProtocol {
 	 * unique seed.
 	 * 
 	 * @param seed 
-	 * 		the seed	
+	 * 		The seed	
 	 */
 	void seed(long seed);
 	
@@ -57,8 +57,7 @@ public interface KeyExchangeProtocol {
 	 * Makes a copy of the current DiffieHellman protocol with the same public parameters and ID.
 	 * This is needed when we want to perform a key exchange protocol on two clients that share the
 	 * same JVM (because otherwise they would be modifying the same object).
-	 * @return 
-	 * 		the copy of the KeyExchangeProtocol
+	 * @return the copy of the KeyExchangeProtocol
 	 */
 	KeyExchangeProtocol copy();
 }
